@@ -1,0 +1,83 @@
+@extends(adminTheme() . 'layouts.app')
+
+@section('title')
+    <title>{{ websiteTitle('Store Inventory Report') }}</title>
+@endsection
+
+@section('contents')
+<div class="flex-grow-1 inv-module">
+    @include('sfl-inventory::admin.partials.alerts')
+    @include('sfl-inventory::admin.partials.ui-kit')
+
+    <div class="card">
+        <div class="card-header">
+            <h5 class="mb-0">Store Inventory Report</h5>
+            <small class="text-muted">One row per stock movement — stock-in and section-wise issue quantities, with a running balance per item.</small>
+        </div>
+        <div class="card-body">
+            <form method="GET" class="row g-2 mb-3">
+                <div class="col-md-3"><input type="date" name="date_from" class="form-control" value="{{ request('date_from') }}" placeholder="From"></div>
+                <div class="col-md-3"><input type="date" name="date_to" class="form-control" value="{{ request('date_to') }}" placeholder="To"></div>
+                <div class="col-md-3"><button type="submit" class="btn btn-secondary">Filter</button></div>
+            </form>
+
+            <div class="table-responsive">
+                <table class="table table-bordered table-striped table-sm align-middle" style="font-size:12px;">
+                    <thead class="text-center">
+                        <tr>
+                            <th rowspan="2">#</th>
+                            <th rowspan="2">Item</th>
+                            <th rowspan="2">Item Code</th>
+                            <th rowspan="2">Category</th>
+                            <th rowspan="2">Store</th>
+                            <th rowspan="2">Date</th>
+                            <th rowspan="2">Invoice/<br>Challan No.</th>
+                            <th rowspan="2">Stock In<br>Qty</th>
+                            <th colspan="{{ $departments->count() }}">Issue Qty (by Section)</th>
+                            <th rowspan="2">Balance<br>Stock Qty</th>
+                            <th rowspan="2">Unit</th>
+                            <th rowspan="2">Cost Per<br>Unit</th>
+                            <th rowspan="2">Total<br>Value</th>
+                            <th rowspan="2">Received By</th>
+                            <th rowspan="2">Issued By</th>
+                        </tr>
+                        <tr>
+                            @foreach($departments as $department)
+                                <th>{{ $department->name }}</th>
+                            @endforeach
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @forelse($rows as $row)
+                            <tr>
+                                <td>{{ $loop->iteration }}</td>
+                                <td class="text-start">{{ $row->item_name }}</td>
+                                <td>{{ $row->item_code }}</td>
+                                <td>{{ $row->category_name }}</td>
+                                <td>{{ $row->store_name }}</td>
+                                <td>{{ \Carbon\Carbon::parse($row->transaction_date)->format('d-m-y') }}</td>
+                                <td>{{ $row->challan_invoice_no }}</td>
+                                <td class="text-end text-success">{{ $row->transaction_type === 'grn' && $row->qty_in > 0 ? rtrim(rtrim($row->qty_in, '0'), '.') : '' }}</td>
+                                @foreach($departments as $department)
+                                    <td class="text-end text-danger">
+                                        {{ $row->transaction_type === 'issue' && $row->department_name === $department->name ? rtrim(rtrim($row->qty_out, '0'), '.') : '' }}
+                                    </td>
+                                @endforeach
+                                <td class="text-end fw-bold">{{ rtrim(rtrim($row->running_balance, '0'), '.') }}</td>
+                                <td>{{ $row->unit }}</td>
+                                <td class="text-end">{{ number_format($row->rate, 2) }}</td>
+                                <td class="text-end">{{ number_format($row->value, 2) }}</td>
+                                <td>{{ $row->received_by_name }}</td>
+                                <td>{{ $row->issued_by_name }}</td>
+                            </tr>
+                        @empty
+                            <tr><td colspan="{{ 15 + $departments->count() }}" class="text-center text-muted">No stock movements found.</td></tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+            <p class="text-muted mb-0" style="font-size:12px;">Showing the latest 500 movements. Use the date filter to narrow the range.</p>
+        </div>
+    </div>
+</div>
+@endsection
