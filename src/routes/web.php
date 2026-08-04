@@ -104,6 +104,7 @@ Route::middleware($route['middleware'] ?? ['web', 'auth'])
         // Stock Ledger + Main Store Inventory
         Route::get('stock-ledger', [InvStockLedgerController::class, 'index'])->name('stock-ledger.index');
         Route::get('stock-overview', [InvStockOverviewController::class, 'index'])->name('stock-overview.index');
+        Route::get('store-overview', [InvStockOverviewController::class, 'cards'])->name('stock-overview.cards');
 
         // Reports
         Route::prefix('reports')->name('reports.')->group(function () {

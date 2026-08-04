@@ -63,4 +63,77 @@ class InvStockOverviewController extends Controller
 
         return view('sfl-inventory::admin.stock-overview.index', compact('rows', 'items', 'stores', 'categories', 'allStores', 'allItems'));
     }
+
+    /**
+     * Card-grid view of every item's status/qty at one store — a visual
+     * browse screen, distinct from index()'s ledger-activity-only table.
+     * Unlike index(), this deliberately includes items with zero/no
+     * transactions at the store (that's exactly what the yellow "active but
+     * empty" dot is for), so it queries the full item master, not just
+     * item/store combos that already have ledger rows.
+     */
+    public function cards(Request $request): View
+    {
+        $this->authorize('inv_stock_overview.view');
+
+        $stores = InvStore::active()->orderBy('name')->get();
+        $store = $request->filled('store_id')
+            ? $stores->firstWhere('id', $request->integer('store_id'))
+            : $stores->first();
+
+        $categories = InvItemCategory::active()->orderBy('name')->get();
+
+        $itemsQuery = InvItem::query()
+            ->with('category')
+            ->when($request->filled('search'), fn ($q) => $q->where(fn ($q2) => $q2
+                ->where('item_code', 'like', '%' . $request->search . '%')
+                ->orWhere('item_name', 'like', '%' . $request->search . '%')))
+            ->when($request->filled('category_id'), fn ($q) => $q->where('category_id', $request->category_id));
+
+        $balances = $store
+            ? DB::table('inv_stock_transactions')->where('store_id', $store->id)
+                ->select('item_id', DB::raw('SUM(qty_in) - SUM(qty_out) as bal'))
+                ->groupBy('item_id')->pluck('bal', 'item_id')
+            : collect();
+
+        $allFilteredItems = $itemsQuery->orderBy('item_name')->get();
+
+        $statusOf = function (InvItem $item) use ($balances) {
+            if (! $item->is_active) {
+                return 'inactive';
+            }
+
+            return (float) ($balances[$item->id] ?? 0) > 0 ? 'active' : 'empty';
+        };
+
+        $counts = ['active' => 0, 'empty' => 0, 'inactive' => 0];
+        foreach ($allFilteredItems as $item) {
+            $counts[$statusOf($item)]++;
+        }
+
+        // Always grouped by category — one 12-column grid per category
+        // section, in a fixed order (each section's own item count, not paginated).
+        $grouped = $allFilteredItems->groupBy(fn ($item) => $item->category?->name ?? 'Uncategorized');
+
+        // Same Stocked/Empty/Inactive breakdown as the page header, but
+        // scoped to each category's own items — shown on the section title row.
+        $groupCounts = $grouped->map(function ($categoryItems) use ($statusOf) {
+            $c = ['active' => 0, 'empty' => 0, 'inactive' => 0];
+            foreach ($categoryItems as $item) {
+                $c[$statusOf($item)]++;
+            }
+            return $c;
+        });
+
+        return view('sfl-inventory::admin.stock-overview.cards', [
+            'stores' => $stores,
+            'store' => $store,
+            'categories' => $categories,
+            'balances' => $balances,
+            'statusOf' => $statusOf,
+            'counts' => $counts,
+            'groupCounts' => $groupCounts,
+            'grouped' => $grouped,
+        ]);
+    }
 }

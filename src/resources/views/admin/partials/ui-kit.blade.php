@@ -77,5 +77,5 @@
 .inv-module .alert { border: none; border-radius: 10px; font-size: 13.5px; }
 
 /* Select2 tweaks to match rounded inputs */
-.inv-module .select2-container--default .select2-selection--single { border-radius: 8px !important; border-color: #e4e4e7 !important; height: calc(1.5em + .75rem + 2px) !important; }
+.inv-module .select2-container--default .select2-selection--single { border-radius: 8px !important; border-color: #e4e4e7 !important; height: auto !important; }
 </style>

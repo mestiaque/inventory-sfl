@@ -22,9 +22,12 @@
 </div>
 @push('js')
 <script>
-    document.getElementById('{{ $modalId }}').addEventListener('show.bs.modal', function (event) {
-        const action = event.relatedTarget.getAttribute('data-action');
-        document.getElementById('{{ $modalId }}Form').setAttribute('action', action);
+    // Bootstrap 4's modal plugin is jQuery-based and fires this event through
+    // jQuery's own event system, not as a native DOM event — a plain
+    // addEventListener('show.bs.modal', ...) never sees it. Must bind with $.
+    $('#{{ $modalId }}').on('show.bs.modal', function (event) {
+        const action = $(event.relatedTarget).data('action');
+        $('#{{ $modalId }}Form').attr('action', action);
     });
 </script>
 @endpush

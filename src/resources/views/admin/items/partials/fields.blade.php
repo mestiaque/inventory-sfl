@@ -2,14 +2,8 @@
 <div class="row">
     <div class="col-md-3 mb-3">
         <label class="form-label">Item Code <span class="text-danger">*</span></label>
-        @isset($item)
-            <input type="text" class="form-control" value="{{ $item->item_code }}" disabled>
-            <input type="hidden" name="item_code" value="{{ $item->item_code }}">
-            <div class="form-text">Item code can't be changed after creation.</div>
-        @else
-            <input type="text" name="item_code" class="form-control" value="{{ old('item_code') }}" placeholder="e.g. SFL-SW-090" required>
-            <div class="form-text">Enter the item's code yourself — it is not auto-generated.</div>
-        @endisset
+        <input type="text" name="item_code" class="form-control" value="{{ old('item_code', $item->item_code ?? '') }}" placeholder="e.g. SFL-SW-090" required>
+        <div class="form-text">Enter the item's code yourself — it is not auto-generated.</div>
     </div>
     <div class="col-md-9 mb-3">
         <label class="form-label">Item Name <span class="text-danger">*</span></label>

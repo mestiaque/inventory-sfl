@@ -72,8 +72,11 @@ return [
                     'title'      => 'Main Store Inventory',
                     'icon'       => 'fa-solid fa-boxes-packing',
                     'icon_color' => 'text-success',
-                    'permission' => 'inv_stock_overview',
-                    'route'      => "$base/stock-overview",
+                    'permission' => '',
+                    'children'   => [
+                        ['title' => 'Table View', 'icon' => 'fa-solid fa-table', 'icon_color' => 'text-success', 'permission' => 'inv_stock_overview', 'route' => "$base/stock-overview"],
+                        ['title' => 'Store Overview (Cards)', 'icon' => 'fa-solid fa-border-all', 'icon_color' => 'text-success', 'permission' => 'inv_stock_overview', 'route' => "$base/store-overview"],
+                    ],
                 ],
                 [
                     'title'      => 'Requisition & Issue',
