@@ -39,7 +39,7 @@
 
     <div class="card">
         <div class="card-header d-flex flex-wrap justify-content-between align-items-center gap-2">
-            <h5 class="mb-0">Store Overview — {{ $store?->name ?? 'No store selected' }}</h5>
+            <h5 class="mb-0">Store Overview — {{ $store?->name ?? 'All Stores' }}</h5>
             <div>
                 <span class="status-indicator"><span class="dot active"></span> Stocked: {{ $counts['active'] }}</span>
                 <span class="status-indicator"><span class="dot empty"></span> Empty: {{ $counts['empty'] }}</span>
@@ -53,6 +53,7 @@
                 </div>
                 <div class="col-md-2">
                     <select name="store_id" class="form-control inv-select2">
+                        <option value="" @selected(! $store)>All Stores</option>
                         @foreach($stores as $s)
                             <option value="{{ $s->id }}" @selected($store?->id == $s->id)>{{ $s->name }}</option>
                         @endforeach
@@ -74,9 +75,6 @@
                 </div>
             </form>
 
-            @if(! $store)
-                <p class="text-muted text-center py-4">No active store found. Add a store first.</p>
-            @else
                 @forelse($grouped as $categoryName => $categoryItems)
                     <div class="category-section-title">
                         <span>{{ $categoryName }} ({{ $categoryItems->count() }})</span>
@@ -89,13 +87,13 @@
                     <div class="store-card-grid">
                         @foreach($categoryItems as $item)
                             @php $status = $statusOf($item); $qty = (float) ($balances[$item->id] ?? 0); @endphp
-                            <div class="store-grid-card" title="{{ $item->item_name }}">
+                            <div class="store-grid-card" title="{{ $item->item_name }}{{ $store ? '' : ' — ' . ($item->openingStore?->name ?? 'No store') }}">
                                 <span class="card-dot {{ $status }}"></span>
                                 <div class="card-code">{{ $item->item_code }}</div>
                                 @if($qty > 0)
-                                    <div class="card-qty-active">{{ rtrim(rtrim(number_format($qty, 4), '0'), '.') }}</div>
+                                    <div class="card-qty-active">{{ inv_qty($qty) }}</div>
                                 @else
-                                    <div class="card-qty">{{ rtrim(rtrim(number_format($qty, 4), '0'), '.') ?: '0' }}</div>
+                                    <div class="card-qty">{{ inv_qty($qty) ?: '0' }}</div>
                                 @endif
                             </div>
                         @endforeach
@@ -103,7 +101,6 @@
                 @empty
                     <p class="text-muted text-center py-4">No items found.</p>
                 @endforelse
-            @endif
         </div>
     </div>
 </div>

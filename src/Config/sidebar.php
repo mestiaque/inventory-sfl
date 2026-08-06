@@ -109,8 +109,8 @@ return [
                     'permission' => '',
                     'children'   => [
                         ['title' => 'FG Receive', 'icon' => 'fa-solid fa-box', 'icon_color' => 'text-success', 'permission' => 'inv_fg_receive', 'route' => "$base/fg-receives"],
-                        ['title' => 'Gate Pass', 'icon' => 'fa-solid fa-id-card', 'icon_color' => 'text-success', 'permission' => 'inv_gate_pass', 'route' => "$base/gate-passes"],
                         ['title' => 'Shipment', 'icon' => 'fa-solid fa-ship', 'icon_color' => 'text-success', 'permission' => 'inv_shipment', 'route' => "$base/shipments"],
+                        ['title' => 'Gate Pass', 'icon' => 'fa-solid fa-id-card', 'icon_color' => 'text-success', 'permission' => 'inv_gate_pass', 'route' => "$base/gate-passes"],
                     ],
                 ],
                 [

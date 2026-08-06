@@ -31,7 +31,7 @@ class InvItemRequest extends FormRequest
             'color_id'         => ['nullable', 'integer', 'exists:inv_colors,id'],
             'size_id'          => ['nullable', 'integer', 'exists:inv_sizes,id'],
             'specification'    => ['nullable', 'string'],
-            'item_type'        => ['required', 'in:raw_material,wip,finished_good'],
+            'item_type'        => ['nullable', 'in:raw_material,wip,finished_good'],
             'minimum_stock'    => ['nullable', 'numeric', 'min:0'],
             'maximum_stock'    => ['nullable', 'numeric', 'min:0'],
             'opening_stock'    => [$isCreate ? 'nullable' : 'prohibited', 'numeric', 'min:0'],

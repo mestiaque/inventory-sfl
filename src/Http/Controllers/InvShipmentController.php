@@ -8,7 +8,6 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 use ME\SflInventory\Http\Requests\InvShipmentRequest;
 use ME\SflInventory\Models\InvBuyer;
-use ME\SflInventory\Models\InvGatePass;
 use ME\SflInventory\Models\InvItem;
 use ME\SflInventory\Models\InvShipment;
 use ME\SflInventory\Models\InvStore;
@@ -27,12 +26,8 @@ class InvShipmentController extends Controller
     {
         $this->authorize('inv_shipment.list');
 
-        // Note: store_id is only set on direct shipments (no gate pass) — a
-        // Store Incharge won't see gate-pass-linked shipments here even if
-        // the linked gate pass was from their store, since the shipment row
-        // itself carries no store reference in that case.
         $shipments = InvShipment::query()
-            ->with(['buyer', 'gatePass'])
+            ->with(['buyer', 'gatePasses', 'store', 'creator', 'items.item.unit'])
             ->when($request->filled('search'), fn ($q) => $q->where('shipment_no', 'like', '%' . $request->search . '%'))
             ->when($request->filled('buyer_id'), fn ($q) => $q->where('buyer_id', $request->buyer_id))
             ->when($request->filled('status'), fn ($q) => $q->where('status', $request->status))
@@ -48,16 +43,18 @@ class InvShipmentController extends Controller
         return view('sfl-inventory::admin.shipments.index', compact('shipments', 'buyers'));
     }
 
-    public function create(Request $request): View
+    /**
+     * Shipment is the first document in the FG->Gate Pass flow: what's
+     * going out, how much, to whom — plus invoice/packing list. It never
+     * posts stock itself; the Gate Pass created against it afterward is
+     * the actual stock-out / security-exit event (see
+     * InvGatePassController::approve()).
+     */
+    public function create(): View
     {
         $this->authorize('inv_shipment.add');
 
-        $gatePass = null;
-        if ($request->filled('gate_pass_id')) {
-            $gatePass = InvGatePass::with('items.item')->where('status', 'issued')->find($request->gate_pass_id);
-        }
-
-        return view('sfl-inventory::admin.shipments.create', ['gatePass' => $gatePass] + $this->formOptions());
+        return view('sfl-inventory::admin.shipments.create', $this->formOptions());
     }
 
     public function store(InvShipmentRequest $request): RedirectResponse
@@ -70,38 +67,20 @@ class InvShipmentController extends Controller
                 'buyer_id'        => $data['buyer_id'] ?? null,
                 'invoice_no'      => $data['invoice_no'] ?? null,
                 'packing_list_no' => $data['packing_list_no'] ?? null,
-                'gate_pass_id'    => $data['gate_pass_id'] ?? null,
-                'store_id'        => $data['store_id'] ?? null,
+                'store_id'        => $data['store_id'],
                 'status'          => 'pending',
                 'remarks'         => $data['remarks'] ?? null,
                 'created_by'      => auth()->id(),
             ]);
 
             foreach ($data['items'] as $line) {
-                $shipmentItem = $shipment->items()->create(['item_id' => $line['item_id'], 'quantity' => $line['quantity']]);
-
-                // A shipment linked to a gate pass posts nothing — stock already
-                // left via the gate pass. Only a direct shipment (no gate pass)
-                // is itself the stock-out event.
-                if (! $shipment->gate_pass_id) {
-                    $this->stock->post([
-                        'item_id'          => $shipmentItem->item_id,
-                        'store_id'         => $shipment->store_id,
-                        'transaction_date' => $shipment->shipment_date,
-                        'transaction_type' => 'shipment',
-                        'qty_out'          => $shipmentItem->quantity,
-                        'reference_type'   => 'inv_shipment',
-                        'reference_id'     => $shipment->id,
-                        'remarks'          => "Shipment {$shipment->shipment_no}",
-                        'created_by'       => $shipment->created_by,
-                    ]);
-                }
+                $shipment->items()->create(['item_id' => $line['item_id'], 'quantity' => $line['quantity']]);
             }
 
             return $shipment;
         });
 
-        return redirect()->route('inventory.shipments.index')->with('success', "Shipment {$shipment->shipment_no} created successfully.");
+        return redirect()->route('inventory.shipments.index')->with('success', "Shipment {$shipment->shipment_no} created. Issue a Gate Pass against it to release the goods.");
     }
 
     public function updateStatus(Request $request, InvShipment $shipment): RedirectResponse
@@ -117,11 +96,27 @@ class InvShipmentController extends Controller
 
     private function formOptions(): array
     {
+        $items = InvItem::active()->ofType('finished_good')->with('unit')->orderBy('item_name')->get();
+
+        // item_id => [store_id => available qty] — lets the create form show
+        // "Available: X UNIT" per item/store and cap the quantity input
+        // without a round-trip per keystroke.
+        $stockMap = DB::table('inv_stock_transactions')
+            ->whereIn('item_id', $items->pluck('id'))
+            ->selectRaw('item_id, store_id, SUM(qty_in) - SUM(qty_out) as balance')
+            ->groupBy('item_id', 'store_id')
+            ->get()
+            ->groupBy('item_id')
+            ->map(fn ($rows) => $rows->pluck('balance', 'store_id'));
+
+        $fgStore = InvStore::active()->where('type', 'finished_goods')->first();
+
         return [
-            'buyers'     => InvBuyer::active()->orderBy('name')->get(),
-            'stores'     => InvStore::active()->orderBy('name')->get(),
-            'gatePasses' => InvGatePass::where('status', 'issued')->orderByDesc('id')->get(),
-            'items'      => InvItem::active()->ofType('finished_good')->orderBy('item_name')->get(),
+            'buyers'   => InvBuyer::active()->orderBy('name')->get(),
+            'stores'   => InvStore::active()->orderBy('name')->get(),
+            'fgStore'  => $fgStore,
+            'items'    => $items,
+            'stockMap' => $stockMap,
         ];
     }
 }

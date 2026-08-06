@@ -56,6 +56,9 @@
                                     </span>
                                 </td>
                                 <td class="text-end">
+                                    <button type="button" class="btn btn-sm btn-outline-secondary" data-toggle="modal" data-target="#viewBuyerModal{{ $buyer->id }}">
+                                        <i class="fa-solid fa-eye"></i>
+                                    </button>
                                     @can('inv_buyer.edit')
                                         <button type="button" class="btn btn-sm btn-outline-primary" data-toggle="modal" data-target="#editBuyerModal{{ $buyer->id }}">
                                             <i class="fa-solid fa-pen"></i>
@@ -68,6 +71,33 @@
                                     @endcan
                                 </td>
                             </tr>
+                            <div class="modal fade" id="viewBuyerModal{{ $buyer->id }}" tabindex="-1" aria-hidden="true">
+                                <div class="modal-dialog">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <h5 class="modal-title">Buyer Details</h5>
+                                            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                                        </div>
+                                        <div class="modal-body">
+                                            <dl class="row mb-0">
+                                                <dt class="col-sm-4">Name</dt><dd class="col-sm-8">{{ $buyer->name }}</dd>
+                                                <dt class="col-sm-4">Code</dt><dd class="col-sm-8">{{ $buyer->code }}</dd>
+                                                <dt class="col-sm-4">Contact</dt><dd class="col-sm-8">{{ $buyer->contact ?: '—' }}</dd>
+                                                <dt class="col-sm-4">Address</dt><dd class="col-sm-8">{{ $buyer->address ?: '—' }}</dd>
+                                                <dt class="col-sm-4">Status</dt>
+                                                <dd class="col-sm-8">
+                                                    <span class="badge p-1 text-white bg-{{ $buyer->is_active ? 'success' : 'secondary' }}">
+                                                        {{ $buyer->is_active ? 'Active' : 'Inactive' }}
+                                                    </span>
+                                                </dd>
+                                            </dl>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-light" data-dismiss="modal">Close</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                             @can('inv_buyer.edit')
                                 <div class="modal fade" id="editBuyerModal{{ $buyer->id }}" tabindex="-1" aria-hidden="true">
                                     <div class="modal-dialog">
@@ -113,7 +143,7 @@
                         <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
                     </div>
                     <div class="modal-body">
-                        @include('sfl-inventory::admin.buyers.partials.fields')
+                        @include('sfl-inventory::admin.buyers.partials.fields', ['buyer' => null])
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-light" data-dismiss="modal">Cancel</button>

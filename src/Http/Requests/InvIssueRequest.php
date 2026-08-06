@@ -14,7 +14,9 @@ class InvIssueRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'requisition_id'              => ['nullable', 'integer', 'exists:inv_requisitions,id'],
+            // Direct issue (no requisition) is switched off for now — every
+            // issue must be raised against an approved requisition.
+            'requisition_id'              => ['required', 'integer', 'exists:inv_requisitions,id'],
             'store_id'                    => ['required', 'integer', 'exists:inv_stores,id'],
             'to_store_id'                 => ['nullable', 'integer', 'different:store_id', 'exists:inv_stores,id'],
             'department_id'               => ['required', 'integer', 'exists:inv_departments,id'],

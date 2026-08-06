@@ -59,6 +59,9 @@
                                     </span>
                                 </td>
                                 <td class="text-end">
+                                    <button type="button" class="btn btn-sm btn-outline-secondary" data-toggle="modal" data-target="#viewColorModal{{ $color->id }}">
+                                        <i class="fa-solid fa-eye"></i>
+                                    </button>
                                     @can('inv_color.edit')
                                         <button type="button" class="btn btn-sm btn-outline-primary" data-toggle="modal" data-target="#editColorModal{{ $color->id }}">
                                             <i class="fa-solid fa-pen"></i>
@@ -71,6 +74,39 @@
                                     @endcan
                                 </td>
                             </tr>
+                            <div class="modal fade" id="viewColorModal{{ $color->id }}" tabindex="-1" aria-hidden="true">
+                                <div class="modal-dialog">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <h5 class="modal-title">Color Details</h5>
+                                            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                                        </div>
+                                        <div class="modal-body">
+                                            <dl class="row mb-0">
+                                                <dt class="col-sm-4">Name</dt><dd class="col-sm-8">{{ $color->name }}</dd>
+                                                <dt class="col-sm-4">Hex Code</dt>
+                                                <dd class="col-sm-8">
+                                                    @if($color->hex_code)
+                                                        <span style="display:inline-block;width:16px;height:16px;border-radius:4px;vertical-align:middle;background:{{ $color->hex_code }};border:1px solid #ddd;"></span>
+                                                        {{ $color->hex_code }}
+                                                    @else
+                                                        —
+                                                    @endif
+                                                </dd>
+                                                <dt class="col-sm-4">Status</dt>
+                                                <dd class="col-sm-8">
+                                                    <span class="badge p-1 text-white bg-{{ $color->is_active ? 'success' : 'secondary' }}">
+                                                        {{ $color->is_active ? 'Active' : 'Inactive' }}
+                                                    </span>
+                                                </dd>
+                                            </dl>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-light" data-dismiss="modal">Close</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                             @can('inv_color.edit')
                                 <div class="modal fade" id="editColorModal{{ $color->id }}" tabindex="-1" aria-hidden="true">
                                     <div class="modal-dialog">
@@ -90,7 +126,7 @@
                                                         <label class="form-label">Hex Code</label>
                                                         <input type="color" name="hex_code" class="form-control form-control-color" value="{{ $color->hex_code ?: '#000000' }}">
                                                     </div>
-                                                    <div class="form-check form-switch">
+                                                    <div class="form-check form-switch mb-4">
                                                         <input type="hidden" name="is_active" value="0">
                                                         <input type="checkbox" name="is_active" value="1" class="form-check-input" id="colorActive{{ $color->id }}" @checked($color->is_active)>
                                                         <label class="form-check-label" for="colorActive{{ $color->id }}">Active</label>
@@ -136,7 +172,7 @@
                             <label class="form-label">Hex Code</label>
                             <input type="color" name="hex_code" class="form-control form-control-color" value="#000000">
                         </div>
-                        <div class="form-check form-switch">
+                        <div class="form-check form-switch mb-4">
                             <input type="hidden" name="is_active" value="0">
                             <input type="checkbox" name="is_active" value="1" class="form-check-input" id="colorActiveNew" checked>
                             <label class="form-check-label" for="colorActiveNew">Active</label>

@@ -24,13 +24,15 @@ class InvItemController extends Controller
         $this->authorize('inv_item.list');
 
         $items = InvItem::query()
-            ->with(['category', 'unit', 'brand', 'color', 'size', 'department', 'supplier'])
+            ->with(['category', 'unit', 'brand', 'color', 'size', 'department', 'supplier', 'buyer', 'openingStore'])
             ->when($request->filled('item_code'), fn ($q) => $q->where('item_code', 'like', '%' . $request->item_code . '%'))
             ->when($request->filled('item_name'), fn ($q) => $q->where('item_name', 'like', '%' . $request->item_name . '%'))
             ->when($request->filled('category_id'), fn ($q) => $q->where('category_id', $request->category_id))
             ->when($request->filled('unit_id'), fn ($q) => $q->where('unit_id', $request->unit_id))
             ->when($request->filled('department_id'), fn ($q) => $q->where('department_id', $request->department_id))
             ->when($request->filled('supplier_id'), fn ($q) => $q->where('supplier_id', $request->supplier_id))
+            ->when($request->filled('buyer_id'), fn ($q) => $q->where('buyer_id', $request->buyer_id))
+            ->when($request->filled('store_id'), fn ($q) => $q->where('opening_store_id', $request->store_id))
             ->when($request->filled('item_type'), fn ($q) => $q->where('item_type', $request->item_type))
             ->when($request->filled('status'), fn ($q) => $q->where('is_active', $request->status === 'active'))
             ->latest('id')
@@ -41,8 +43,10 @@ class InvItemController extends Controller
         $departments = InvDepartment::active()->orderBy('name')->get();
         $suppliers = InvSupplier::active()->orderBy('name')->get();
         $units = InvUnit::active()->orderBy('name')->get();
+        $stores = InvStore::active()->orderBy('name')->get();
+        $buyers = InvBuyer::active()->orderBy('name')->get();
 
-        return view('sfl-inventory::admin.items.index', compact('items', 'categories', 'departments', 'suppliers', 'units'));
+        return view('sfl-inventory::admin.items.index', compact('items', 'categories', 'departments', 'suppliers', 'units', 'stores', 'buyers'));
     }
 
     public function create(): View

@@ -48,20 +48,40 @@ class InvGrnController extends Controller
         return view('sfl-inventory::admin.grns.index', compact('grns', 'stores', 'suppliers'));
     }
 
-    public function create(Request $request): View
+    /**
+     * Chooser page — a challan is either against a Purchase Order (from a
+     * supplier) or Buyer Supplied (fabric/accessories the buyer sends
+     * directly, no purchase involved). Kept as two separate forms so each
+     * only shows the fields relevant to that source.
+     */
+    public function create(): View
+    {
+        $this->authorize('inv_grn.add');
+
+        return view('sfl-inventory::admin.grns.create');
+    }
+
+    public function createPurchase(Request $request): View
     {
         $this->authorize('inv_grn.add');
 
         $purchaseOrder = null;
         if ($request->filled('purchase_order_id')) {
             $purchaseOrder = InvPurchaseOrder::with('items.item')
-                ->whereIn('status', ['approved', 'received'])
+                ->selectableForGrn()
                 ->find($request->purchase_order_id);
         }
 
-        return view('sfl-inventory::admin.grns.create', [
+        return view('sfl-inventory::admin.grns.create-purchase', [
             'purchaseOrder' => $purchaseOrder,
         ] + $this->formOptions());
+    }
+
+    public function createBuyer(): View
+    {
+        $this->authorize('inv_grn.add');
+
+        return view('sfl-inventory::admin.grns.create-buyer', $this->formOptions());
     }
 
     public function store(InvGrnRequest $request): RedirectResponse
@@ -138,11 +158,13 @@ class InvGrnController extends Controller
     private function formOptions(): array
     {
         return [
-            'stores'    => InvStore::active()->orderBy('name')->get(),
-            'suppliers' => InvSupplier::active()->orderBy('name')->get(),
-            'buyers'    => InvBuyer::active()->orderBy('name')->get(),
-            'items'     => InvItem::active()->orderBy('item_name')->get(),
-            'users'     => \App\Models\User::orderBy('name')->get(),
+            'stores'          => InvStore::active()->orderBy('name')->get(),
+            'accessoriesStore' => InvStore::active()->where('type', 'accessories')->first(),
+            'buyerStore'      => InvStore::active()->where('type', 'raw_material')->first(),
+            'suppliers'       => InvSupplier::active()->orderBy('name')->get(),
+            'buyers'          => InvBuyer::active()->orderBy('name')->get(),
+            'items'           => InvItem::active()->with('unit')->orderBy('item_name')->get(),
+            'users'           => \App\Models\User::orderBy('name')->get(),
         ];
     }
 }

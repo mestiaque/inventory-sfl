@@ -67,6 +67,22 @@
                     </select>
                 </div>
                 <div class="col-md-2">
+                    <select name="store_id" class="form-control inv-select2">
+                        <option value="">All Stores</option>
+                        @foreach($stores as $store)
+                            <option value="{{ $store->id }}" @selected(request('store_id') == $store->id)>{{ $store->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <select name="buyer_id" class="form-control inv-select2">
+                        <option value="">All Buyers</option>
+                        @foreach($buyers as $buyer)
+                            <option value="{{ $buyer->id }}" @selected(request('buyer_id') == $buyer->id)>{{ $buyer->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="col-md-2">
                     <select name="status" class="form-control inv-select2">
                         <option value="">All Status</option>
                         <option value="active" @selected(request('status') === 'active')>Active</option>
@@ -85,7 +101,7 @@
                 <table class="table table-bordered table-striped align-middle">
                     <thead>
                         <tr>
-                            <th>#</th><th>Code</th><th>Name</th><th>Category</th><th>Department</th><th>Supplier</th><th>Unit</th><th>Type</th><th>Min/Max</th><th>Status</th><th class="text-end">Actions</th>
+                            <th>#</th><th>Code</th><th>Name</th><th>Category</th><th>Department</th><th>Supplier</th><th>Buyer</th><th>Unit</th><th>Type</th><th>Store</th><th>Status</th><th class="text-end">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -102,15 +118,19 @@
                                 <td>{{ $item->category?->name }}</td>
                                 <td>{{ $item->department?->name ?? '—' }}</td>
                                 <td>{{ $item->supplier?->name ?? '—' }}</td>
+                                <td>{{ $item->buyer?->name ?? '—' }}</td>
                                 <td>{{ $item->unit?->short_name }}</td>
                                 <td>{{ ucwords(str_replace('_', ' ', $item->item_type)) }}</td>
-                                <td>{{ rtrim(rtrim($item->minimum_stock, '0'), '.') }} / {{ rtrim(rtrim($item->maximum_stock, '0'), '.') }}</td>
+                                <td>{{ $item->openingStore?->name ?? '—' }}</td>
                                 <td>
                                     <span class="badge p-1 text-white bg-{{ $item->is_active ? 'success' : 'secondary' }}">
                                         {{ $item->is_active ? 'Active' : 'Inactive' }}
                                     </span>
                                 </td>
                                 <td class="text-end">
+                                    <button type="button" class="btn btn-sm btn-outline-secondary" data-toggle="modal" data-target="#viewItemModal{{ $item->id }}">
+                                        <i class="fa-solid fa-eye"></i>
+                                    </button>
                                     @can('inv_item.edit')
                                         <a href="{{ route('inventory.items.edit', $item) }}" class="btn btn-sm btn-outline-primary"><i class="fa-solid fa-pen"></i></a>
                                     @endcan
@@ -121,8 +141,45 @@
                                     @endcan
                                 </td>
                             </tr>
+
+                            <div class="modal fade" id="viewItemModal{{ $item->id }}" tabindex="-1" aria-hidden="true">
+                                <div class="modal-dialog modal-lg">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <h5 class="modal-title">Item Details — {{ $item->item_code }}</h5>
+                                            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                                        </div>
+                                        <div class="modal-body">
+                                            <dl class="row mb-0">
+                                                <dt class="col-sm-3">Item Code</dt><dd class="col-sm-9">{{ $item->item_code }}</dd>
+                                                <dt class="col-sm-3">Item Name</dt><dd class="col-sm-9">{{ $item->item_name }}</dd>
+                                                <dt class="col-sm-3">Category</dt><dd class="col-sm-9">{{ $item->category?->name ?? '—' }}</dd>
+                                                <dt class="col-sm-3">Department</dt><dd class="col-sm-9">{{ $item->department?->name ?? '—' }}</dd>
+                                                <dt class="col-sm-3">Supplier</dt><dd class="col-sm-9">{{ $item->supplier?->name ?? '—' }}</dd>
+                                                <dt class="col-sm-3">Buyer</dt><dd class="col-sm-9">{{ $item->buyer?->name ?? '—' }}</dd>
+                                                <dt class="col-sm-3">Unit</dt><dd class="col-sm-9">{{ $item->unit?->name ?? '—' }} @if($item->unit?->short_name) ({{ $item->unit->short_name }}) @endif</dd>
+                                                <dt class="col-sm-3">Brand</dt><dd class="col-sm-9">{{ $item->brand?->name ?? '—' }}</dd>
+                                                <dt class="col-sm-3">Color</dt><dd class="col-sm-9">{{ $item->color?->name ?? '—' }}</dd>
+                                                <dt class="col-sm-3">Size</dt><dd class="col-sm-9">{{ $item->size?->name ?? '—' }}</dd>
+                                                <dt class="col-sm-3">Type</dt><dd class="col-sm-9">{{ $item->item_type ? ucwords(str_replace('_', ' ', $item->item_type)) : '—' }}</dd>
+                                                <dt class="col-sm-3">Store</dt><dd class="col-sm-9">{{ $item->openingStore?->name ?? '—' }}</dd>
+                                                <dt class="col-sm-3">Specification</dt><dd class="col-sm-9">{{ $item->specification ?: '—' }}</dd>
+                                                <dt class="col-sm-3">Status</dt>
+                                                <dd class="col-sm-9">
+                                                    <span class="badge p-1 text-white bg-{{ $item->is_active ? 'success' : 'secondary' }}">
+                                                        {{ $item->is_active ? 'Active' : 'Inactive' }}
+                                                    </span>
+                                                </dd>
+                                            </dl>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-light" data-dismiss="modal">Close</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         @empty
-                            <tr><td colspan="11" class="text-center text-muted">No items found.</td></tr>
+                            <tr><td colspan="12" class="text-center text-muted">No items found.</td></tr>
                         @endforelse
                     </tbody>
                 </table>

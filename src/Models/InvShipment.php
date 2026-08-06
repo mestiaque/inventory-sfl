@@ -30,9 +30,23 @@ class InvShipment extends Model
         return $this->belongsTo(InvBuyer::class, 'buyer_id');
     }
 
+    /**
+     * @deprecated legacy direction, kept for records created before the
+     * shipment-first flow. New records use gatePasses() below instead.
+     */
     public function gatePass(): BelongsTo
     {
         return $this->belongsTo(InvGatePass::class, 'gate_pass_id');
+    }
+
+    /**
+     * Gate pass(es) issued against this shipment to let the goods actually
+     * leave the gate — the shipment is the record of what/how much/for
+     * whom, the gate pass is the security exit document.
+     */
+    public function gatePasses(): HasMany
+    {
+        return $this->hasMany(InvGatePass::class, 'shipment_id');
     }
 
     public function store(): BelongsTo

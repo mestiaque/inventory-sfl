@@ -54,7 +54,7 @@
             <div class="table-responsive">
                 <table class="table table-bordered table-striped align-middle">
                     <thead>
-                        <tr><th>#</th><th>PO Number</th><th>Supplier</th><th>Order Date</th><th>Total</th><th>Status</th><th class="text-end">Actions</th></tr>
+                        <tr><th>#</th><th>PO Number</th><th>Supplier</th><th>Order Date</th><th>Expected Date</th><th>Items</th><th>Total</th><th>Status</th><th class="text-end">Actions</th></tr>
                     </thead>
                     <tbody>
                         @forelse($purchaseOrders as $po)
@@ -63,6 +63,8 @@
                                 <td>{{ $po->po_number }}</td>
                                 <td>{{ $po->supplier?->name }}</td>
                                 <td>{{ $po->order_date?->format('d M Y') }}</td>
+                                <td>{{ $po->expected_date?->format('d M Y') ?? '—' }}</td>
+                                <td>{{ $po->items_count }}</td>
                                 <td>{{ number_format($po->total_amount, 2) }}</td>
                                 <td>
                                     <span class="badge p-1 text-white bg-{{ ['draft' => 'secondary', 'approved' => 'info', 'received' => 'primary', 'closed' => 'success', 'cancelled' => 'danger'][$po->status] ?? 'secondary' }}">
@@ -71,35 +73,37 @@
                                 </td>
                                 <td class="text-end">
                                     @can('inv_purchase_order.view')
-                                        <a href="{{ route('inventory.purchase-orders.show', $po) }}" class="btn btn-sm btn-outline-secondary" title="View order lines and every challan received against it">
-                                            <i class="fa-solid fa-file-invoice"></i> Challans ({{ $po->grns_count }})
+                                        <a href="{{ route('inventory.purchase-orders.show', $po) }}" class="btn btn-sm btn-outline-secondary" title="Challans ({{ $po->grns_count }})">
+                                            <i class="fa-solid fa-eye"></i>
                                         </a>
                                     @endcan
                                     @if($po->status === 'draft')
                                         @can('inv_purchase_order.edit')
-                                            <a href="{{ route('inventory.purchase-orders.edit', $po) }}" class="btn btn-sm btn-outline-primary"><i class="fa-solid fa-pen"></i></a>
+                                            <a href="{{ route('inventory.purchase-orders.edit', $po) }}" class="btn btn-sm btn-outline-primary" title="Edit"><i class="fa-solid fa-pen"></i></a>
                                         @endcan
                                         @can('inv_purchase_order.approve')
                                             <form method="POST" action="{{ route('inventory.purchase-orders.approve', $po) }}" class="d-inline">
                                                 @csrf
-                                                <button type="submit" class="btn btn-sm btn-outline-success" onclick="return confirm('Approve this purchase order?')"><i class="fa-solid fa-check"></i></button>
+                                                <button type="submit" class="btn btn-sm btn-outline-success" title="Approve" onclick="return confirm('Approve this purchase order?')"><i class="fa-solid fa-check"></i></button>
                                             </form>
                                         @endcan
                                         @can('inv_purchase_order.delete')
-                                            <button type="button" class="btn btn-sm btn-outline-danger" data-toggle="modal" data-target="#deletePoModal" data-action="{{ route('inventory.purchase-orders.destroy', $po) }}">
+                                            <button type="button" class="btn btn-sm btn-outline-danger" title="Delete" data-toggle="modal" data-target="#deletePoModal" data-action="{{ route('inventory.purchase-orders.destroy', $po) }}">
                                                 <i class="fa-solid fa-trash"></i>
                                             </button>
                                         @endcan
                                     @endif
                                     @can('inv_grn.add')
                                         @if(in_array($po->status, ['approved', 'received']))
-                                            <a href="{{ route('inventory.grns.create', ['purchase_order_id' => $po->id]) }}" class="btn btn-sm btn-outline-secondary">Receive (GRN)</a>
+                                            <a href="{{ route('inventory.grns.create-purchase', ['purchase_order_id' => $po->id]) }}" class="btn btn-sm btn-outline-secondary" title="Receive (GRN)">
+                                                <i class="fa-solid fa-truck-ramp-box"></i>
+                                            </a>
                                         @endif
                                     @endcan
                                 </td>
                             </tr>
                         @empty
-                            <tr><td colspan="7" class="text-center text-muted">No purchase orders found.</td></tr>
+                            <tr><td colspan="9" class="text-center text-muted">No purchase orders found.</td></tr>
                         @endforelse
                     </tbody>
                 </table>

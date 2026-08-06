@@ -14,6 +14,7 @@ class InvGatePassRequest extends FormRequest
     public function rules(): array
     {
         return [
+            'shipment_id'       => ['nullable', 'integer', 'exists:inv_shipments,id'],
             'gate_pass_date'    => ['required', 'date'],
             'buyer_id'          => ['nullable', 'integer', 'exists:inv_buyers,id'],
             'vehicle_no'        => ['nullable', 'string', 'max:50'],

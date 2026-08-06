@@ -24,7 +24,7 @@ class InvProductionConsumptionController extends Controller
         $this->authorize('inv_production.list');
 
         $consumptions = InvProductionConsumption::query()
-            ->with(['department', 'store'])
+            ->with(['department', 'store', 'issue', 'creator', 'items.item.unit'])
             ->when($request->filled('search'), fn ($q) => $q->where('consumption_no', 'like', '%' . $request->search . '%'))
             ->when($request->filled('department_id'), fn ($q) => $q->where('department_id', $request->department_id))
             ->when($request->filled('store_id'), fn ($q) => $q->where('store_id', $request->store_id))

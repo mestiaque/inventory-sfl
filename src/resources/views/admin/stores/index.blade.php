@@ -45,6 +45,7 @@
                             <th>#</th>
                             <th>Name</th>
                             <th>Code</th>
+                            <th>Store For</th>
                             <th>Address</th>
                             <th>Status</th>
                             <th class="text-end">Actions</th>
@@ -56,6 +57,7 @@
                                 <td>{{ $loop->iteration + $stores->firstItem() - 1 }}</td>
                                 <td>{{ $store->name }}</td>
                                 <td>{{ $store->code }}</td>
+                                <td>{{ ['raw_material' => 'For Buyer', 'accessories' => 'For Accessories', 'finished_goods' => 'For Finished Goods'][$store->type] ?? ucfirst($store->type) }}</td>
                                 <td>{{ $store->address }}</td>
                                 <td>
                                     <span class="badge p-1 text-white bg-{{ $store->is_active ? 'success' : 'secondary' }}">
@@ -63,6 +65,10 @@
                                     </span>
                                 </td>
                                 <td class="text-end">
+                                    <button type="button" class="btn btn-sm btn-outline-secondary" data-toggle="modal"
+                                        data-target="#viewStoreModal{{ $store->id }}">
+                                        <i class="fa-solid fa-eye"></i>
+                                    </button>
                                     @can('inv_store.edit')
                                         <button type="button" class="btn btn-sm btn-outline-primary" data-toggle="modal"
                                             data-target="#editStoreModal{{ $store->id }}">
@@ -77,6 +83,34 @@
                                     @endcan
                                 </td>
                             </tr>
+
+                            <div class="modal fade" id="viewStoreModal{{ $store->id }}" tabindex="-1" aria-hidden="true">
+                                <div class="modal-dialog">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <h5 class="modal-title">Store Details</h5>
+                                            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                                        </div>
+                                        <div class="modal-body">
+                                            <dl class="row mb-0">
+                                                <dt class="col-sm-4">Name</dt><dd class="col-sm-8">{{ $store->name }}</dd>
+                                                <dt class="col-sm-4">Code</dt><dd class="col-sm-8">{{ $store->code }}</dd>
+                                                <dt class="col-sm-4">Store For</dt><dd class="col-sm-8">{{ ['raw_material' => 'For Buyer', 'accessories' => 'For Accessories', 'finished_goods' => 'For Finished Goods'][$store->type] ?? ucfirst($store->type) }}</dd>
+                                                <dt class="col-sm-4">Address</dt><dd class="col-sm-8">{{ $store->address ?: '—' }}</dd>
+                                                <dt class="col-sm-4">Status</dt>
+                                                <dd class="col-sm-8">
+                                                    <span class="badge p-1 text-white bg-{{ $store->is_active ? 'success' : 'secondary' }}">
+                                                        {{ $store->is_active ? 'Active' : 'Inactive' }}
+                                                    </span>
+                                                </dd>
+                                            </dl>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-light" data-dismiss="modal">Close</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
 
                             @can('inv_store.edit')
                                 <div class="modal fade" id="editStoreModal{{ $store->id }}" tabindex="-1" aria-hidden="true">
@@ -102,7 +136,7 @@
                             @endcan
                         @empty
                             <tr>
-                                <td colspan="6" class="text-center text-muted">No stores found.</td>
+                                <td colspan="7" class="text-center text-muted">No stores found.</td>
                             </tr>
                         @endforelse
                     </tbody>
@@ -125,7 +159,7 @@
                         <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
                     </div>
                     <div class="modal-body">
-                        @include('sfl-inventory::admin.stores.partials.fields')
+                        @include('sfl-inventory::admin.stores.partials.fields', ['store' => null])
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-light" data-dismiss="modal">Cancel</button>

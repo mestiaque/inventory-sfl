@@ -40,8 +40,8 @@
 
 <div class="req-checkbox-row">
     Department:
-    @foreach(['Sample' => 'SM', 'Cutting' => 'CT', 'Sewing' => 'SW', 'Finishing' => 'FN', 'Embroidery' => 'JQ', 'Quality' => 'QC', 'Admin' => 'OF', 'Maintenance' => 'GS'] as $label => $code)
-        {{ $label }}<span class="box">{{ $requisition->department?->code === $code ? '✓' : '' }}</span>
+    @foreach($departments as $dept)
+        {{ $dept->name }}<span class="box">{{ $requisition->department_id === $dept->id ? '✓' : '' }}</span>
     @endforeach
 </div>
 
@@ -75,8 +75,8 @@
                 <td>{{ $requisition->style ?? $requisition->order_ref }}</td>
                 <td>{{ $line->item?->color?->name }}</td>
                 <td>{{ $line->item?->size?->name }}</td>
-                <td>{{ rtrim(rtrim($line->requested_qty, '0'), '.') }}</td>
-                <td>{{ rtrim(rtrim($line->issued_qty, '0'), '.') }}</td>
+                <td>{{ inv_qty($line->requested_qty) }}</td>
+                <td>{{ inv_qty($line->issued_qty) }}</td>
                 <td>{{ $line->remarks }}</td>
             </tr>
         @endforeach

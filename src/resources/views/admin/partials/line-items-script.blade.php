@@ -26,10 +26,77 @@
             }
         }
 
+        function syncRowUnit(row) {
+            const itemSelect = row.querySelector('select[name$="[item_id]"]');
+            const unitField = row.querySelector('[data-role="unit"]');
+            if (!itemSelect || !unitField) {
+                return;
+            }
+            const option = itemSelect.options[itemSelect.selectedIndex];
+            unitField.value = option?.getAttribute('data-unit') || '';
+        }
+
+        // The document-level store field may be a live select, or locked to
+        // a single store (disabled select + hidden input carrying the real
+        // value, e.g. the one Finished Goods store) — read whichever
+        // actually has the value.
+        function currentDocStoreId() {
+            const hidden = document.querySelector('input[type="hidden"][name="store_id"], input[type="hidden"][name="from_store_id"]');
+            if (hidden) {
+                return hidden.value;
+            }
+            const select = document.querySelector('select[name="store_id"], select[name="from_store_id"]');
+            return select ? select.value : null;
+        }
+
+        // Items are fixed to exactly one store — once a document-level
+        // store field exists on the page, item options carrying
+        // data-store="{id}" are filtered down to that store so only items
+        // that actually live there can be picked.
+        function filterRowItemsByStore(row) {
+            const storeId = currentDocStoreId();
+            if (storeId === null) {
+                return;
+            }
+            const itemSelect = row.querySelector('select[name$="[item_id]"]');
+            if (!itemSelect) {
+                return;
+            }
+            let selectedStillValid = false;
+            Array.from(itemSelect.options).forEach(function (opt) {
+                if (!opt.value) {
+                    return;
+                }
+                const optStore = opt.getAttribute('data-store');
+                const visible = !storeId || !optStore || optStore === storeId;
+                opt.hidden = !visible;
+                opt.disabled = !visible;
+                if (opt.value === itemSelect.value && visible) {
+                    selectedStillValid = true;
+                }
+            });
+            if (!selectedStillValid && itemSelect.value) {
+                itemSelect.value = '';
+            }
+            if ($(itemSelect).hasClass('select2-hidden-accessible')) {
+                $(itemSelect).select2('destroy');
+            }
+            invSelect2Init(row);
+        }
+
+        function filterAllRowsByStore() {
+            document.querySelectorAll('tbody[id$="RowsBody"] tr').forEach(filterRowItemsByStore);
+        }
+
         function bindRow(row) {
             row.querySelectorAll('[data-role="qty"], [data-role="rate"]').forEach(function (input) {
                 input.addEventListener('input', function () { computeRowAmount(row); });
             });
+            const itemSelect = row.querySelector('select[name$="[item_id]"]');
+            if (itemSelect) {
+                itemSelect.addEventListener('change', function () { syncRowUnit(row); });
+                $(itemSelect).on('change', function () { syncRowUnit(row); });
+            }
             const removeBtn = row.querySelector('[data-line-items-remove]');
             removeBtn?.addEventListener('click', function () {
                 if (document.querySelectorAll('#' + row.closest('tbody').id + ' tr').length > 1) {
@@ -37,6 +104,14 @@
                 }
             });
             invSelect2Init(row);
+            syncRowUnit(row);
+            filterRowItemsByStore(row);
+        }
+
+        const storeSelect = document.querySelector('select[name="store_id"], select[name="from_store_id"]');
+        if (storeSelect) {
+            storeSelect.addEventListener('change', filterAllRowsByStore);
+            $(storeSelect).on('change', filterAllRowsByStore);
         }
 
         document.querySelectorAll('[data-line-items-add]').forEach(function (btn) {

@@ -10,7 +10,7 @@
         <input type="text" name="item_name" class="form-control" value="{{ old('item_name', $item->item_name ?? '') }}" required>
     </div>
 
-    <div class="col-md-4 mb-3">
+    <div class="col-md-3 mb-3">
         <label class="form-label">Category <span class="text-danger">*</span></label>
         <select name="category_id" class="form-control inv-select2" required>
             <option value="">— Select —</option>
@@ -19,25 +19,7 @@
             @endforeach
         </select>
     </div>
-    <div class="col-md-4 mb-3">
-        <label class="form-label">Sub Category</label>
-        <select name="sub_category_id" class="form-control inv-select2">
-            <option value="">— None —</option>
-            @foreach($categories as $category)
-                <option value="{{ $category->id }}" @selected(old('sub_category_id', $item->sub_category_id ?? '') == $category->id)>{{ $category->name }}</option>
-            @endforeach
-        </select>
-    </div>
-    <div class="col-md-4 mb-3">
-        <label class="form-label">Item Type <span class="text-danger">*</span></label>
-        <select name="item_type" class="form-control inv-select2" required>
-            @foreach(['raw_material' => 'Raw Material', 'wip' => 'Work In Progress', 'finished_good' => 'Finished Good'] as $value => $label)
-                <option value="{{ $value }}" @selected(old('item_type', $item->item_type ?? 'raw_material') === $value)>{{ $label }}</option>
-            @endforeach
-        </select>
-    </div>
-
-    <div class="col-md-4 mb-3">
+    <div class="col-md-3 mb-3">
         <label class="form-label">Department / Section</label>
         <select name="department_id" class="form-control inv-select2">
             <option value="">— None —</option>
@@ -45,9 +27,9 @@
                 <option value="{{ $department->id }}" @selected(old('department_id', $item->department_id ?? '') == $department->id)>{{ $department->name }}</option>
             @endforeach
         </select>
-        <div class="form-text">Which floor section normally uses/owns this item.</div>
+        <div class="form-text">Floor section that uses this item.</div>
     </div>
-    <div class="col-md-4 mb-3">
+    <div class="col-md-3 mb-3">
         <label class="form-label">Supplier</label>
         <select name="supplier_id" class="form-control inv-select2">
             <option value="">— None —</option>
@@ -56,7 +38,7 @@
             @endforeach
         </select>
     </div>
-    <div class="col-md-4 mb-3">
+    <div class="col-md-3 mb-3">
         <label class="form-label">Buyer</label>
         <select name="buyer_id" class="form-control inv-select2">
             <option value="">— None —</option>
@@ -64,7 +46,7 @@
                 <option value="{{ $buyer->id }}" @selected(old('buyer_id', $item->buyer_id ?? '') == $buyer->id)>{{ $buyer->name }}</option>
             @endforeach
         </select>
-        <div class="form-text">Only for buyer-specific items (e.g. a style-specific trim).</div>
+        <div class="form-text">Only for buyer-specific items.</div>
     </div>
 
     <div class="col-md-3 mb-3">
@@ -104,15 +86,6 @@
         </select>
     </div>
 
-    <div class="col-md-6 mb-3">
-        <label class="form-label">Minimum Stock</label>
-        <input type="number" step="0.0001" name="minimum_stock" class="form-control" value="{{ old('minimum_stock', $item->minimum_stock ?? 0) }}">
-    </div>
-    <div class="col-md-6 mb-3">
-        <label class="form-label">Maximum Stock</label>
-        <input type="number" step="0.0001" name="maximum_stock" class="form-control" value="{{ old('maximum_stock', $item->maximum_stock ?? 0) }}">
-    </div>
-
     @unless(isset($item))
         <div class="col-md-4 mb-3">
             <label class="form-label">Opening Stock</label>
@@ -133,17 +106,26 @@
         </div>
     @endunless
 
-    <div class="col-md-6 mb-3">
-        <label class="form-label">Barcode</label>
-        <input type="text" name="barcode" class="form-control" value="{{ old('barcode', $item->barcode ?? '') }}">
-    </div>
-    <div class="col-md-6 mb-3">
+    @if(isset($item) && !$item->opening_store_id)
+        <div class="col-md-4 mb-3">
+            <label class="form-label">Store</label>
+            <select name="opening_store_id" class="form-control inv-select2">
+                <option value="">— None —</option>
+                @foreach($stores as $store)
+                    <option value="{{ $store->id }}" @selected(old('opening_store_id') == $store->id)>{{ $store->name }}</option>
+                @endforeach
+            </select>
+            <div class="form-text">This item has no store assigned yet. Set it here.</div>
+        </div>
+    @endif
+
+    <div class="col-12 mb-3">
         <label class="form-label">Specification</label>
         <textarea name="specification" class="form-control" rows="1">{{ old('specification', $item->specification ?? '') }}</textarea>
     </div>
 
     <div class="col-12">
-        <div class="form-check form-switch">
+        <div class="form-check form-switch mb-4">
             <input type="hidden" name="is_active" value="0">
             <input type="checkbox" name="is_active" value="1" class="form-check-input" id="itemActive"
                 @checked(old('is_active', $item->is_active ?? true))>

@@ -72,19 +72,21 @@
 </div>
 <div class="table-responsive">
     <table class="table table-bordered table-sm align-middle">
-        <thead><tr><th style="min-width:220px">Item</th><th style="width:160px">Requested Qty</th><th style="width:40px"></th></tr></thead>
+        <thead><tr><th style="min-width:220px">Item</th><th style="width:90px">Unit</th><th style="width:160px">Requested Qty</th><th style="width:40px"></th></tr></thead>
         <tbody id="reqRowsBody">
             @php $lines = old('items', isset($requisition) ? $requisition->items->map(fn ($i) => $i->toArray())->all() : [[]]); @endphp
             @foreach($lines as $index => $line)
+                @php $selectedItem = $items->firstWhere('id', (int) ($line['item_id'] ?? null)); @endphp
                 <tr>
                     <td>
                         <select name="items[{{ $index }}][item_id]" class="form-control inv-select2" required>
                             <option value="">— Select —</option>
                             @foreach($items as $item)
-                                <option value="{{ $item->id }}" @selected(($line['item_id'] ?? null) == $item->id)>{{ $item->item_code }} — {{ $item->item_name }}</option>
+                                <option value="{{ $item->id }}" data-unit="{{ $item->unit?->short_name }}" data-store="{{ $item->opening_store_id }}" @selected(($line['item_id'] ?? null) == $item->id)>{{ $item->item_code }} — {{ $item->item_name }}</option>
                             @endforeach
                         </select>
                     </td>
+                    <td><input type="text" class="form-control" data-role="unit" value="{{ $selectedItem?->unit?->short_name }}" disabled></td>
                     <td><input type="number" step="0.0001" min="0.0001" name="items[{{ $index }}][requested_qty]" class="form-control" value="{{ $line['requested_qty'] ?? '' }}" required></td>
                     <td><button type="button" class="btn btn-sm btn-outline-danger" data-line-items-remove><i class="fa-solid fa-xmark"></i></button></td>
                 </tr>
@@ -99,10 +101,11 @@
             <select name="items[__INDEX__][item_id]" class="form-control inv-select2" required>
                 <option value="">— Select —</option>
                 @foreach($items as $item)
-                    <option value="{{ $item->id }}">{{ $item->item_code }} — {{ $item->item_name }}</option>
+                    <option value="{{ $item->id }}" data-unit="{{ $item->unit?->short_name }}" data-store="{{ $item->opening_store_id }}">{{ $item->item_code }} — {{ $item->item_name }}</option>
                 @endforeach
             </select>
         </td>
+        <td><input type="text" class="form-control" data-role="unit" disabled></td>
         <td><input type="number" step="0.0001" min="0.0001" name="items[__INDEX__][requested_qty]" class="form-control" required></td>
         <td><button type="button" class="btn btn-sm btn-outline-danger" data-line-items-remove><i class="fa-solid fa-xmark"></i></button></td>
     </tr>

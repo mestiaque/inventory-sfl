@@ -82,6 +82,9 @@
                                     </span>
                                 </td>
                                 <td class="text-end">
+                                    <button type="button" class="btn btn-sm btn-outline-secondary" data-toggle="modal" data-target="#viewOperatorModal{{ $operator->id }}">
+                                        <i class="fa-solid fa-eye"></i>
+                                    </button>
                                     @can('inv_operator.edit')
                                         <button type="button" class="btn btn-sm btn-outline-primary" data-toggle="modal" data-target="#editOperatorModal{{ $operator->id }}">
                                             <i class="fa-solid fa-pen"></i>
@@ -94,6 +97,40 @@
                                     @endcan
                                 </td>
                             </tr>
+
+                            <div class="modal fade" id="viewOperatorModal{{ $operator->id }}" tabindex="-1" aria-hidden="true">
+                                <div class="modal-dialog">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <h5 class="modal-title">Operator Details</h5>
+                                            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                                        </div>
+                                        <div class="modal-body">
+                                            <dl class="row mb-0">
+                                                <dt class="col-sm-4">Name</dt><dd class="col-sm-8">{{ $operator->name }}</dd>
+                                                <dt class="col-sm-4">Code</dt><dd class="col-sm-8">{{ $operator->code ?: '—' }}</dd>
+                                                <dt class="col-sm-4">System Login</dt><dd class="col-sm-8">{{ $operator->user?->name ?? '—' }}</dd>
+                                                <dt class="col-sm-4">Designation</dt>
+                                                <dd class="col-sm-8">
+                                                    <span class="badge p-1 text-white bg-{{ $operator->designation === 'operator' ? 'secondary' : 'info' }}">
+                                                        {{ ucwords(str_replace('_', ' ', $operator->designation)) }}
+                                                    </span>
+                                                </dd>
+                                                <dt class="col-sm-4">Assigned Store</dt><dd class="col-sm-8">{{ $operator->store?->name ?? '—' }}</dd>
+                                                <dt class="col-sm-4">Status</dt>
+                                                <dd class="col-sm-8">
+                                                    <span class="badge p-1 text-white bg-{{ $operator->is_active ? 'success' : 'secondary' }}">
+                                                        {{ $operator->is_active ? 'Active' : 'Inactive' }}
+                                                    </span>
+                                                </dd>
+                                            </dl>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-light" data-dismiss="modal">Close</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
 
                             @can('inv_operator.edit')
                                 <div class="modal fade" id="editOperatorModal{{ $operator->id }}" tabindex="-1" aria-hidden="true">
@@ -142,7 +179,7 @@
                         <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
                     </div>
                     <div class="modal-body">
-                        @include('sfl-inventory::admin.operators.partials.fields')
+                        @include('sfl-inventory::admin.operators.partials.fields', ['operator' => null])
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-light" data-dismiss="modal">Cancel</button>

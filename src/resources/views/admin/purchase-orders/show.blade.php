@@ -14,10 +14,14 @@
             <h5 class="mb-0">Purchase Order {{ $purchaseOrder->po_number }}</h5>
             <div>
                 @can('inv_grn.add')
-                    @if($purchaseOrder->status !== 'closed')
-                        <a href="{{ route('inventory.grns.create', ['purchase_order_id' => $purchaseOrder->id]) }}" class="btn btn-success btn-sm">
+                    @if(in_array($purchaseOrder->status, ['approved', 'received']))
+                        <a href="{{ route('inventory.grns.create-purchase', ['purchase_order_id' => $purchaseOrder->id]) }}" class="btn btn-success btn-sm">
                             <i class="fa-solid fa-truck-ramp-box"></i> Receive (New Challan / GRN)
                         </a>
+                    @elseif($purchaseOrder->status === 'draft')
+                        <span class="badge p-2 text-white bg-secondary" title="Approve this purchase order first before a challan can be received against it.">
+                            <i class="fa-solid fa-lock"></i> Approve first to receive
+                        </span>
                     @endif
                 @endcan
                 <a href="{{ route('inventory.purchase-orders.index') }}" class="btn btn-light btn-sm"><i class="fa-solid fa-arrow-left"></i> Back</a>
@@ -25,15 +29,26 @@
         </div>
         <div class="card-body">
             <div class="row mb-3">
-                <div class="col-md-3"><strong>Supplier:</strong> {{ $purchaseOrder->supplier?->name }}</div>
-                <div class="col-md-3"><strong>Order Date:</strong> {{ $purchaseOrder->order_date?->format('d M Y') }}</div>
-                <div class="col-md-3"><strong>Expected Date:</strong> {{ $purchaseOrder->expected_date?->format('d M Y') ?? '—' }}</div>
-                <div class="col-md-3">
+                <div class="col-md-3 mb-2"><strong>Supplier:</strong> {{ $purchaseOrder->supplier?->name }}</div>
+                <div class="col-md-3 mb-2"><strong>Order Date:</strong> {{ $purchaseOrder->order_date?->format('d M Y') }}</div>
+                <div class="col-md-3 mb-2"><strong>Expected Date:</strong> {{ $purchaseOrder->expected_date?->format('d M Y') ?? '—' }}</div>
+                <div class="col-md-3 mb-2">
                     <strong>Status:</strong>
                     <span class="badge p-1 text-white bg-{{ ['draft' => 'secondary', 'approved' => 'info', 'received' => 'warning', 'closed' => 'success'][$purchaseOrder->status] ?? 'secondary' }}">
                         {{ ucfirst($purchaseOrder->status) }}
                     </span>
                 </div>
+                <div class="col-md-3 mb-2"><strong>Items:</strong> {{ $purchaseOrder->items->count() }}</div>
+                <div class="col-md-3 mb-2"><strong>Created By:</strong> {{ $purchaseOrder->creator?->name ?? '—' }}</div>
+                <div class="col-md-3 mb-2">
+                    <strong>Approved By:</strong>
+                    {{ $purchaseOrder->approver?->name ?? '—' }}
+                    @if($purchaseOrder->approved_at)
+                        <span class="text-muted">({{ $purchaseOrder->approved_at->format('d M Y h:i A') }})</span>
+                    @endif
+                </div>
+                <div class="col-md-3 mb-2"><strong>Total Amount:</strong> {{ number_format($purchaseOrder->total_amount, 2) }}</div>
+                <div class="col-12"><strong>Remarks:</strong> {{ $purchaseOrder->remarks ?: '—' }}</div>
             </div>
 
             <h6>Order Lines — Ordered vs. Received (across all challans)</h6>
@@ -48,10 +63,10 @@
                             <tr>
                                 <td>{{ $line->item?->item_code }} — {{ $line->item?->item_name }}</td>
                                 <td>{{ $line->item?->unit?->short_name }}</td>
-                                <td class="text-end">{{ rtrim(rtrim($line->quantity, '0'), '.') }}</td>
-                                <td class="text-end">{{ rtrim(rtrim($line->received_qty, '0'), '.') }}</td>
+                                <td class="text-end">{{ inv_qty($line->quantity) }}</td>
+                                <td class="text-end">{{ inv_qty($line->received_qty) }}</td>
                                 <td class="text-end">
-                                    <span class="badge p-1 text-white bg-{{ $remaining <= 0 ? 'success' : 'warning' }}">{{ rtrim(rtrim($remaining, '0'), '.') }}</span>
+                                    <span class="badge p-1 text-white bg-{{ $remaining <= 0 ? 'success' : 'warning' }}">{{ inv_qty($remaining) }}</span>
                                 </td>
                                 <td class="text-end">{{ number_format($line->rate, 2) }}</td>
                                 <td class="text-end">{{ number_format($line->amount, 2) }}</td>
@@ -93,8 +108,8 @@
                                             <tr>
                                                 <td>{{ $gi->item?->item_code }}</td>
                                                 <td>{{ $gi->item?->item_name }}</td>
-                                                <td class="text-end">{{ rtrim(rtrim($gi->received_qty, '0'), '.') }}</td>
-                                                <td class="text-end">{{ rtrim(rtrim($gi->rejected_qty, '0'), '.') }}</td>
+                                                <td class="text-end">{{ inv_qty($gi->received_qty) }}</td>
+                                                <td class="text-end">{{ inv_qty($gi->rejected_qty) }}</td>
                                                 <td class="text-end">{{ number_format($gi->rate, 2) }}</td>
                                                 <td class="text-end">{{ number_format($gi->amount, 2) }}</td>
                                                 <td>{{ collect([$gi->lot_no, $gi->batch_no])->filter()->implode(' / ') ?: '—' }}</td>

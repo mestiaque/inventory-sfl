@@ -37,12 +37,15 @@
                     </div>
                     <div class="col-md-3 mb-3">
                         <label class="form-label">Finished Goods Store <span class="text-danger">*</span></label>
-                        <select name="store_id" class="form-control inv-select2" required>
+                        <select name="{{ $fgStore ? '' : 'store_id' }}" class="form-control inv-select2" required @disabled($fgStore)>
                             <option value="">— Select —</option>
                             @foreach($stores as $store)
-                                <option value="{{ $store->id }}" @selected(old('store_id') == $store->id)>{{ $store->name }}</option>
+                                <option value="{{ $store->id }}" @selected(old('store_id', $fgStore?->id) == $store->id)>{{ $store->name }}</option>
                             @endforeach
                         </select>
+                        @if($fgStore)
+                            <input type="hidden" name="store_id" value="{{ $fgStore->id }}">
+                        @endif
                     </div>
                     <div class="col-md-4 mb-3">
                         <label class="form-label">Receive Date <span class="text-danger">*</span></label>

@@ -12,9 +12,6 @@
     <div class="card">
         <div class="card-header d-flex justify-content-between align-items-center">
             <h5 class="mb-0">Store Issues</h5>
-            @can('inv_issue.add')
-                <a href="{{ route('inventory.issues.create') }}" class="btn btn-primary btn-sm"><i class="fa-solid fa-plus"></i> Direct Issue</a>
-            @endcan
         </div>
         <div class="card-body">
             <form method="GET" class="row g-2 mb-3">

@@ -57,13 +57,13 @@
                                 <td>{{ $row->store_name }}</td>
                                 <td>{{ \Carbon\Carbon::parse($row->transaction_date)->format('d-m-y') }}</td>
                                 <td>{{ $row->challan_invoice_no }}</td>
-                                <td class="text-end text-success">{{ $row->transaction_type === 'grn' && $row->qty_in > 0 ? rtrim(rtrim($row->qty_in, '0'), '.') : '' }}</td>
+                                <td class="text-end text-success">{{ $row->transaction_type === 'grn' && $row->qty_in > 0 ? inv_qty($row->qty_in) : '' }}</td>
                                 @foreach($departments as $department)
                                     <td class="text-end text-danger">
-                                        {{ $row->transaction_type === 'issue' && $row->department_name === $department->name ? rtrim(rtrim($row->qty_out, '0'), '.') : '' }}
+                                        {{ $row->transaction_type === 'issue' && $row->department_name === $department->name ? inv_qty($row->qty_out) : '' }}
                                     </td>
                                 @endforeach
-                                <td class="text-end fw-bold">{{ rtrim(rtrim($row->running_balance, '0'), '.') }}</td>
+                                <td class="text-end fw-bold">{{ inv_qty($row->running_balance) }}</td>
                                 <td>{{ $row->unit }}</td>
                                 <td class="text-end">{{ number_format($row->rate, 2) }}</td>
                                 <td class="text-end">{{ number_format($row->value, 2) }}</td>

@@ -79,22 +79,22 @@ class InvStockOverviewController extends Controller
         $stores = InvStore::active()->orderBy('name')->get();
         $store = $request->filled('store_id')
             ? $stores->firstWhere('id', $request->integer('store_id'))
-            : $stores->first();
+            : null;
 
         $categories = InvItemCategory::active()->orderBy('name')->get();
 
         $itemsQuery = InvItem::query()
-            ->with('category')
+            ->with('category', 'openingStore')
             ->when($request->filled('search'), fn ($q) => $q->where(fn ($q2) => $q2
                 ->where('item_code', 'like', '%' . $request->search . '%')
                 ->orWhere('item_name', 'like', '%' . $request->search . '%')))
-            ->when($request->filled('category_id'), fn ($q) => $q->where('category_id', $request->category_id));
+            ->when($request->filled('category_id'), fn ($q) => $q->where('category_id', $request->category_id))
+            ->when($store, fn ($q) => $q->where('opening_store_id', $store->id));
 
-        $balances = $store
-            ? DB::table('inv_stock_transactions')->where('store_id', $store->id)
-                ->select('item_id', DB::raw('SUM(qty_in) - SUM(qty_out) as bal'))
-                ->groupBy('item_id')->pluck('bal', 'item_id')
-            : collect();
+        $balances = DB::table('inv_stock_transactions')
+            ->when($store, fn ($q) => $q->where('store_id', $store->id))
+            ->select('item_id', DB::raw('SUM(qty_in) - SUM(qty_out) as bal'))
+            ->groupBy('item_id')->pluck('bal', 'item_id');
 
         $allFilteredItems = $itemsQuery->orderBy('item_name')->get();
 

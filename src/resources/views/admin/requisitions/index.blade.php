@@ -82,6 +82,9 @@
                                     </span>
                                 </td>
                                 <td class="text-end">
+                                    <button type="button" class="btn btn-sm btn-outline-secondary" data-toggle="modal" data-target="#viewReqModal{{ $requisition->id }}">
+                                        <i class="fa-solid fa-eye"></i>
+                                    </button>
                                     @if($requisition->status === 'pending')
                                         @can('inv_requisition.edit')
                                             <a href="{{ route('inventory.requisitions.edit', $requisition) }}" class="btn btn-sm btn-outline-primary"><i class="fa-solid fa-pen"></i></a>
@@ -116,6 +119,76 @@
         </div>
     </div>
 </div>
+
+{{-- View modals live outside the table — a <div> can't legally be a direct child of <tbody>, and browsers "fix" that by relocating it, which corrupts the table nested inside the modal and makes it render as plain page content instead of a floating overlay. --}}
+@foreach($requisitions as $requisition)
+    <div class="modal fade" id="viewReqModal{{ $requisition->id }}" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Requisition Details — {{ $requisition->requisition_no }}</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                </div>
+                <div class="modal-body">
+                    <dl class="row mb-3">
+                        <dt class="col-sm-3">Department</dt><dd class="col-sm-9">{{ $requisition->department?->name ?? '—' }}</dd>
+                        <dt class="col-sm-3">Issue From Store</dt><dd class="col-sm-9">{{ $requisition->store?->name ?? '—' }}</dd>
+                        <dt class="col-sm-3">Requisition Date</dt><dd class="col-sm-9">{{ $requisition->requisition_date?->format('d M Y') }}</dd>
+                        <dt class="col-sm-3">Requisition For</dt><dd class="col-sm-9">{{ $requisition->requisition_for ? ucwords(str_replace('_', ' ', $requisition->requisition_for)) : '—' }}</dd>
+                        <dt class="col-sm-3">Buyer</dt><dd class="col-sm-9">{{ $requisition->buyer?->name ?? '—' }}</dd>
+                        <dt class="col-sm-3">Style / Order Ref</dt><dd class="col-sm-9">{{ collect([$requisition->style, $requisition->order_ref])->filter()->implode(' / ') ?: '—' }}</dd>
+                        <dt class="col-sm-3">Requested By</dt><dd class="col-sm-9">{{ $requisition->requester?->name ?? '—' }}</dd>
+                        <dt class="col-sm-3">Status</dt>
+                        <dd class="col-sm-9">
+                            <span class="badge p-1 text-white bg-{{ ['pending' => 'secondary', 'approved' => 'info', 'rejected' => 'danger', 'issued' => 'success', 'partially_issued' => 'warning'][$requisition->status] ?? 'secondary' }}">
+                                {{ ucwords(str_replace('_', ' ', $requisition->status)) }}
+                            </span>
+                        </dd>
+                        @if($requisition->approver)
+                            <dt class="col-sm-3">{{ $requisition->status === 'rejected' ? 'Rejected By' : 'Approved By' }}</dt>
+                            <dd class="col-sm-9">{{ $requisition->approver->name }} @if($requisition->approved_at)<span class="text-muted">({{ $requisition->approved_at->format('d M Y h:i A') }})</span>@endif</dd>
+                        @endif
+                        @if($requisition->approval_remarks)
+                            <dt class="col-sm-3">Approval Remarks</dt><dd class="col-sm-9">{{ $requisition->approval_remarks }}</dd>
+                        @endif
+                        <dt class="col-sm-3">Remarks</dt><dd class="col-sm-9">{{ $requisition->remarks ?: '—' }}</dd>
+                    </dl>
+
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-sm align-middle mb-0">
+                            <thead>
+                                <tr>
+                                    <th>#</th><th>Item</th><th>Unit</th>
+                                    <th class="text-end">Requested</th>
+                                    <th class="text-end">Approved</th>
+                                    <th class="text-end">Issued</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach($requisition->items as $line)
+                                    <tr>
+                                        <td>{{ $loop->iteration }}</td>
+                                        <td>{{ $line->item?->item_code }} — {{ $line->item?->item_name }}</td>
+                                        <td>{{ $line->item?->unit?->short_name ?? '—' }}</td>
+                                        <td class="text-end">{{ inv_qty($line->requested_qty) }}</td>
+                                        <td class="text-end">{{ $line->approved_qty !== null ? inv_qty($line->approved_qty) : '—' }}</td>
+                                        <td class="text-end">{{ inv_qty($line->issued_qty) }}</td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    @can('inv_requisition.print')
+                        <a href="{{ route('inventory.requisitions.print', $requisition) }}" target="_blank" class="btn btn-outline-secondary"><i class="fa-solid fa-print"></i> Print</a>
+                    @endcan
+                    <button type="button" class="btn btn-light" data-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+@endforeach
 
 @include('sfl-inventory::admin.partials.delete-confirm-modal', ['modalId' => 'deleteReqModal', 'label' => 'requisition'])
 @include('sfl-inventory::admin.partials.select2-init')

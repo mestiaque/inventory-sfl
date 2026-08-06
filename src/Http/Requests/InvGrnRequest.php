@@ -3,6 +3,7 @@
 namespace ME\SflInventory\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class InvGrnRequest extends FormRequest
 {
@@ -14,7 +15,11 @@ class InvGrnRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'purchase_order_id'             => ['nullable', 'integer', 'exists:inv_purchase_orders,id'],
+            'purchase_order_id'             => [
+                'nullable',
+                'integer',
+                Rule::exists('inv_purchase_orders', 'id')->where(fn ($q) => $q->whereIn('status', ['approved', 'received'])),
+            ],
             'source_type'                   => ['required', 'in:purchase,buyer_supplied'],
             'store_id'                      => ['required', 'integer', 'exists:inv_stores,id'],
             'supplier_id'                   => ['required_if:source_type,purchase', 'nullable', 'integer', 'exists:inv_suppliers,id'],
@@ -34,6 +39,13 @@ class InvGrnRequest extends FormRequest
             'items.*.rate'                  => ['required', 'numeric', 'min:0'],
             'items.*.lot_no'                => ['nullable', 'string', 'max:100'],
             'items.*.batch_no'              => ['nullable', 'string', 'max:100'],
+        ];
+    }
+
+    public function messages(): array
+    {
+        return [
+            'purchase_order_id.exists' => 'This purchase order has not been approved yet, so a challan cannot be received against it.',
         ];
     }
 }

@@ -51,15 +51,22 @@ class InvIssueController extends Controller
         return view('sfl-inventory::admin.issues.index', compact('issues', 'departments', 'buyers', 'stores'));
     }
 
-    public function create(Request $request): View
+    /**
+     * Direct Issue (no requisition) is switched off for now — every issue
+     * must be raised against an approved requisition, so this always
+     * requires a valid ?requisition_id=.
+     */
+    public function create(Request $request): View|RedirectResponse
     {
         $this->authorize('inv_issue.add');
 
-        $requisition = null;
-        if ($request->filled('requisition_id')) {
-            $requisition = InvRequisition::with(['items.item', 'buyer'])
-                ->whereIn('status', ['approved', 'partially_issued'])
-                ->find($request->requisition_id);
+        $requisition = InvRequisition::with(['items.item', 'buyer'])
+            ->whereIn('status', ['approved', 'partially_issued'])
+            ->find($request->requisition_id);
+
+        if (! $requisition) {
+            return redirect()->route('inventory.requisitions.index')
+                ->with('error', 'Direct issue is disabled — select an approved requisition and click "Issue" against it.');
         }
 
         return view('sfl-inventory::admin.issues.create', ['requisition' => $requisition] + $this->formOptions());

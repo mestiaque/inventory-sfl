@@ -9,6 +9,7 @@ use Illuminate\View\View;
 use ME\SflInventory\Http\Requests\InvPurchaseOrderRequest;
 use ME\SflInventory\Models\InvItem;
 use ME\SflInventory\Models\InvPurchaseOrder;
+use ME\SflInventory\Models\InvStore;
 use ME\SflInventory\Models\InvSupplier;
 use ME\SflInventory\Services\InvOperatorScopeService;
 
@@ -27,7 +28,7 @@ class InvPurchaseOrderController extends Controller
         // (any designation) is restricted to POs they personally created here.
         $purchaseOrders = InvPurchaseOrder::query()
             ->with('supplier')
-            ->withCount('grns')
+            ->withCount(['grns', 'items'])
             ->when($request->filled('search'), fn ($q) => $q->where('po_number', 'like', '%' . $request->search . '%'))
             ->when($request->filled('supplier_id'), fn ($q) => $q->where('supplier_id', $request->supplier_id))
             ->when($request->filled('status'), fn ($q) => $q->where('status', $request->status))
@@ -171,9 +172,15 @@ class InvPurchaseOrderController extends Controller
 
     private function formOptions(): array
     {
+        // Purchase Orders always target the Accessories store — items are
+        // fixed to one store, so only that store's items are orderable here.
+        $accessoriesStoreId = InvStore::active()->where('type', 'accessories')->value('id');
+
         return [
             'suppliers' => InvSupplier::active()->orderBy('name')->get(),
-            'items'     => InvItem::active()->orderBy('item_name')->get(),
+            'items'     => InvItem::active()->with('unit')
+                ->when($accessoriesStoreId, fn ($q) => $q->where('opening_store_id', $accessoriesStoreId))
+                ->orderBy('item_name')->get(),
         ];
     }
 }

@@ -68,7 +68,7 @@
                                     <select name="items[0][item_id]" class="form-control inv-select2" required>
                                         <option value="">— Select —</option>
                                         @foreach($items as $item)
-                                            <option value="{{ $item->id }}">{{ $item->item_code }} — {{ $item->item_name }}</option>
+                                            <option value="{{ $item->id }}" data-store="{{ $item->opening_store_id }}">{{ $item->item_code }} — {{ $item->item_name }}</option>
                                         @endforeach
                                     </select>
                                 </td>
@@ -86,7 +86,7 @@
                             <select name="items[__INDEX__][item_id]" class="form-control inv-select2" required>
                                 <option value="">— Select —</option>
                                 @foreach($items as $item)
-                                    <option value="{{ $item->id }}">{{ $item->item_code }} — {{ $item->item_name }}</option>
+                                    <option value="{{ $item->id }}" data-store="{{ $item->opening_store_id }}">{{ $item->item_code }} — {{ $item->item_name }}</option>
                                 @endforeach
                             </select>
                         </td>

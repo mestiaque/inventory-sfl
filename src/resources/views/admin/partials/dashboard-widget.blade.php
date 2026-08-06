@@ -186,7 +186,7 @@
                     @foreach($s['lowStockItems'] as $item)
                         <div class="d-flex align-items-center justify-content-between" style="font-size:13px;">
                             <span>{{ $item->item_name }} <span class="text-muted">({{ $item->item_code }})</span></span>
-                            <span class="inv-badge p-1 text-white" style="background:#fff1f2;color:#f43f5e;">{{ rtrim(rtrim($item->current_stock, '0'), '.') }} / {{ rtrim(rtrim($item->minimum_stock, '0'), '.') }}</span>
+                            <span class="inv-badge p-1 text-white" style="background:#fff1f2;color:#f43f5e;">{{ inv_qty($item->current_stock) }} / {{ inv_qty($item->minimum_stock) }}</span>
                         </div>
                     @endforeach
                 </div>
@@ -243,7 +243,7 @@
                                 <td class="inv-recent-table">{{ ucwords(str_replace('_', ' ', $activity->transaction_type)) }}</td>
                                 <td class="inv-recent-table">{{ $activity->store?->name }}</td>
                                 <td class="inv-recent-table {{ $activity->qty_in > 0 ? 'text-success' : 'text-danger' }}">
-                                    {{ $activity->qty_in > 0 ? '+' . rtrim(rtrim($activity->qty_in, '0'), '.') : '-' . rtrim(rtrim($activity->qty_out, '0'), '.') }}
+                                    {{ $activity->qty_in > 0 ? '+' . inv_qty($activity->qty_in) : '-' . inv_qty($activity->qty_out) }}
                                 </td>
                             </tr>
                         @empty

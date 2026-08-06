@@ -27,7 +27,7 @@ class InvRequisitionController extends Controller
         $this->authorize('inv_requisition.list');
 
         $requisitions = InvRequisition::query()
-            ->with(['department', 'store', 'buyer'])
+            ->with(['department', 'store', 'buyer', 'requester', 'approver', 'items.item.unit'])
             ->when($request->filled('search'), fn ($q) => $q->where('requisition_no', 'like', '%' . $request->search . '%'))
             ->when($request->filled('department_id'), fn ($q) => $q->where('department_id', $request->department_id))
             ->when($request->filled('buyer_id'), fn ($q) => $q->where('buyer_id', $request->buyer_id))
@@ -179,7 +179,9 @@ class InvRequisitionController extends Controller
 
         $requisition->load(['items.item.color', 'items.item.size', 'department', 'buyer', 'requester', 'receiver', 'approver']);
 
-        return view('sfl-inventory::admin.requisitions.print', compact('requisition'));
+        $departments = InvDepartment::active()->orderBy('name')->get();
+
+        return view('sfl-inventory::admin.requisitions.print', compact('requisition', 'departments'));
     }
 
     public function destroy(InvRequisition $requisition): RedirectResponse
@@ -203,8 +205,10 @@ class InvRequisitionController extends Controller
 
         return [
             'departments' => InvDepartment::active()->orderBy('name')->get(),
-            'stores'      => InvStore::active()->orderBy('name')->get(),
-            'items'       => InvItem::active()->orderBy('item_name')->get(),
+            // Requisitions only ever draw raw material (Warehouse) or
+            // accessories — the Finished Goods store is never a source here.
+            'stores'      => InvStore::active()->whereIn('type', ['raw_material', 'accessories'])->orderBy('name')->get(),
+            'items'       => InvItem::active()->with('unit')->orderBy('item_name')->get(),
             'buyers'      => InvBuyer::active()->orderBy('name')->get(),
             'employees'   => $employees,
         ];

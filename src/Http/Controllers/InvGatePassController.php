@@ -10,6 +10,7 @@ use ME\SflInventory\Http\Requests\InvGatePassRequest;
 use ME\SflInventory\Models\InvBuyer;
 use ME\SflInventory\Models\InvGatePass;
 use ME\SflInventory\Models\InvItem;
+use ME\SflInventory\Models\InvShipment;
 use ME\SflInventory\Models\InvStore;
 use ME\SflInventory\Services\InvOperatorScopeService;
 use ME\SflInventory\Services\StockService;
@@ -27,7 +28,7 @@ class InvGatePassController extends Controller
         $this->authorize('inv_gate_pass.list');
 
         $gatePasses = InvGatePass::query()
-            ->with(['buyer', 'store'])
+            ->with(['buyer', 'store', 'creator', 'shipment', 'items.item.unit'])
             ->when($request->filled('search'), fn ($q) => $q->where('gate_pass_no', 'like', '%' . $request->search . '%'))
             ->when($request->filled('buyer_id'), fn ($q) => $q->where('buyer_id', $request->buyer_id))
             ->when($request->filled('store_id'), fn ($q) => $q->where('store_id', $request->store_id))
@@ -45,11 +46,23 @@ class InvGatePassController extends Controller
         return view('sfl-inventory::admin.gate-passes.index', compact('gatePasses', 'buyers', 'stores'));
     }
 
-    public function create(): View
+    /**
+     * A gate pass is normally created against an existing Shipment (passed
+     * as ?shipment_id=) — the shipment already says what/how much/for
+     * whom; the gate pass just adds vehicle/driver and is the actual
+     * security-exit permission. A gate pass with no shipment is still
+     * supported for ad-hoc/direct exits.
+     */
+    public function create(Request $request): View
     {
         $this->authorize('inv_gate_pass.add');
 
-        return view('sfl-inventory::admin.gate-passes.create', $this->formOptions());
+        $shipment = null;
+        if ($request->filled('shipment_id')) {
+            $shipment = InvShipment::with('items.item')->find($request->shipment_id);
+        }
+
+        return view('sfl-inventory::admin.gate-passes.create', ['shipment' => $shipment] + $this->formOptions());
     }
 
     public function store(InvGatePassRequest $request): RedirectResponse
@@ -58,6 +71,7 @@ class InvGatePassController extends Controller
 
         $gatePass = DB::transaction(function () use ($data) {
             $gatePass = InvGatePass::create([
+                'shipment_id'    => $data['shipment_id'] ?? null,
                 'gate_pass_date' => $data['gate_pass_date'],
                 'buyer_id'       => $data['buyer_id'] ?? null,
                 'vehicle_no'     => $data['vehicle_no'] ?? null,
@@ -81,8 +95,9 @@ class InvGatePassController extends Controller
 
     /**
      * The real stock-out event: goods physically leave the factory's tracked
-     * custody here. A linked Shipment does NOT post again (see
-     * InvShipmentController@store).
+     * custody here. The Shipment this gate pass may be linked to is purely
+     * a logistics/status record — it never posts stock itself (see
+     * InvShipmentController::store()).
      */
     public function approve(InvGatePass $gate_pass): RedirectResponse
     {
@@ -113,10 +128,13 @@ class InvGatePassController extends Controller
 
     private function formOptions(): array
     {
+        $fgStore = InvStore::active()->where('type', 'finished_goods')->first();
+
         return [
-            'buyers' => InvBuyer::active()->orderBy('name')->get(),
-            'stores' => InvStore::active()->orderBy('name')->get(),
-            'items'  => InvItem::active()->ofType('finished_good')->orderBy('item_name')->get(),
+            'buyers'  => InvBuyer::active()->orderBy('name')->get(),
+            'stores'  => InvStore::active()->orderBy('name')->get(),
+            'fgStore' => $fgStore,
+            'items'   => InvItem::active()->ofType('finished_good')->orderBy('item_name')->get(),
         ];
     }
 }

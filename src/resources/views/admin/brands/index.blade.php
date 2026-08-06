@@ -54,6 +54,9 @@
                                     </span>
                                 </td>
                                 <td class="text-end">
+                                    <button type="button" class="btn btn-sm btn-outline-secondary" data-toggle="modal" data-target="#viewBrandModal{{ $brand->id }}">
+                                        <i class="fa-solid fa-eye"></i>
+                                    </button>
                                     @can('inv_brand.edit')
                                         <button type="button" class="btn btn-sm btn-outline-primary" data-toggle="modal" data-target="#editBrandModal{{ $brand->id }}">
                                             <i class="fa-solid fa-pen"></i>
@@ -66,6 +69,30 @@
                                     @endcan
                                 </td>
                             </tr>
+                            <div class="modal fade" id="viewBrandModal{{ $brand->id }}" tabindex="-1" aria-hidden="true">
+                                <div class="modal-dialog">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <h5 class="modal-title">Brand Details</h5>
+                                            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                                        </div>
+                                        <div class="modal-body">
+                                            <dl class="row mb-0">
+                                                <dt class="col-sm-4">Name</dt><dd class="col-sm-8">{{ $brand->name }}</dd>
+                                                <dt class="col-sm-4">Status</dt>
+                                                <dd class="col-sm-8">
+                                                    <span class="badge p-1 text-white bg-{{ $brand->is_active ? 'success' : 'secondary' }}">
+                                                        {{ $brand->is_active ? 'Active' : 'Inactive' }}
+                                                    </span>
+                                                </dd>
+                                            </dl>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-light" data-dismiss="modal">Close</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                             @can('inv_brand.edit')
                                 <div class="modal fade" id="editBrandModal{{ $brand->id }}" tabindex="-1" aria-hidden="true">
                                     <div class="modal-dialog">
@@ -81,7 +108,7 @@
                                                         <label class="form-label">Name <span class="text-danger">*</span></label>
                                                         <input type="text" name="name" class="form-control" value="{{ $brand->name }}" required>
                                                     </div>
-                                                    <div class="form-check form-switch">
+                                                    <div class="form-check form-switch mb-4">
                                                         <input type="hidden" name="is_active" value="0">
                                                         <input type="checkbox" name="is_active" value="1" class="form-check-input" id="brandActive{{ $brand->id }}" @checked($brand->is_active)>
                                                         <label class="form-check-label" for="brandActive{{ $brand->id }}">Active</label>
@@ -123,7 +150,7 @@
                             <label class="form-label">Name <span class="text-danger">*</span></label>
                             <input type="text" name="name" class="form-control" value="{{ old('name') }}" required>
                         </div>
-                        <div class="form-check form-switch">
+                        <div class="form-check form-switch mb-4">
                             <input type="hidden" name="is_active" value="0">
                             <input type="checkbox" name="is_active" value="1" class="form-check-input" id="brandActiveNew" checked>
                             <label class="form-check-label" for="brandActiveNew">Active</label>

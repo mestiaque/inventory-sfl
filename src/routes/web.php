@@ -62,6 +62,8 @@ Route::middleware($route['middleware'] ?? ['web', 'auth'])
         Route::post('purchase-orders/{purchase_order}/approve', [InvPurchaseOrderController::class, 'approve'])
             ->name('purchase-orders.approve');
         Route::resource('grns', InvGrnController::class)->only(['index', 'create', 'store', 'destroy']);
+        Route::get('grns/create/purchase', [InvGrnController::class, 'createPurchase'])->name('grns.create-purchase');
+        Route::get('grns/create/buyer', [InvGrnController::class, 'createBuyer'])->name('grns.create-buyer');
 
         // Requisition -> Approval -> Issue -> Department Receive
         Route::resource('requisitions', InvRequisitionController::class)

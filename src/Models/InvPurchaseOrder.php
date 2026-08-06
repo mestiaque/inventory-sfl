@@ -3,6 +3,7 @@
 namespace ME\SflInventory\Models;
 
 use App\Models\User;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -56,6 +57,16 @@ class InvPurchaseOrder extends Model
     public function isReferenced(): bool
     {
         return $this->grns()->exists();
+    }
+
+    /**
+     * A GRN (challan) can only be received against a PO that has been
+     * approved — draft POs have no approval on record yet, so nothing
+     * should be allowed to arrive against them.
+     */
+    public function scopeSelectableForGrn(Builder $query): Builder
+    {
+        return $query->whereIn('status', ['approved', 'received']);
     }
 
     /**

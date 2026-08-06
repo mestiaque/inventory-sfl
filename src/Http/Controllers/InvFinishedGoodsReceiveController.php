@@ -27,7 +27,7 @@ class InvFinishedGoodsReceiveController extends Controller
         $this->authorize('inv_fg_receive.list');
 
         $receives = InvFinishedGoodsReceive::query()
-            ->with(['buyer', 'store'])
+            ->with(['buyer', 'store', 'creator', 'items.item.unit'])
             ->when($request->filled('search'), fn ($q) => $q->where('receive_no', 'like', '%' . $request->search . '%'))
             ->when($request->filled('buyer_id'), fn ($q) => $q->where('buyer_id', $request->buyer_id))
             ->when($request->filled('store_id'), fn ($q) => $q->where('store_id', $request->store_id))
@@ -90,10 +90,15 @@ class InvFinishedGoodsReceiveController extends Controller
 
     private function formOptions(): array
     {
+        // Finished goods only ever go into the one store marked "For
+        // Finished Goods" — locked here rather than left as a free choice.
+        $fgStore = InvStore::active()->where('type', 'finished_goods')->first();
+
         return [
-            'buyers' => InvBuyer::active()->orderBy('name')->get(),
-            'stores' => InvStore::active()->orderBy('name')->get(),
-            'items'  => InvItem::active()->ofType('finished_good')->orderBy('item_name')->get(),
+            'buyers'  => InvBuyer::active()->orderBy('name')->get(),
+            'stores'  => InvStore::active()->orderBy('name')->get(),
+            'fgStore' => $fgStore,
+            'items'   => InvItem::active()->ofType('finished_good')->orderBy('item_name')->get(),
         ];
     }
 }

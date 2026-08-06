@@ -78,4 +78,22 @@
 
 /* Select2 tweaks to match rounded inputs */
 .inv-module .select2-container--default .select2-selection--single { border-radius: 8px !important; border-color: #e4e4e7 !important; height: auto !important; }
+
+/* Active toggle switch — this theme bundles Bootstrap 4, which has no native
+   .form-switch (that's Bootstrap 5 only), so plain `form-check form-switch`
+   renders as a bare checkbox. This draws a real switch by hand. */
+.inv-module .form-switch { position: relative; padding-left: 3.25rem; min-height: 1.6rem; display: flex; align-items: center; }
+.inv-module .form-switch .form-check-input {
+    -webkit-appearance: none; appearance: none; position: absolute; left: 0; top: 0;
+    width: 2.75rem; height: 1.5rem; margin: 0; border: none; border-radius: 999px;
+    background: #d1d5db; cursor: pointer; transition: background-color .2s ease; outline: none;
+}
+.inv-module .form-switch .form-check-input::after {
+    content: ''; position: absolute; top: 2px; left: 2px; width: 20px; height: 20px;
+    background: #fff; border-radius: 50%; box-shadow: 0 1px 3px rgba(0,0,0,.35); transition: transform .2s ease;
+}
+.inv-module .form-switch .form-check-input:checked { background: var(--inv-accent); }
+.inv-module .form-switch .form-check-input:checked::after { transform: translateX(20px); }
+.inv-module .form-switch .form-check-input:focus { box-shadow: 0 0 0 .2rem rgba(249,115,22,.2); }
+.inv-module .form-switch .form-check-label { font-weight: 700; color: var(--inv-ink); cursor: pointer; margin-bottom: 0; }
 </style>

@@ -55,6 +55,9 @@
                                     </span>
                                 </td>
                                 <td class="text-end">
+                                    <button type="button" class="btn btn-sm btn-outline-secondary" data-toggle="modal" data-target="#viewSizeModal{{ $size->id }}">
+                                        <i class="fa-solid fa-eye"></i>
+                                    </button>
                                     @can('inv_size.edit')
                                         <button type="button" class="btn btn-sm btn-outline-primary" data-toggle="modal" data-target="#editSizeModal{{ $size->id }}">
                                             <i class="fa-solid fa-pen"></i>
@@ -67,6 +70,31 @@
                                     @endcan
                                 </td>
                             </tr>
+                            <div class="modal fade" id="viewSizeModal{{ $size->id }}" tabindex="-1" aria-hidden="true">
+                                <div class="modal-dialog">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <h5 class="modal-title">Size Details</h5>
+                                            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                                        </div>
+                                        <div class="modal-body">
+                                            <dl class="row mb-0">
+                                                <dt class="col-sm-4">Name</dt><dd class="col-sm-8">{{ $size->name }}</dd>
+                                                <dt class="col-sm-4">Sort Order</dt><dd class="col-sm-8">{{ $size->sort_order }}</dd>
+                                                <dt class="col-sm-4">Status</dt>
+                                                <dd class="col-sm-8">
+                                                    <span class="badge p-1 text-white bg-{{ $size->is_active ? 'success' : 'secondary' }}">
+                                                        {{ $size->is_active ? 'Active' : 'Inactive' }}
+                                                    </span>
+                                                </dd>
+                                            </dl>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-light" data-dismiss="modal">Close</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                             @can('inv_size.edit')
                                 <div class="modal fade" id="editSizeModal{{ $size->id }}" tabindex="-1" aria-hidden="true">
                                     <div class="modal-dialog">
@@ -86,7 +114,7 @@
                                                         <label class="form-label">Sort Order</label>
                                                         <input type="number" name="sort_order" class="form-control" value="{{ $size->sort_order }}">
                                                     </div>
-                                                    <div class="form-check form-switch">
+                                                    <div class="form-check form-switch mb-4">
                                                         <input type="hidden" name="is_active" value="0">
                                                         <input type="checkbox" name="is_active" value="1" class="form-check-input" id="sizeActive{{ $size->id }}" @checked($size->is_active)>
                                                         <label class="form-check-label" for="sizeActive{{ $size->id }}">Active</label>
@@ -132,7 +160,7 @@
                             <label class="form-label">Sort Order</label>
                             <input type="number" name="sort_order" class="form-control" value="0">
                         </div>
-                        <div class="form-check form-switch">
+                        <div class="form-check form-switch mb-4">
                             <input type="hidden" name="is_active" value="0">
                             <input type="checkbox" name="is_active" value="1" class="form-check-input" id="sizeActiveNew" checked>
                             <label class="form-check-label" for="sizeActiveNew">Active</label>

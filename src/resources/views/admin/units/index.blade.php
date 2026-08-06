@@ -61,6 +61,10 @@
                                     </span>
                                 </td>
                                 <td class="text-end">
+                                    <button type="button" class="btn btn-sm btn-outline-secondary" data-toggle="modal"
+                                        data-target="#viewUnitModal{{ $unit->id }}">
+                                        <i class="fa-solid fa-eye"></i>
+                                    </button>
                                     @can('inv_unit.edit')
                                         <button type="button" class="btn btn-sm btn-outline-primary" data-toggle="modal"
                                             data-target="#editUnitModal{{ $unit->id }}">
@@ -75,6 +79,32 @@
                                     @endcan
                                 </td>
                             </tr>
+
+                            <div class="modal fade" id="viewUnitModal{{ $unit->id }}" tabindex="-1" aria-hidden="true">
+                                <div class="modal-dialog">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <h5 class="modal-title">Unit Details</h5>
+                                            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                                        </div>
+                                        <div class="modal-body">
+                                            <dl class="row mb-0">
+                                                <dt class="col-sm-4">Name</dt><dd class="col-sm-8">{{ $unit->name }}</dd>
+                                                <dt class="col-sm-4">Short Name</dt><dd class="col-sm-8">{{ $unit->short_name }}</dd>
+                                                <dt class="col-sm-4">Status</dt>
+                                                <dd class="col-sm-8">
+                                                    <span class="badge p-1 text-white bg-{{ $unit->is_active ? 'success' : 'secondary' }}">
+                                                        {{ $unit->is_active ? 'Active' : 'Inactive' }}
+                                                    </span>
+                                                </dd>
+                                            </dl>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-light" data-dismiss="modal">Close</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
 
                             @can('inv_unit.edit')
                                 <div class="modal fade" id="editUnitModal{{ $unit->id }}" tabindex="-1" aria-hidden="true">
@@ -123,7 +153,7 @@
                         <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
                     </div>
                     <div class="modal-body">
-                        @include('sfl-inventory::admin.units.partials.fields')
+                        @include('sfl-inventory::admin.units.partials.fields', ['unit' => null])
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-light" data-dismiss="modal">Cancel</button>

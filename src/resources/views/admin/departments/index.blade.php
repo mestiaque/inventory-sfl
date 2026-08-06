@@ -56,6 +56,9 @@
                                     </span>
                                 </td>
                                 <td class="text-end">
+                                    <button type="button" class="btn btn-sm btn-outline-secondary" data-toggle="modal" data-target="#viewDepartmentModal{{ $department->id }}">
+                                        <i class="fa-solid fa-eye"></i>
+                                    </button>
                                     @can('inv_department.edit')
                                         <button type="button" class="btn btn-sm btn-outline-primary" data-toggle="modal" data-target="#editDepartmentModal{{ $department->id }}">
                                             <i class="fa-solid fa-pen"></i>
@@ -68,6 +71,32 @@
                                     @endcan
                                 </td>
                             </tr>
+                            <div class="modal fade" id="viewDepartmentModal{{ $department->id }}" tabindex="-1" aria-hidden="true">
+                                <div class="modal-dialog">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <h5 class="modal-title">Department Details</h5>
+                                            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                                        </div>
+                                        <div class="modal-body">
+                                            <dl class="row mb-0">
+                                                <dt class="col-sm-4">Name</dt><dd class="col-sm-8">{{ $department->name }}</dd>
+                                                <dt class="col-sm-4">Code</dt><dd class="col-sm-8">{{ $department->code }}</dd>
+                                                <dt class="col-sm-4">Default Floor Store</dt><dd class="col-sm-8">{{ $department->defaultStore?->name ?? '—' }}</dd>
+                                                <dt class="col-sm-4">Status</dt>
+                                                <dd class="col-sm-8">
+                                                    <span class="badge p-1 text-white bg-{{ $department->is_active ? 'success' : 'secondary' }}">
+                                                        {{ $department->is_active ? 'Active' : 'Inactive' }}
+                                                    </span>
+                                                </dd>
+                                            </dl>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-light" data-dismiss="modal">Close</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                             @can('inv_department.edit')
                                 <div class="modal fade" id="editDepartmentModal{{ $department->id }}" tabindex="-1" aria-hidden="true">
                                     <div class="modal-dialog">
@@ -113,7 +142,7 @@
                         <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
                     </div>
                     <div class="modal-body">
-                        @include('sfl-inventory::admin.departments.partials.fields', ['stores' => $stores])
+                        @include('sfl-inventory::admin.departments.partials.fields', ['department' => null, 'stores' => $stores])
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-light" data-dismiss="modal">Cancel</button>

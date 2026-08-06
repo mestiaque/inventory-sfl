@@ -57,6 +57,9 @@
                                     </span>
                                 </td>
                                 <td class="text-end">
+                                    <button type="button" class="btn btn-sm btn-outline-secondary" data-toggle="modal" data-target="#viewSupplierModal{{ $supplier->id }}">
+                                        <i class="fa-solid fa-eye"></i>
+                                    </button>
                                     @can('inv_supplier.edit')
                                         <button type="button" class="btn btn-sm btn-outline-primary" data-toggle="modal" data-target="#editSupplierModal{{ $supplier->id }}">
                                             <i class="fa-solid fa-pen"></i>
@@ -69,6 +72,37 @@
                                     @endcan
                                 </td>
                             </tr>
+                            <div class="modal fade" id="viewSupplierModal{{ $supplier->id }}" tabindex="-1" aria-hidden="true">
+                                <div class="modal-dialog modal-lg">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <h5 class="modal-title">Supplier Details</h5>
+                                            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                                        </div>
+                                        <div class="modal-body">
+                                            <dl class="row mb-0">
+                                                <dt class="col-sm-3">Name</dt><dd class="col-sm-9">{{ $supplier->name }}</dd>
+                                                <dt class="col-sm-3">Code</dt><dd class="col-sm-9">{{ $supplier->code }}</dd>
+                                                <dt class="col-sm-3">Contact Person</dt><dd class="col-sm-9">{{ $supplier->contact_person ?: '—' }}</dd>
+                                                <dt class="col-sm-3">Phone</dt><dd class="col-sm-9">{{ $supplier->phone ?: '—' }}</dd>
+                                                <dt class="col-sm-3">Email</dt><dd class="col-sm-9">{{ $supplier->email ?: '—' }}</dd>
+                                                <dt class="col-sm-3">TIN/VAT</dt><dd class="col-sm-9">{{ $supplier->tin_vat ?: '—' }}</dd>
+                                                <dt class="col-sm-3">Address</dt><dd class="col-sm-9">{{ $supplier->address ?: '—' }}</dd>
+                                                <dt class="col-sm-3">Remarks</dt><dd class="col-sm-9">{{ $supplier->remarks ?: '—' }}</dd>
+                                                <dt class="col-sm-3">Status</dt>
+                                                <dd class="col-sm-9">
+                                                    <span class="badge p-1 text-white bg-{{ $supplier->is_active ? 'success' : 'secondary' }}">
+                                                        {{ $supplier->is_active ? 'Active' : 'Inactive' }}
+                                                    </span>
+                                                </dd>
+                                            </dl>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-light" data-dismiss="modal">Close</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                             @can('inv_supplier.edit')
                                 <div class="modal fade" id="editSupplierModal{{ $supplier->id }}" tabindex="-1" aria-hidden="true">
                                     <div class="modal-dialog modal-lg">
@@ -114,7 +148,7 @@
                         <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
                     </div>
                     <div class="modal-body">
-                        @include('sfl-inventory::admin.suppliers.partials.fields')
+                        @include('sfl-inventory::admin.suppliers.partials.fields', ['supplier' => null])
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-light" data-dismiss="modal">Cancel</button>

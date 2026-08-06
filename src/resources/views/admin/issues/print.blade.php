@@ -86,12 +86,12 @@
                 <td>{{ $line->item?->category?->name }}</td>
                 <td>{{ $line->item?->specification ?? '---' }}</td>
                 <td>{{ $line->item?->unit?->short_name }}</td>
-                <td>{{ rtrim(rtrim($line->issued_qty, '0'), '.') }}</td>
+                <td>{{ inv_qty($line->issued_qty) }}</td>
             </tr>
         @endforeach
         <tr class="total-row">
             <td colspan="6" class="text-start">Total :</td>
-            <td>{{ rtrim(rtrim($issue->items->sum('issued_qty'), '0'), '.') }}</td>
+            <td>{{ inv_qty($issue->items->sum('issued_qty')) }}</td>
         </tr>
     </tbody>
 </table>

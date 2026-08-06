@@ -61,13 +61,14 @@
             <div class="table-responsive">
                 <table class="table table-bordered table-striped align-middle">
                     <thead>
-                        <tr><th>#</th><th>Gate Pass No</th><th>Buyer</th><th>Vehicle</th><th>Store</th><th>Date</th><th>Status</th><th class="text-end">Actions</th></tr>
+                        <tr><th>#</th><th>Gate Pass No</th><th>Shipment</th><th>Buyer</th><th>Vehicle</th><th>Store</th><th>Date</th><th>Status</th><th class="text-end">Actions</th></tr>
                     </thead>
                     <tbody>
                         @forelse($gatePasses as $gatePass)
                             <tr>
                                 <td>{{ $loop->iteration + $gatePasses->firstItem() - 1 }}</td>
                                 <td>{{ $gatePass->gate_pass_no }}</td>
+                                <td>{{ $gatePass->shipment?->shipment_no ?? '— (direct)' }}</td>
                                 <td>{{ $gatePass->buyer?->name }}</td>
                                 <td>{{ $gatePass->vehicle_no }}</td>
                                 <td>{{ $gatePass->store?->name }}</td>
@@ -78,6 +79,9 @@
                                     </span>
                                 </td>
                                 <td class="text-end">
+                                    <button type="button" class="btn btn-sm btn-outline-secondary" data-toggle="modal" data-target="#viewGpModal{{ $gatePass->id }}">
+                                        <i class="fa-solid fa-eye"></i>
+                                    </button>
                                     @can('inv_gate_pass.approve')
                                         @if($gatePass->status === 'pending')
                                             <form method="POST" action="{{ route('inventory.gate-passes.approve', $gatePass) }}" class="d-inline">
@@ -86,15 +90,10 @@
                                             </form>
                                         @endif
                                     @endcan
-                                    @can('inv_shipment.add')
-                                        @if($gatePass->status === 'issued')
-                                            <a href="{{ route('inventory.shipments.create', ['gate_pass_id' => $gatePass->id]) }}" class="btn btn-sm btn-outline-secondary">Ship</a>
-                                        @endif
-                                    @endcan
                                 </td>
                             </tr>
                         @empty
-                            <tr><td colspan="8" class="text-center text-muted">No gate passes found.</td></tr>
+                            <tr><td colspan="9" class="text-center text-muted">No gate passes found.</td></tr>
                         @endforelse
                     </tbody>
                 </table>
@@ -104,5 +103,59 @@
         </div>
     </div>
 </div>
+
+{{-- View modals live outside the table (a <div> can't legally be a direct child of <tbody>, and a nested <table> inside it would get corrupted by the browser's table-repair parsing otherwise). --}}
+@foreach($gatePasses as $gatePass)
+    <div class="modal fade" id="viewGpModal{{ $gatePass->id }}" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Gate Pass Details — {{ $gatePass->gate_pass_no }}</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                </div>
+                <div class="modal-body">
+                    <dl class="row mb-3">
+                        <dt class="col-sm-3">Shipment</dt><dd class="col-sm-9">{{ $gatePass->shipment?->shipment_no ?? '— (direct, no shipment)' }}</dd>
+                        <dt class="col-sm-3">Store</dt><dd class="col-sm-9">{{ $gatePass->store?->name ?? '—' }}</dd>
+                        <dt class="col-sm-3">Gate Pass Date</dt><dd class="col-sm-9">{{ $gatePass->gate_pass_date?->format('d M Y') }}</dd>
+                        <dt class="col-sm-3">Buyer</dt><dd class="col-sm-9">{{ $gatePass->buyer?->name ?? '—' }}</dd>
+                        <dt class="col-sm-3">Vehicle No</dt><dd class="col-sm-9">{{ $gatePass->vehicle_no ?: '—' }}</dd>
+                        <dt class="col-sm-3">Driver</dt><dd class="col-sm-9">{{ collect([$gatePass->driver_name, $gatePass->driver_contact])->filter()->implode(' / ') ?: '—' }}</dd>
+                        <dt class="col-sm-3">Status</dt>
+                        <dd class="col-sm-9">
+                            <span class="badge p-1 text-white bg-{{ ['pending' => 'secondary', 'issued' => 'success', 'cancelled' => 'danger'][$gatePass->status] ?? 'secondary' }}">
+                                {{ ucfirst($gatePass->status) }}
+                            </span>
+                        </dd>
+                        <dt class="col-sm-3">Created By</dt><dd class="col-sm-9">{{ $gatePass->creator?->name ?? '—' }}</dd>
+                        <dt class="col-sm-3">Remarks</dt><dd class="col-sm-9">{{ $gatePass->remarks ?: '—' }}</dd>
+                    </dl>
+
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-sm align-middle mb-0">
+                            <thead>
+                                <tr><th>#</th><th>Item</th><th>Unit</th><th class="text-end">Quantity</th></tr>
+                            </thead>
+                            <tbody>
+                                @foreach($gatePass->items as $line)
+                                    <tr>
+                                        <td>{{ $loop->iteration }}</td>
+                                        <td>{{ $line->item?->item_code }} — {{ $line->item?->item_name }}</td>
+                                        <td>{{ $line->item?->unit?->short_name ?? '—' }}</td>
+                                        <td class="text-end">{{ inv_qty($line->quantity) }}</td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-light" data-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+@endforeach
+
 @include('sfl-inventory::admin.partials.select2-init')
 @endsection

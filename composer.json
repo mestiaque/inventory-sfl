@@ -30,7 +30,10 @@
     "autoload": {
         "psr-4": {
             "ME\\SflInventory\\": "src/"
-        }
+        },
+        "files": [
+            "src/helpers.php"
+        ]
     },
     "extra": {
         "laravel": {

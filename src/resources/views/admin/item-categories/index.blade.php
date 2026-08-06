@@ -71,6 +71,10 @@
                                     </span>
                                 </td>
                                 <td class="text-end">
+                                    <button type="button" class="btn btn-sm btn-outline-secondary" data-toggle="modal"
+                                        data-target="#viewCategoryModal{{ $category->id }}">
+                                        <i class="fa-solid fa-eye"></i>
+                                    </button>
                                     @can('inv_item_category.edit')
                                         <button type="button" class="btn btn-sm btn-outline-primary" data-toggle="modal"
                                             data-target="#editCategoryModal{{ $category->id }}">
@@ -85,6 +89,33 @@
                                     @endcan
                                 </td>
                             </tr>
+
+                            <div class="modal fade" id="viewCategoryModal{{ $category->id }}" tabindex="-1" aria-hidden="true">
+                                <div class="modal-dialog">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <h5 class="modal-title">Category Details</h5>
+                                            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                                        </div>
+                                        <div class="modal-body">
+                                            <dl class="row mb-0">
+                                                <dt class="col-sm-4">Name</dt><dd class="col-sm-8">{{ $category->name }}</dd>
+                                                <dt class="col-sm-4">Code</dt><dd class="col-sm-8">{{ $category->code ?: '—' }}</dd>
+                                                <dt class="col-sm-4">Parent Category</dt><dd class="col-sm-8">{{ $category->parent?->name ?? '—' }}</dd>
+                                                <dt class="col-sm-4">Status</dt>
+                                                <dd class="col-sm-8">
+                                                    <span class="badge p-1 text-white bg-{{ $category->is_active ? 'success' : 'secondary' }}">
+                                                        {{ $category->is_active ? 'Active' : 'Inactive' }}
+                                                    </span>
+                                                </dd>
+                                            </dl>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-light" data-dismiss="modal">Close</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
 
                             @can('inv_item_category.edit')
                                 <div class="modal fade" id="editCategoryModal{{ $category->id }}" tabindex="-1" aria-hidden="true">
@@ -133,7 +164,7 @@
                         <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
                     </div>
                     <div class="modal-body">
-                        @include('sfl-inventory::admin.item-categories.partials.fields', ['parents' => $parents])
+                        @include('sfl-inventory::admin.item-categories.partials.fields', ['category' => null, 'parents' => $parents])
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-light" data-dismiss="modal">Cancel</button>
