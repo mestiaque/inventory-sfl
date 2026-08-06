@@ -37,7 +37,7 @@
 .inv-module hr { border-top: 2px dashed #f0f0f2; margin: 22px 0; }
 
 /* Tables */
-.inv-module .table-responsive { border-radius: 10px; overflow: hidden; border: 1px solid #f0f0f2; }
+.inv-module .table-responsive { border-radius: 10px; border: 1px solid #f0f0f2; }
 .inv-module .table { margin-bottom: 0; }
 .inv-module .table thead th {
     background: #fff8ed; color: #9a3412; font-size: 11.5px; text-transform: uppercase; letter-spacing: .4px;

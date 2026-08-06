@@ -1,28 +1,53 @@
-@extends(adminTheme() . 'layouts.app')
+@php $printMode = $printMode ?? request()->boolean('print'); @endphp
+@extends(request()->boolean('excel_export') ? 'sfl-inventory::export-minimal' : ($printMode ? 'printMaster2' : adminTheme() . 'layouts.app'))
 
 @section('title')
-    <title>{{ websiteTitle('Store Inventory Report') }}</title>
+    @if($printMode)
+        {{ websiteTitle('Store Inventory Report') }}
+    @else
+        <title>{{ websiteTitle('Store Inventory Report') }}</title>
+    @endif
 @endsection
+
+@push('css')
+<style>
+    /* This report's table is unusually wide (15+ columns, one per department) —
+       the shared .table-responsive rule clips overflow entirely instead of
+       scrolling it, so override to a real horizontal scrollbar here only. */
+    /* .inv-module .store-inventory-scroll { overflow-x: auto; overflow-y: hidden; -webkit-overflow-scrolling: touch; } */
+</style>
+@endpush
 
 @section('contents')
 <div class="flex-grow-1 inv-module">
-    @include('sfl-inventory::admin.partials.alerts')
-    @include('sfl-inventory::admin.partials.ui-kit')
+    @if($printMode)
+        @include('sfl-inventory::admin.reports.partials.print-header', ['title' => 'Store Inventory Report'])
+    @else
+        @include('sfl-inventory::admin.partials.alerts')
+        @include('sfl-inventory::admin.partials.ui-kit')
+    @endif
 
     <div class="card">
-        <div class="card-header">
-            <h5 class="mb-0">Store Inventory Report</h5>
-            <small class="text-muted">One row per stock movement — stock-in and section-wise issue quantities, with a running balance per item.</small>
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <div>
+                <h5 class="mb-0">Store Inventory Report</h5>
+                <small class="text-muted">One row per stock movement — stock-in and section-wise issue quantities, with a running balance per item.</small>
+            </div>
+            @unless($printMode)
+                @include('sfl-inventory::admin.reports.partials.export-print-buttons', ['report' => 'store-inventory-report'])
+            @endunless
         </div>
         <div class="card-body">
-            <form method="GET" class="row g-2 mb-3">
-                <div class="col-md-3"><input type="date" name="date_from" class="form-control" value="{{ request('date_from') }}" placeholder="From"></div>
-                <div class="col-md-3"><input type="date" name="date_to" class="form-control" value="{{ request('date_to') }}" placeholder="To"></div>
-                <div class="col-md-3"><button type="submit" class="btn btn-secondary">Filter</button></div>
-            </form>
+            @unless($printMode)
+                <form method="GET" class="row g-2 mb-3">
+                    <div class="col-md-3"><input type="date" name="date_from" class="form-control" value="{{ request('date_from') }}" placeholder="From"></div>
+                    <div class="col-md-3"><input type="date" name="date_to" class="form-control" value="{{ request('date_to') }}" placeholder="To"></div>
+                    <div class="col-md-3"><button type="submit" class="btn btn-secondary">Filter</button></div>
+                </form>
+            @endunless
 
-            <div class="table-responsive">
-                <table class="table table-bordered table-striped table-sm align-middle" style="font-size:12px;">
+            <div class="table-responsive store-inventory-scroll">
+                <table class="table table-bordered table-striped table-sm align-middle" style="font-size:12px; min-width:1400px;">
                     <thead class="text-center">
                         <tr>
                             <th rowspan="2">#</th>

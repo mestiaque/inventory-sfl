@@ -5,6 +5,8 @@ namespace ME\SflInventory\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
+use Maatwebsite\Excel\Facades\Excel;
+use ME\SflInventory\Exports\InvReportExport;
 use ME\SflInventory\Models\InvBuyer;
 use ME\SflInventory\Models\InvDepartment;
 use ME\SflInventory\Models\InvGatePass;
@@ -162,7 +164,7 @@ class InvReportController extends Controller
             ->when($request->filled('date_from'), fn ($q) => $q->whereDate('receive_date', '>=', $request->date_from))
             ->when($request->filled('date_to'), fn ($q) => $q->whereDate('receive_date', '<=', $request->date_to))
             ->latest('receive_date')
-            ->paginate(30)
+            ->paginate($request->boolean('print') ? 100000 : 30)
             ->withQueryString();
 
         $stores = InvStore::active()->orderBy('name')->get();
@@ -181,7 +183,7 @@ class InvReportController extends Controller
             ->when($request->filled('date_from'), fn ($q) => $q->whereDate('issue_date', '>=', $request->date_from))
             ->when($request->filled('date_to'), fn ($q) => $q->whereDate('issue_date', '<=', $request->date_to))
             ->latest('issue_date')
-            ->paginate(30)
+            ->paginate($request->boolean('print') ? 100000 : 30)
             ->withQueryString();
 
         $departments = InvDepartment::active()->orderBy('name')->get();
@@ -199,7 +201,7 @@ class InvReportController extends Controller
             ->when($request->filled('date_from'), fn ($q) => $q->whereDate('gate_pass_date', '>=', $request->date_from))
             ->when($request->filled('date_to'), fn ($q) => $q->whereDate('gate_pass_date', '<=', $request->date_to))
             ->latest('gate_pass_date')
-            ->paginate(30)
+            ->paginate($request->boolean('print') ? 100000 : 30)
             ->withQueryString();
 
         return view('sfl-inventory::admin.reports.gate-pass-report', compact('gatePasses'));
@@ -210,13 +212,13 @@ class InvReportController extends Controller
         $this->authorize('inv_report.view');
 
         $shipments = InvShipment::query()
-            ->with(['buyer', 'gatePass'])
+            ->with(['buyer', 'gatePass', 'gatePasses'])
             ->when($request->filled('buyer_id'), fn ($q) => $q->where('buyer_id', $request->buyer_id))
             ->when($request->filled('status'), fn ($q) => $q->where('status', $request->status))
             ->when($request->filled('date_from'), fn ($q) => $q->whereDate('shipment_date', '>=', $request->date_from))
             ->when($request->filled('date_to'), fn ($q) => $q->whereDate('shipment_date', '<=', $request->date_to))
             ->latest('shipment_date')
-            ->paginate(30)
+            ->paginate($request->boolean('print') ? 100000 : 30)
             ->withQueryString();
 
         $buyers = InvBuyer::active()->orderBy('name')->get();
@@ -327,5 +329,51 @@ class InvReportController extends Controller
             ->get();
 
         return view('sfl-inventory::admin.reports.store-inventory-report', compact('rows', 'departments'));
+    }
+
+    /**
+     * One Excel-download entry point for every report — reuses the exact
+     * same method (and therefore the exact same query/filters) that
+     * renders the on-screen report, just with printMode=true merged in so
+     * the filter form/buttons/pagination are left out of the sheet.
+     */
+    public function export(Request $request, string $report)
+    {
+        $method = $this->reportMethodMap()[$report] ?? abort(404);
+
+        // Also flips any print-aware pagination (grn/issue/gate-pass/shipment
+        // reports fetch every row instead of one paginated page) since it's
+        // the same 'print' flag the underlying report method itself reads.
+        // excel_export additionally swaps the base layout: PhpSpreadsheet's
+        // HTML reader chokes on a full printMaster2/admin-theme page (fonts,
+        // scripts, deep markup) and throws "Failed to load ... as a DOM
+        // Document" — export needs the bare table only.
+        $request->merge(['print' => 1, 'excel_export' => 1]);
+
+        /** @var View $view */
+        $view = $this->{$method}($request);
+        $view = $view->with('printMode', true);
+
+        return Excel::download(new InvReportExport($view, $report), $report . '.xlsx');
+    }
+
+    private function reportMethodMap(): array
+    {
+        return [
+            'current-stock'          => 'currentStock',
+            'stock-summary'          => 'stockSummary',
+            'item-history'           => 'itemHistory',
+            'store-wise-stock'       => 'storeWiseStock',
+            'department-consumption' => 'departmentWiseConsumption',
+            'supplier-purchase'      => 'supplierWisePurchase',
+            'grn'                    => 'grnReport',
+            'issue'                  => 'issueReport',
+            'gate-pass'              => 'gatePassReport',
+            'shipment'               => 'shipmentReport',
+            'low-stock'              => 'lowStock',
+            'dead-stock'             => 'deadStock',
+            'stock-valuation'        => 'stockValuation',
+            'store-inventory-report' => 'storeInventoryReport',
+        ];
     }
 }

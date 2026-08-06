@@ -110,6 +110,7 @@ Route::middleware($route['middleware'] ?? ['web', 'auth'])
 
         // Reports
         Route::prefix('reports')->name('reports.')->group(function () {
+            Route::get('{report}/export', [InvReportController::class, 'export'])->name('export');
             Route::get('current-stock', [InvReportController::class, 'currentStock'])->name('current-stock');
             Route::get('stock-summary', [InvReportController::class, 'stockSummary'])->name('stock-summary');
             Route::get('item-history', [InvReportController::class, 'itemHistory'])->name('item-history');

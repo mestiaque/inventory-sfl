@@ -1,18 +1,32 @@
-@extends(adminTheme() . 'layouts.app')
+@php $printMode = $printMode ?? request()->boolean('print'); @endphp
+@extends(request()->boolean('excel_export') ? 'sfl-inventory::export-minimal' : ($printMode ? 'printMaster2' : adminTheme() . 'layouts.app'))
 
 @section('title')
-    <title>{{ websiteTitle('Dead Stock Report') }}</title>
+    @if($printMode)
+        {{ websiteTitle('Dead Stock Report') }}
+    @else
+        <title>{{ websiteTitle('Dead Stock Report') }}</title>
+    @endif
 @endsection
 
 @section('contents')
 <div class="flex-grow-1 inv-module">
-    @include('sfl-inventory::admin.partials.alerts')
-    @include('sfl-inventory::admin.partials.ui-kit')
+    @if($printMode)
+        @include('sfl-inventory::admin.reports.partials.print-header', ['title' => 'Dead Stock Report'])
+    @else
+        @include('sfl-inventory::admin.partials.alerts')
+        @include('sfl-inventory::admin.partials.ui-kit')
+    @endif
 
     <div class="card">
-        <div class="card-header">
-            <h5 class="mb-0">Dead Stock Report</h5>
-            <small class="text-muted">Items with stock on hand but no outbound movement in the last {{ config('sfl-inventory.dead_stock_days', 90) }} days.</small>
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <div>
+                <h5 class="mb-0">Dead Stock Report</h5>
+                <small class="text-muted">Items with stock on hand but no outbound movement in the last {{ config('sfl-inventory.dead_stock_days', 90) }} days.</small>
+            </div>
+            @unless($printMode)
+                @include('sfl-inventory::admin.reports.partials.export-print-buttons', ['report' => 'dead-stock'])
+            @endunless
         </div>
         <div class="card-body">
             <div class="table-responsive">

@@ -1,38 +1,54 @@
-@extends(adminTheme() . 'layouts.app')
+@php $printMode = $printMode ?? request()->boolean('print'); @endphp
+@extends(request()->boolean('excel_export') ? 'sfl-inventory::export-minimal' : ($printMode ? 'printMaster2' : adminTheme() . 'layouts.app'))
 
 @section('title')
-    <title>{{ websiteTitle('GRN Report') }}</title>
+    @if($printMode)
+        {{ websiteTitle('GRN Report') }}
+    @else
+        <title>{{ websiteTitle('GRN Report') }}</title>
+    @endif
 @endsection
 
 @section('contents')
 <div class="flex-grow-1 inv-module">
-    @include('sfl-inventory::admin.partials.alerts')
-    @include('sfl-inventory::admin.partials.ui-kit')
+    @if($printMode)
+        @include('sfl-inventory::admin.reports.partials.print-header', ['title' => 'GRN Report'])
+    @else
+        @include('sfl-inventory::admin.partials.alerts')
+        @include('sfl-inventory::admin.partials.ui-kit')
+    @endif
 
     <div class="card">
-        <div class="card-header"><h5 class="mb-0">GRN Report</h5></div>
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">GRN Report</h5>
+            @unless($printMode)
+                @include('sfl-inventory::admin.reports.partials.export-print-buttons', ['report' => 'grn'])
+            @endunless
+        </div>
         <div class="card-body">
-            <form method="GET" class="row g-2 mb-3">
-                <div class="col-md-3">
-                    <select name="store_id" class="form-control inv-select2">
-                        <option value="">All Stores</option>
-                        @foreach($stores as $store)
-                            <option value="{{ $store->id }}" @selected(request('store_id') == $store->id)>{{ $store->name }}</option>
-                        @endforeach
-                    </select>
-                </div>
-                <div class="col-md-3">
-                    <select name="supplier_id" class="form-control inv-select2">
-                        <option value="">All Suppliers</option>
-                        @foreach($suppliers as $supplier)
-                            <option value="{{ $supplier->id }}" @selected(request('supplier_id') == $supplier->id)>{{ $supplier->name }}</option>
-                        @endforeach
-                    </select>
-                </div>
-                <div class="col-md-2"><input type="date" name="date_from" class="form-control" value="{{ request('date_from') }}" placeholder="From"></div>
-                <div class="col-md-2"><input type="date" name="date_to" class="form-control" value="{{ request('date_to') }}" placeholder="To"></div>
-                <div class="col-md-2"><button type="submit" class="btn btn-secondary">Filter</button></div>
-            </form>
+            @unless($printMode)
+                <form method="GET" class="row g-2 mb-3">
+                    <div class="col-md-3">
+                        <select name="store_id" class="form-control inv-select2">
+                            <option value="">All Stores</option>
+                            @foreach($stores as $store)
+                                <option value="{{ $store->id }}" @selected(request('store_id') == $store->id)>{{ $store->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <select name="supplier_id" class="form-control inv-select2">
+                            <option value="">All Suppliers</option>
+                            @foreach($suppliers as $supplier)
+                                <option value="{{ $supplier->id }}" @selected(request('supplier_id') == $supplier->id)>{{ $supplier->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="col-md-2"><input type="date" name="date_from" class="form-control" value="{{ request('date_from') }}" placeholder="From"></div>
+                    <div class="col-md-2"><input type="date" name="date_to" class="form-control" value="{{ request('date_to') }}" placeholder="To"></div>
+                    <div class="col-md-2"><button type="submit" class="btn btn-secondary">Filter</button></div>
+                </form>
+            @endunless
 
             <div class="table-responsive">
                 <table class="table table-bordered table-striped table-sm align-middle">
@@ -53,9 +69,13 @@
                     </tbody>
                 </table>
             </div>
-            {{ $grns->links('pagination::bootstrap-5') }}
+            @unless($printMode)
+                {{ $grns->links('pagination::bootstrap-5') }}
+            @endunless
         </div>
     </div>
 </div>
-@include('sfl-inventory::admin.partials.select2-init')
+@unless($printMode)
+    @include('sfl-inventory::admin.partials.select2-init')
+@endunless
 @endsection

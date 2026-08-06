@@ -1,30 +1,46 @@
-@extends(adminTheme() . 'layouts.app')
+@php $printMode = $printMode ?? request()->boolean('print'); @endphp
+@extends(request()->boolean('excel_export') ? 'sfl-inventory::export-minimal' : ($printMode ? 'printMaster2' : adminTheme() . 'layouts.app'))
 
 @section('title')
-    <title>{{ websiteTitle('Gate Pass Report') }}</title>
+    @if($printMode)
+        {{ websiteTitle('Gate Pass Report') }}
+    @else
+        <title>{{ websiteTitle('Gate Pass Report') }}</title>
+    @endif
 @endsection
 
 @section('contents')
 <div class="flex-grow-1 inv-module">
-    @include('sfl-inventory::admin.partials.alerts')
-    @include('sfl-inventory::admin.partials.ui-kit')
+    @if($printMode)
+        @include('sfl-inventory::admin.reports.partials.print-header', ['title' => 'Gate Pass Report'])
+    @else
+        @include('sfl-inventory::admin.partials.alerts')
+        @include('sfl-inventory::admin.partials.ui-kit')
+    @endif
 
     <div class="card">
-        <div class="card-header"><h5 class="mb-0">Gate Pass Report</h5></div>
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">Gate Pass Report</h5>
+            @unless($printMode)
+                @include('sfl-inventory::admin.reports.partials.export-print-buttons', ['report' => 'gate-pass'])
+            @endunless
+        </div>
         <div class="card-body">
-            <form method="GET" class="row g-2 mb-3">
-                <div class="col-md-3">
-                    <select name="status" class="form-control inv-select2">
-                        <option value="">All Status</option>
-                        <option value="pending" @selected(request('status') === 'pending')>Pending</option>
-                        <option value="issued" @selected(request('status') === 'issued')>Issued</option>
-                        <option value="cancelled" @selected(request('status') === 'cancelled')>Cancelled</option>
-                    </select>
-                </div>
-                <div class="col-md-3"><input type="date" name="date_from" class="form-control" value="{{ request('date_from') }}" placeholder="From"></div>
-                <div class="col-md-3"><input type="date" name="date_to" class="form-control" value="{{ request('date_to') }}" placeholder="To"></div>
-                <div class="col-md-3"><button type="submit" class="btn btn-secondary">Filter</button></div>
-            </form>
+            @unless($printMode)
+                <form method="GET" class="row g-2 mb-3">
+                    <div class="col-md-3">
+                        <select name="status" class="form-control inv-select2">
+                            <option value="">All Status</option>
+                            <option value="pending" @selected(request('status') === 'pending')>Pending</option>
+                            <option value="issued" @selected(request('status') === 'issued')>Issued</option>
+                            <option value="cancelled" @selected(request('status') === 'cancelled')>Cancelled</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3"><input type="date" name="date_from" class="form-control" value="{{ request('date_from') }}" placeholder="From"></div>
+                    <div class="col-md-3"><input type="date" name="date_to" class="form-control" value="{{ request('date_to') }}" placeholder="To"></div>
+                    <div class="col-md-3"><button type="submit" class="btn btn-secondary">Filter</button></div>
+                </form>
+            @endunless
 
             <div class="table-responsive">
                 <table class="table table-bordered table-striped table-sm align-middle">
@@ -44,9 +60,13 @@
                     </tbody>
                 </table>
             </div>
-            {{ $gatePasses->links('pagination::bootstrap-5') }}
+            @unless($printMode)
+                {{ $gatePasses->links('pagination::bootstrap-5') }}
+            @endunless
         </div>
     </div>
 </div>
-@include('sfl-inventory::admin.partials.select2-init')
+@unless($printMode)
+    @include('sfl-inventory::admin.partials.select2-init')
+@endunless
 @endsection

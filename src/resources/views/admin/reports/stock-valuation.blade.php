@@ -1,28 +1,44 @@
-@extends(adminTheme() . 'layouts.app')
+@php $printMode = $printMode ?? request()->boolean('print'); @endphp
+@extends(request()->boolean('excel_export') ? 'sfl-inventory::export-minimal' : ($printMode ? 'printMaster2' : adminTheme() . 'layouts.app'))
 
 @section('title')
-    <title>{{ websiteTitle('Stock Valuation Report') }}</title>
+    @if($printMode)
+        {{ websiteTitle('Stock Valuation Report') }}
+    @else
+        <title>{{ websiteTitle('Stock Valuation Report') }}</title>
+    @endif
 @endsection
 
 @section('contents')
 <div class="flex-grow-1 inv-module">
-    @include('sfl-inventory::admin.partials.alerts')
-    @include('sfl-inventory::admin.partials.ui-kit')
+    @if($printMode)
+        @include('sfl-inventory::admin.reports.partials.print-header', ['title' => 'Stock Valuation Report'])
+    @else
+        @include('sfl-inventory::admin.partials.alerts')
+        @include('sfl-inventory::admin.partials.ui-kit')
+    @endif
 
     <div class="card">
-        <div class="card-header"><h5 class="mb-0">Stock Valuation (Moving Weighted Average)</h5></div>
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">Stock Valuation (Moving Weighted Average)</h5>
+            @unless($printMode)
+                @include('sfl-inventory::admin.reports.partials.export-print-buttons', ['report' => 'stock-valuation'])
+            @endunless
+        </div>
         <div class="card-body">
-            <form method="GET" class="row g-2 mb-3">
-                <div class="col-md-4">
-                    <select name="category_id" class="form-control inv-select2">
-                        <option value="">All Categories</option>
-                        @foreach($categories as $category)
-                            <option value="{{ $category->id }}" @selected(request('category_id') == $category->id)>{{ $category->name }}</option>
-                        @endforeach
-                    </select>
-                </div>
-                <div class="col-md-4"><button type="submit" class="btn btn-secondary">Filter</button></div>
-            </form>
+            @unless($printMode)
+                <form method="GET" class="row g-2 mb-3">
+                    <div class="col-md-4">
+                        <select name="category_id" class="form-control inv-select2">
+                            <option value="">All Categories</option>
+                            @foreach($categories as $category)
+                                <option value="{{ $category->id }}" @selected(request('category_id') == $category->id)>{{ $category->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="col-md-4"><button type="submit" class="btn btn-secondary">Filter</button></div>
+                </form>
+            @endunless
 
             <div class="table-responsive">
                 <table class="table table-bordered table-striped table-sm align-middle">
@@ -51,5 +67,7 @@
         </div>
     </div>
 </div>
-@include('sfl-inventory::admin.partials.select2-init')
+@unless($printMode)
+    @include('sfl-inventory::admin.partials.select2-init')
+@endunless
 @endsection
