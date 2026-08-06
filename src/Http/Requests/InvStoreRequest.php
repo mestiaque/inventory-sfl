@@ -20,7 +20,6 @@ class InvStoreRequest extends FormRequest
         return [
             'name'      => ['required', 'string', 'max:150'],
             'code'      => ['required', 'string', 'max:50', 'unique:inv_stores,code,' . $storeId],
-            'type'      => ['required', 'in:raw_material,accessories,cutting,sewing,finishing,finished_goods,general'],
             'address'   => ['nullable', 'string', 'max:255'],
             'is_active' => ['nullable', 'boolean'],
         ];

@@ -45,7 +45,6 @@
                             <th>#</th>
                             <th>Name</th>
                             <th>Code</th>
-                            <th>Type</th>
                             <th>Address</th>
                             <th>Status</th>
                             <th class="text-end">Actions</th>
@@ -57,7 +56,6 @@
                                 <td>{{ $loop->iteration + $stores->firstItem() - 1 }}</td>
                                 <td>{{ $store->name }}</td>
                                 <td>{{ $store->code }}</td>
-                                <td>{{ ucwords(str_replace('_', ' ', $store->type)) }}</td>
                                 <td>{{ $store->address }}</td>
                                 <td>
                                     <span class="badge p-1 text-white bg-{{ $store->is_active ? 'success' : 'secondary' }}">
@@ -104,7 +102,7 @@
                             @endcan
                         @empty
                             <tr>
-                                <td colspan="7" class="text-center text-muted">No stores found.</td>
+                                <td colspan="6" class="text-center text-muted">No stores found.</td>
                             </tr>
                         @endforelse
                     </tbody>

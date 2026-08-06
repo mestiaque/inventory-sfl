@@ -14,17 +14,16 @@
         <div class="card-body">
             <div class="table-responsive">
                 <table class="table table-bordered table-striped table-sm align-middle">
-                    <thead><tr><th>Store</th><th>Type</th><th class="text-end">Distinct Items</th><th class="text-end">Total Value</th></tr></thead>
+                    <thead><tr><th>Store</th><th class="text-end">Distinct Items</th><th class="text-end">Total Value</th></tr></thead>
                     <tbody>
                         @forelse($stores as $row)
                             <tr>
                                 <td>{{ $row->store->name }}</td>
-                                <td>{{ ucwords(str_replace('_', ' ', $row->store->type)) }}</td>
                                 <td class="text-end">{{ $row->items_count }}</td>
                                 <td class="text-end">{{ number_format($row->total_value, 2) }}</td>
                             </tr>
                         @empty
-                            <tr><td colspan="4" class="text-center text-muted">No stores found.</td></tr>
+                            <tr><td colspan="3" class="text-center text-muted">No stores found.</td></tr>
                         @endforelse
                     </tbody>
                 </table>
