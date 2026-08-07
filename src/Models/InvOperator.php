@@ -16,7 +16,7 @@ class InvOperator extends Model
 
     protected $table = 'inv_operators';
 
-    protected $fillable = ['name', 'code', 'designation', 'user_id', 'store_id', 'is_active', 'created_by'];
+    protected $fillable = ['name', 'code', 'designation', 'user_id', 'employee_id', 'store_id', 'is_active', 'created_by'];
 
     protected $casts = [
         'is_active' => 'boolean',
@@ -25,6 +25,18 @@ class InvOperator extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class, 'user_id');
+    }
+
+    /**
+     * The HR employee record for this operator (hr_employees), separate
+     * from their system login (user_id) — guarded with class_exists() so
+     * this package doesn't hard-depend on hr-new being installed.
+     */
+    public function employee(): BelongsTo
+    {
+        $employeeClass = class_exists(\ME\Hr\Models\HrEmployee::class) ? \ME\Hr\Models\HrEmployee::class : self::class;
+
+        return $this->belongsTo($employeeClass, 'employee_id');
     }
 
     public function store(): BelongsTo

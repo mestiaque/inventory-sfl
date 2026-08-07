@@ -61,7 +61,7 @@
             <div class="table-responsive">
                 <table class="table table-bordered table-striped align-middle">
                     <thead>
-                        <tr><th>#</th><th>Name</th><th>Code</th><th>System Login</th><th>Designation</th><th>Assigned Store</th><th>Status</th><th class="text-end">Actions</th></tr>
+                        <tr><th>#</th><th>Name</th><th>Code</th><th>System Login</th><th>HR Employee</th><th>Designation</th><th>Assigned Store</th><th>Status</th><th class="text-end">Actions</th></tr>
                     </thead>
                     <tbody>
                         @forelse($operators as $operator)
@@ -70,6 +70,7 @@
                                 <td>{{ $operator->name }}</td>
                                 <td>{{ $operator->code }}</td>
                                 <td>{{ $operator->user?->name }}</td>
+                                <td>{{ $operator->employee?->name ?? '—' }}</td>
                                 <td>
                                     <span class="badge p-1 text-white bg-{{ $operator->designation === 'operator' ? 'secondary' : 'info' }}">
                                         {{ ucwords(str_replace('_', ' ', $operator->designation)) }}
@@ -110,6 +111,7 @@
                                                 <dt class="col-sm-4">Name</dt><dd class="col-sm-8">{{ $operator->name }}</dd>
                                                 <dt class="col-sm-4">Code</dt><dd class="col-sm-8">{{ $operator->code ?: '—' }}</dd>
                                                 <dt class="col-sm-4">System Login</dt><dd class="col-sm-8">{{ $operator->user?->name ?? '—' }}</dd>
+                                                <dt class="col-sm-4">HR Employee</dt><dd class="col-sm-8">{{ $operator->employee?->name ?? '—' }}</dd>
                                                 <dt class="col-sm-4">Designation</dt>
                                                 <dd class="col-sm-8">
                                                     <span class="badge p-1 text-white bg-{{ $operator->designation === 'operator' ? 'secondary' : 'info' }}">
@@ -156,7 +158,7 @@
                             @endcan
                         @empty
                             <tr>
-                                <td colspan="8" class="text-center text-muted">No operators found.</td>
+                                <td colspan="9" class="text-center text-muted">No operators found.</td>
                             </tr>
                         @endforelse
                     </tbody>

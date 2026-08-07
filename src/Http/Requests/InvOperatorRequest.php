@@ -22,6 +22,7 @@ class InvOperatorRequest extends FormRequest
             'code'        => ['required', 'string', 'max:50', 'unique:inv_operators,code,' . $operatorId],
             'designation' => ['required', 'in:operator,store_incharge,store_manager'],
             'user_id'     => ['required', 'integer', 'exists:users,id', 'unique:inv_operators,user_id,' . $operatorId],
+            'employee_id' => ['nullable', 'integer', 'exists:hr_employees,id'],
             'store_id'    => ['nullable', 'required_unless:designation,operator', 'integer', 'exists:inv_stores,id'],
             'is_active'   => ['nullable', 'boolean'],
         ];

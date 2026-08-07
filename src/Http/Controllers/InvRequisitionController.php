@@ -2,6 +2,8 @@
 
 namespace ME\SflInventory\Http\Controllers;
 
+use App\Models\Approval;
+use App\Services\ApprovalService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -82,6 +84,16 @@ class InvRequisitionController extends Controller
             return $requisition;
         });
 
+        app(ApprovalService::class)->request([
+            'module'       => 'inventory.requisition',
+            'approvable'   => $requisition,
+            'title'        => "Requisition Approval - {$requisition->requisition_no}",
+            'description'  => "{$requisition->requester?->name} requested materials from {$requisition->department?->name} / {$requisition->store?->name}.",
+            'route_name'   => 'inventory.requisitions.approval-form',
+            'route_params' => ['requisition' => $requisition->id],
+            'requested_by' => auth()->id(),
+        ]);
+
         return redirect()->route('inventory.requisitions.index')->with('success', "Requisition {$requisition->requisition_no} submitted successfully.");
     }
 
@@ -152,6 +164,8 @@ class InvRequisitionController extends Controller
                 'approval_remarks'  => $data['approval_remarks'] ?? null,
             ]);
 
+            $this->syncCentralApproval($requisition, 'rejected', $data['approval_remarks'] ?? null);
+
             return redirect()->route('inventory.requisitions.index')->with('success', 'Requisition rejected.');
         }
 
@@ -169,6 +183,8 @@ class InvRequisitionController extends Controller
                 'approval_remarks'  => $data['approval_remarks'] ?? null,
             ]);
         });
+
+        $this->syncCentralApproval($requisition, 'approved', $data['approval_remarks'] ?? null);
 
         return redirect()->route('inventory.requisitions.index')->with('success', "Requisition {$requisition->requisition_no} approved.");
     }
@@ -195,6 +211,29 @@ class InvRequisitionController extends Controller
         $requisition->delete();
 
         return back()->with('success', 'Requisition deleted successfully.');
+    }
+
+    /**
+     * Mirrors the decision made on this dedicated approval form (with its
+     * per-line quantities) back onto the central Approvals record, so it
+     * stops showing as pending there too. Updated directly — not through
+     * ApprovalService::approve()/reject() — because the business effect
+     * (per-line approved_qty, requisition status) was already applied above;
+     * going through the service again would re-run the handler's generic
+     * full-quantity approval on top of it.
+     */
+    private function syncCentralApproval(InvRequisition $requisition, string $status, ?string $remarks): void
+    {
+        Approval::where('module', 'inventory.requisition')
+            ->where('approvable_type', InvRequisition::class)
+            ->where('approvable_id', $requisition->id)
+            ->where('status', 'pending')
+            ->update([
+                'status'      => $status,
+                'approved_by' => auth()->id(),
+                'approved_at' => now(),
+                'remarks'     => $remarks,
+            ]);
     }
 
     private function formOptions(): array

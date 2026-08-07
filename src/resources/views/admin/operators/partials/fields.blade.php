@@ -18,6 +18,16 @@
     <div class="form-text">The person logs in with this account; their issues/requisitions/etc. get tracked back to this profile.</div>
 </div>
 <div class="mb-3">
+    <label class="form-label">HR Employee</label>
+    <select name="employee_id" class="form-control inv-select2">
+        <option value="">— None —</option>
+        @foreach($employees as $employee)
+            <option value="{{ $employee->id }}" @selected(old('employee_id', $operator?->employee_id ?? '') == $employee->id)>{{ $employee->name }} ({{ $employee->employee_id }})</option>
+        @endforeach
+    </select>
+    <div class="form-text">Links this operator to their HR employee record (separate from the system login above).</div>
+</div>
+<div class="mb-3">
     <label class="form-label">Designation <span class="text-danger">*</span></label>
     <select name="designation" class="form-control operator-designation" required>
         <option value="operator" @selected(old('designation', $operator?->designation ?? 'operator') === 'operator')>Operator — sees only their own entries</option>

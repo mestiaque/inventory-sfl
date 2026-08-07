@@ -17,7 +17,7 @@ class InvOperatorController extends Controller
         $this->authorize('inv_operator.list');
 
         $operators = InvOperator::query()
-            ->with(['user', 'store'])
+            ->with(['user', 'employee', 'store'])
             ->when($request->filled('search'), fn ($q) => $q->where('name', 'like', '%' . $request->search . '%'))
             ->when($request->filled('designation'), fn ($q) => $q->where('designation', $request->designation))
             ->when($request->filled('store_id'), fn ($q) => $q->where('store_id', $request->store_id))
@@ -56,9 +56,14 @@ class InvOperatorController extends Controller
 
     private function formOptions(): array
     {
+        $employees = class_exists(\ME\Hr\Models\HrEmployee::class)
+            ? \ME\Hr\Models\HrEmployee::query()->where('status', 1)->orderBy('name')->get()
+            : collect();
+
         return [
-            'stores' => InvStore::active()->orderBy('name')->get(),
-            'users'  => User::orderBy('name')->get(),
+            'stores'    => InvStore::active()->orderBy('name')->get(),
+            'users'     => User::orderBy('name')->get(),
+            'employees' => $employees,
         ];
     }
 }
