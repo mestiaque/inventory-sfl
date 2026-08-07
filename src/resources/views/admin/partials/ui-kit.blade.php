@@ -1,10 +1,4 @@
-{{-- Shared visual design system for every Inventory Management page. Scoped
-     under .inv-module so it only affects this page's own markup — include
-     once near the top of any index/create/edit view, right after the
-     wrapping <div> gets the `inv-module` class added. Targets the existing
-     Bootstrap classes already used everywhere (.card, .table, .badge, .btn,
-     form.row.g-2 filter bars) so pages get the upgrade without needing their
-     HTML restructured. --}}
+
 <style>
 .inv-module { --inv-accent: #f97316; --inv-accent-dark: #ea580c; --inv-ink: #1f2937; }
 
