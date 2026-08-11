@@ -128,6 +128,16 @@ return [
                     'route'      => "$base/stock-ledger",
                 ],
                 [
+                    'title'      => 'Broken Needle',
+                    'icon'       => 'fa-solid fa-syringe',
+                    'icon_color' => 'text-danger',
+                    'permission' => '',
+                    'children'   => [
+                        ['title' => 'Entries', 'icon' => 'fa-solid fa-arrow-right', 'icon_color' => 'text-danger', 'permission' => 'inv_broken_needle', 'route' => "$base/broken-needles"],
+                        ['title' => 'Monthly Report', 'icon' => 'fa-solid fa-arrow-right', 'icon_color' => 'text-danger', 'permission' => 'inv_broken_needle', 'route' => "$base/broken-needles/report"],
+                    ],
+                ],
+                [
                     'title'      => 'Reports',
                     'icon'       => 'fa-solid fa-chart-line',
                     'icon_color' => 'text-info',

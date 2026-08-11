@@ -117,5 +117,9 @@ return [
             'label' => 'Inventory Reports',
             'permissions' => ['view' => 'View', 'export' => 'Export', 'all' => 'All'],
         ],
+        'inv_broken_needle' => [
+            'label' => 'Broken Needle',
+            'permissions' => $crud + ['export' => 'Export'],
+        ],
     ],
 ];

@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use ME\SflInventory\Http\Controllers\DashboardController;
 use ME\SflInventory\Http\Controllers\InvBrandController;
+use ME\SflInventory\Http\Controllers\InvBrokenNeedleController;
 use ME\SflInventory\Http\Controllers\InvBuyerController;
 use ME\SflInventory\Http\Controllers\InvColorController;
 use ME\SflInventory\Http\Controllers\InvDepartmentController;
@@ -107,6 +108,13 @@ Route::middleware($route['middleware'] ?? ['web', 'auth'])
         Route::get('stock-ledger', [InvStockLedgerController::class, 'index'])->name('stock-ledger.index');
         Route::get('stock-overview', [InvStockOverviewController::class, 'index'])->name('stock-overview.index');
         Route::get('store-overview', [InvStockOverviewController::class, 'cards'])->name('stock-overview.cards');
+
+        // Broken Needle tracking
+        Route::get('broken-needles/report', [InvBrokenNeedleController::class, 'report'])->name('broken-needles.report');
+        Route::get('broken-needles/report/export', [InvBrokenNeedleController::class, 'exportReport'])->name('broken-needles.report.export');
+        Route::resource('broken-needles', InvBrokenNeedleController::class)
+            ->only(['index', 'store', 'update', 'destroy'])
+            ->parameters(['broken-needles' => 'broken_needle']);
 
         // Reports
         Route::prefix('reports')->name('reports.')->group(function () {

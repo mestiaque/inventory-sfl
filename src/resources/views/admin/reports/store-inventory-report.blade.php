@@ -11,10 +11,6 @@
 
 @push('css')
 <style>
-    /* This report's table is unusually wide (15+ columns, one per department) —
-       the shared .table-responsive rule clips overflow entirely instead of
-       scrolling it, so override to a real horizontal scrollbar here only. */
-    /* .inv-module .store-inventory-scroll { overflow-x: auto; overflow-y: hidden; -webkit-overflow-scrolling: touch; } */
 </style>
 @endpush
 
