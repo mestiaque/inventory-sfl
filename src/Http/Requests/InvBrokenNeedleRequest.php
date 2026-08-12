@@ -18,8 +18,7 @@ class InvBrokenNeedleRequest extends FormRequest
         return [
             'employee_id'   => ['required', 'integer', 'exists:hr_employees,id'],
             'department_id' => ['nullable', 'integer', 'exists:inv_departments,id'],
-            'machine_id'    => ['nullable', 'integer', 'exists:inv_machines,id'],
-            'line_no'       => ['required', 'string', 'max:50'],
+            'machine_id'    => ['required', 'integer', 'exists:inv_machines,id'],
             'needle_type'   => ['required', 'string', 'max:100'],
             'needle_size'   => ['required', 'string', 'max:50'],
             'buyer_id'      => ['nullable', 'integer', 'exists:inv_buyers,id'],

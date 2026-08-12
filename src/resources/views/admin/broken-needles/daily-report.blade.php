@@ -26,6 +26,9 @@
     .needle-tape-col { min-width: 220px; }
     .needle-instructions { font-size: 12px; color: #1d4ed8; margin-top: 10px; }
     .needle-instructions li { margin-bottom: 2px; }
+    .needle-signatures { display: flex; justify-content: space-between; margin-top: 50px; padding: 0 20px; }
+    .needle-signatures .sign-block { text-align: center; min-width: 200px; }
+    .needle-signatures .sign-line { border-top: 1px solid #000; padding-top: 6px; font-weight: 700; font-size: 13px; }
 
     @media print {
         @page { margin: 0; size: landscape; }
@@ -115,7 +118,7 @@
                             <td class="text-center">{{ $row->line_no }}</td>
                             <td>{{ $row->needle_type }}</td>
                             <td class="text-center">{{ $row->needle_size }}</td>
-                            <td>{{ $row->machine?->name ?? $row->machine?->code ?? '' }}</td>
+                            <td>{{ $row->machine?->machine_no ?? $row->machine?->code ?? '' }}</td>
                             <td></td>
                             <td>{{ $row->employee?->name ?? '' }}</td>
                             <td class="text-center">{{ $row->employee?->employee_id ?? $row->employee_id }}</td>
@@ -144,6 +147,18 @@
                 <li>THE NEEDLE MAN MUST TAPE THE BROKEN METAL/NEEDLE PIECES SECURELY TO A CONTROL CARD AND LOG IN REGISTER.</li>
                 <li>IF ANY BROKEN PART IS MISSING, THE NEEDLE MAN WILL NOT ISSUE A NEW NEEDLE UNTIL AUTHORIZATION IS RECEIVED FROM PM.</li>
             </ul>
+        </div>
+
+        <div class="needle-signatures">
+            <div class="sign-block">
+                <div class="sign-line">QUALITY MANAGER</div>
+            </div>
+            <div class="sign-block">
+                <div class="sign-line">PRODUCTION MANAGER</div>
+            </div>
+            <div class="sign-block">
+                <div class="sign-line">ADMIN/ WAREHOUSE MANAGER</div>
+            </div>
         </div>
     </div>
 </div>

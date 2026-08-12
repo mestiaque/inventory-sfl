@@ -16,7 +16,7 @@ class InvMachine extends Model
     protected $table = 'inv_machines';
 
     protected $fillable = [
-        'name', 'code', 'model', 'origin', 'type', 'color', 'description',
+        'name', 'code', 'machine_no', 'model', 'origin', 'type', 'color', 'description',
         'department_id', 'section', 'line', 'is_active', 'created_by',
     ];
 

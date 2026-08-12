@@ -11,6 +11,14 @@
 </div>
 <div class="row">
     <div class="col-md-6 mb-3">
+        <label class="form-label">Machine No</label>
+        <input type="text" name="machine_no" class="form-control" placeholder="e.g. B.A, B.St, SN2" value="{{ old('machine_no', $machine?->machine_no ?? '') }}">
+        <div class="form-text">The floor's own machine tag — this is what prints in the "Machine No" column on reports.</div>
+    </div>
+    <div class="col-md-6"></div>
+</div>
+<div class="row">
+    <div class="col-md-6 mb-3">
         <label class="form-label">Model</label>
         <input type="text" name="model" class="form-control" value="{{ old('model', $machine?->model ?? '') }}">
     </div>

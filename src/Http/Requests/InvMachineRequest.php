@@ -20,6 +20,7 @@ class InvMachineRequest extends FormRequest
         return [
             'name'          => ['required', 'string', 'max:150'],
             'code'          => ['required', 'string', 'max:50', 'unique:inv_machines,code,' . $machineId],
+            'machine_no'    => ['nullable', 'string', 'max:100'],
             'model'         => ['nullable', 'string', 'max:150'],
             'origin'        => ['nullable', 'string', 'max:150'],
             'type'          => ['nullable', 'string', 'max:150'],

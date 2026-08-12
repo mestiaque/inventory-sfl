@@ -41,6 +41,7 @@ class InvBrokenNeedleController extends Controller
     public function store(InvBrokenNeedleRequest $request): RedirectResponse
     {
         $data = $request->validated();
+        $data['line_no'] = InvMachine::find($data['machine_id'])?->line;
         $data['created_by'] = auth()->id();
         InvBrokenNeedle::create($data);
 
@@ -49,7 +50,9 @@ class InvBrokenNeedleController extends Controller
 
     public function update(InvBrokenNeedleRequest $request, InvBrokenNeedle $broken_needle): RedirectResponse
     {
-        $broken_needle->update($request->validated());
+        $data = $request->validated();
+        $data['line_no'] = InvMachine::find($data['machine_id'])?->line;
+        $broken_needle->update($data);
 
         return back()->with('success', 'Broken needle entry updated.');
     }
