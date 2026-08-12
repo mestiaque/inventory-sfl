@@ -10,8 +10,8 @@ return [
     ],
 
     'company' => [
-        'name'    => env('COMPANY_NAME', 'Suhana Fashions Limited'),
-        'address' => env('COMPANY_ADDRESS', ''),
+        'name'    => env('COMPANY_NAME', 'SUHANA FASHIONS LTD.'),
+        'address' => env('COMPANY_ADDRESS', 'Kathgora, Ashulia, Savar, Dhaka, Bangladesh'),
     ],
 
     // Prefixes used by ME\SflInventory\Services\DocumentNumberService to

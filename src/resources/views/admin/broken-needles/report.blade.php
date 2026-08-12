@@ -37,9 +37,17 @@
             @unless($printMode)
                 <form method="GET" class="row g-2 mb-3">
                     <div class="col-md-3">
+                        <select name="employee_id" class="form-control inv-select2">
+                            <option value="">All Employees</option>
+                            @foreach($employees as $employee)
+                                <option value="{{ $employee->id }}" @selected($employeeId == $employee->id)>{{ $employee->name }} ({{ $employee->employee_id }})</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="col-md-2">
                         <input type="date" name="date_from" class="form-control" value="{{ $from }}" placeholder="From">
                     </div>
-                    <div class="col-md-3">
+                    <div class="col-md-2">
                         <input type="date" name="date_to" class="form-control" value="{{ $to }}" placeholder="To">
                     </div>
                     <div class="col-md-3">
@@ -48,10 +56,15 @@
                             <option value="asc" @selected($sort === 'asc')>Qty: Low to High</option>
                         </select>
                     </div>
-                    <div class="col-md-3">
+                    <div class="col-md-2">
                         <button type="submit" class="btn btn-secondary w-100">Filter</button>
                     </div>
                 </form>
+                @if($employeeId)
+                    <a href="{{ route('inventory.broken-needles.report', request()->except(['employee_id'])) }}" class="btn btn-sm btn-outline-secondary mb-3">
+                        <i class="fa-solid fa-arrow-left"></i> Clear employee filter
+                    </a>
+                @endif
             @endunless
 
             <div class="table-responsive">

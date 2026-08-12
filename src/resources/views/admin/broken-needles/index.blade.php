@@ -13,6 +13,7 @@
         <div class="card-header d-flex justify-content-between align-items-center">
             <h5 class="mb-0">Broken Needle Entries</h5>
             <div class="d-flex align-items-center gap-2">
+                <a href="{{ route('inventory.broken-needles.daily-report') }}" class="btn btn-outline-warning btn-sm"><i class="fa-solid fa-file-lines"></i> Daily Needle Supply Report</a>
                 <a href="{{ route('inventory.broken-needles.report') }}" class="btn btn-outline-info btn-sm"><i class="fa-solid fa-chart-column"></i> Monthly Report</a>
                 <a href="{{ route('inventory.broken-needles.machine-report') }}" class="btn btn-outline-info btn-sm"><i class="fa-solid fa-industry"></i> Machine Report</a>
                 @can('inv_broken_needle.add')
@@ -24,7 +25,7 @@
         </div>
         <div class="card-body">
             <form method="GET" class="row g-2 mb-3">
-                <div class="col-md-3">
+                <div class="col-md-2">
                     <select name="employee_id" class="form-control inv-select2">
                         <option value="">All Employees</option>
                         @foreach($employees as $employee)
@@ -32,7 +33,7 @@
                         @endforeach
                     </select>
                 </div>
-                <div class="col-md-3">
+                <div class="col-md-2">
                     <select name="department_id" class="form-control inv-select2">
                         <option value="">All Departments</option>
                         @foreach($departments as $department)
@@ -40,7 +41,7 @@
                         @endforeach
                     </select>
                 </div>
-                <div class="col-md-3">
+                <div class="col-md-2">
                     <select name="machine_id" class="form-control inv-select2">
                         <option value="">All Machines</option>
                         @foreach($machines as $machine)
@@ -48,34 +49,52 @@
                         @endforeach
                     </select>
                 </div>
-                <div class="col-md-2">
-                    <input type="date" name="date_from" class="form-control" value="{{ request('date_from') }}" placeholder="From">
+                <div class="col-md-1">
+                    <input type="text" name="line_no" class="form-control" placeholder="Line No" value="{{ request('line_no') }}">
                 </div>
                 <div class="col-md-2">
+                    <select name="buyer_id" class="form-control inv-select2">
+                        <option value="">All Buyers</option>
+                        @foreach($buyers as $buyer)
+                            <option value="{{ $buyer->id }}" @selected(request('buyer_id') == $buyer->id)>{{ $buyer->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="col-md-1">
+                    <input type="date" name="date_from" class="form-control" value="{{ request('date_from') }}" placeholder="From">
+                </div>
+                <div class="col-md-1">
                     <input type="date" name="date_to" class="form-control" value="{{ request('date_to') }}" placeholder="To">
                 </div>
                 <div class="col-md-1">
                     <button type="submit" class="btn btn-secondary w-100">Filter</button>
                 </div>
-                <div class="col-md-1">
-                    <a href="{{ route('inventory.broken-needles.index') }}" class="btn btn-light w-100">Reset</a>
+                <div class="col-md-12">
+                    <a href="{{ route('inventory.broken-needles.index') }}" class="btn btn-light btn-sm">Reset</a>
                 </div>
             </form>
 
             <div class="table-responsive">
                 <table class="table table-bordered table-striped align-middle">
                     <thead>
-                        <tr><th>#</th><th>Date</th><th>Employee</th><th>Department</th><th>Machine</th><th class="text-end">Qty</th><th>Remarks</th><th class="text-end">Actions</th></tr>
+                        <tr>
+                            <th>#</th><th>Date</th><th>Line</th><th>Employee</th><th>Department</th><th>Machine</th>
+                            <th>Needle Type</th><th>Needle Size</th><th class="text-end">Qty</th><th>Buyer / Style</th><th>Remarks</th><th class="text-end">Actions</th>
+                        </tr>
                     </thead>
                     <tbody>
                         @forelse($entries as $entry)
                             <tr>
                                 <td>{{ $loop->iteration + $entries->firstItem() - 1 }}</td>
                                 <td>{{ $entry->broken_date?->format('d M Y') }}</td>
+                                <td>{{ $entry->line_no }}</td>
                                 <td>{{ $entry->employee?->name ?? '—' }}</td>
                                 <td>{{ $entry->department?->name ?? '—' }}</td>
                                 <td>{{ $entry->machine?->name ?? '—' }}</td>
+                                <td>{{ $entry->needle_type }}</td>
+                                <td>{{ $entry->needle_size }}</td>
                                 <td class="text-end">{{ $entry->quantity }}</td>
+                                <td>{{ trim(($entry->buyer?->name ?? '') . ($entry->style ? ' / ' . $entry->style : '')) ?: '—' }}</td>
                                 <td>{{ $entry->remarks }}</td>
                                 <td class="text-end">
                                     @can('inv_broken_needle.edit')
@@ -93,7 +112,7 @@
 
                             @can('inv_broken_needle.edit')
                                 <div class="modal fade" id="editBrokenNeedleModal{{ $entry->id }}" tabindex="-1" aria-hidden="true">
-                                    <div class="modal-dialog">
+                                    <div class="modal-dialog modal-lg">
                                         <div class="modal-content">
                                             <form method="POST" action="{{ route('inventory.broken-needles.update', $entry) }}">
                                                 @csrf @method('PUT')
@@ -114,7 +133,7 @@
                                 </div>
                             @endcan
                         @empty
-                            <tr><td colspan="8" class="text-center text-muted">No broken needle entries found.</td></tr>
+                            <tr><td colspan="12" class="text-center text-muted">No broken needle entries found.</td></tr>
                         @endforelse
                     </tbody>
                 </table>
@@ -127,7 +146,7 @@
 
 @can('inv_broken_needle.add')
     <div class="modal fade" id="createBrokenNeedleModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog">
+        <div class="modal-dialog modal-lg">
             <div class="modal-content">
                 <form method="POST" action="{{ route('inventory.broken-needles.store') }}">
                     @csrf

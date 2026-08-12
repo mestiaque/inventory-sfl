@@ -116,6 +116,8 @@ Route::middleware($route['middleware'] ?? ['web', 'auth'])
         Route::get('broken-needles/report/export', [InvBrokenNeedleController::class, 'exportCombinedReport'])->name('broken-needles.report.export');
         Route::get('broken-needles/machine-report', [InvBrokenNeedleController::class, 'machineReport'])->name('broken-needles.machine-report');
         Route::get('broken-needles/machine-report/export', [InvBrokenNeedleController::class, 'exportCombinedReport'])->name('broken-needles.machine-report.export');
+        Route::get('broken-needles/daily-report', [InvBrokenNeedleController::class, 'dailyReport'])->name('broken-needles.daily-report');
+        Route::get('broken-needles/daily-report/export', [InvBrokenNeedleController::class, 'exportDailyReport'])->name('broken-needles.daily-report.export');
         Route::resource('broken-needles', InvBrokenNeedleController::class)
             ->only(['index', 'store', 'update', 'destroy'])
             ->parameters(['broken-needles' => 'broken_needle']);
