@@ -14,6 +14,7 @@
             <h5 class="mb-0">Broken Needle Entries</h5>
             <div class="d-flex align-items-center gap-2">
                 <a href="{{ route('inventory.broken-needles.report') }}" class="btn btn-outline-info btn-sm"><i class="fa-solid fa-chart-column"></i> Monthly Report</a>
+                <a href="{{ route('inventory.broken-needles.machine-report') }}" class="btn btn-outline-info btn-sm"><i class="fa-solid fa-industry"></i> Machine Report</a>
                 @can('inv_broken_needle.add')
                     <button type="button" class="btn btn-primary btn-sm" data-toggle="modal" data-target="#createBrokenNeedleModal">
                         <i class="fa-solid fa-plus"></i> Add Entry
@@ -39,6 +40,14 @@
                         @endforeach
                     </select>
                 </div>
+                <div class="col-md-3">
+                    <select name="machine_id" class="form-control inv-select2">
+                        <option value="">All Machines</option>
+                        @foreach($machines as $machine)
+                            <option value="{{ $machine->id }}" @selected(request('machine_id') == $machine->id)>{{ $machine->name }} ({{ $machine->code }})</option>
+                        @endforeach
+                    </select>
+                </div>
                 <div class="col-md-2">
                     <input type="date" name="date_from" class="form-control" value="{{ request('date_from') }}" placeholder="From">
                 </div>
@@ -56,7 +65,7 @@
             <div class="table-responsive">
                 <table class="table table-bordered table-striped align-middle">
                     <thead>
-                        <tr><th>#</th><th>Date</th><th>Employee</th><th>Department</th><th class="text-end">Qty</th><th>Remarks</th><th class="text-end">Actions</th></tr>
+                        <tr><th>#</th><th>Date</th><th>Employee</th><th>Department</th><th>Machine</th><th class="text-end">Qty</th><th>Remarks</th><th class="text-end">Actions</th></tr>
                     </thead>
                     <tbody>
                         @forelse($entries as $entry)
@@ -65,6 +74,7 @@
                                 <td>{{ $entry->broken_date?->format('d M Y') }}</td>
                                 <td>{{ $entry->employee?->name ?? '—' }}</td>
                                 <td>{{ $entry->department?->name ?? '—' }}</td>
+                                <td>{{ $entry->machine?->name ?? '—' }}</td>
                                 <td class="text-end">{{ $entry->quantity }}</td>
                                 <td>{{ $entry->remarks }}</td>
                                 <td class="text-end">
@@ -104,7 +114,7 @@
                                 </div>
                             @endcan
                         @empty
-                            <tr><td colspan="7" class="text-center text-muted">No broken needle entries found.</td></tr>
+                            <tr><td colspan="8" class="text-center text-muted">No broken needle entries found.</td></tr>
                         @endforelse
                     </tbody>
                 </table>

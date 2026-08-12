@@ -18,6 +18,7 @@ class InvBrokenNeedleRequest extends FormRequest
         return [
             'employee_id'   => ['required', 'integer', 'exists:hr_employees,id'],
             'department_id' => ['nullable', 'integer', 'exists:inv_departments,id'],
+            'machine_id'    => ['nullable', 'integer', 'exists:inv_machines,id'],
             'broken_date'   => ['required', 'date'],
             'quantity'      => ['required', 'integer', 'min:1'],
             'remarks'       => ['nullable', 'string'],

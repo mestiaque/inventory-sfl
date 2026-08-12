@@ -65,6 +65,10 @@ return [
             'label' => 'Departments',
             'permissions' => $crud,
         ],
+        'inv_machine' => [
+            'label' => 'Machines',
+            'permissions' => $crud,
+        ],
         'inv_purchase_order' => [
             'label' => 'Purchase Orders',
             'permissions' => $crud + ['approve' => 'Approve', 'print' => 'Print', 'export' => 'Export'],

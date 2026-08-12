@@ -14,6 +14,7 @@ use ME\SflInventory\Http\Controllers\InvGuidelineController;
 use ME\SflInventory\Http\Controllers\InvIssueController;
 use ME\SflInventory\Http\Controllers\InvItemCategoryController;
 use ME\SflInventory\Http\Controllers\InvItemController;
+use ME\SflInventory\Http\Controllers\InvMachineController;
 use ME\SflInventory\Http\Controllers\InvOperatorController;
 use ME\SflInventory\Http\Controllers\InvProductionConsumptionController;
 use ME\SflInventory\Http\Controllers\InvPurchaseOrderController;
@@ -54,6 +55,7 @@ Route::middleware($route['middleware'] ?? ['web', 'auth'])
         Route::resource('buyers', InvBuyerController::class)->only(['index', 'store', 'update', 'destroy']);
         Route::resource('departments', InvDepartmentController::class)->only(['index', 'store', 'update', 'destroy']);
         Route::resource('operators', InvOperatorController::class)->only(['index', 'store', 'update', 'destroy']);
+        Route::resource('machines', InvMachineController::class)->only(['index', 'store', 'update', 'destroy']);
         Route::resource('items', InvItemController::class)->only(['index', 'create', 'store', 'edit', 'update', 'destroy']);
 
         // Purchase -> GRN
@@ -111,7 +113,9 @@ Route::middleware($route['middleware'] ?? ['web', 'auth'])
 
         // Broken Needle tracking
         Route::get('broken-needles/report', [InvBrokenNeedleController::class, 'report'])->name('broken-needles.report');
-        Route::get('broken-needles/report/export', [InvBrokenNeedleController::class, 'exportReport'])->name('broken-needles.report.export');
+        Route::get('broken-needles/report/export', [InvBrokenNeedleController::class, 'exportCombinedReport'])->name('broken-needles.report.export');
+        Route::get('broken-needles/machine-report', [InvBrokenNeedleController::class, 'machineReport'])->name('broken-needles.machine-report');
+        Route::get('broken-needles/machine-report/export', [InvBrokenNeedleController::class, 'exportCombinedReport'])->name('broken-needles.machine-report.export');
         Route::resource('broken-needles', InvBrokenNeedleController::class)
             ->only(['index', 'store', 'update', 'destroy'])
             ->parameters(['broken-needles' => 'broken_needle']);

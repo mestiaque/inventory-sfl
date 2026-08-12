@@ -56,6 +56,7 @@ return [
                         ['title' => 'Buyers', 'icon' => 'fa-solid fa-handshake', 'icon_color' => 'text-info', 'permission' => 'inv_buyer', 'route' => "$base/buyers"],
                         ['title' => 'Departments', 'icon' => 'fa-solid fa-building', 'icon_color' => 'text-info', 'permission' => 'inv_department', 'route' => "$base/departments"],
                         ['title' => 'Operators / Store Incharge', 'icon' => 'fa-solid fa-user-gear', 'icon_color' => 'text-info', 'permission' => 'inv_operator', 'route' => "$base/operators"],
+                        ['title' => 'Machines', 'icon' => 'fa-solid fa-industry', 'icon_color' => 'text-info', 'permission' => 'inv_machine', 'route' => "$base/machines"],
                     ],
                 ],
                 [

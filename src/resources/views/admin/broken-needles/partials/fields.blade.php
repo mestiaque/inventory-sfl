@@ -1,4 +1,4 @@
-{{-- props: entry (optional, for edit), employees, departments --}}
+{{-- props: entry (optional, for edit), employees, departments, machines --}}
 <div class="mb-3">
     <label class="form-label">Employee <span class="text-danger">*</span></label>
     <select name="employee_id" class="form-control inv-select2" required>
@@ -8,14 +8,25 @@
         @endforeach
     </select>
 </div>
-<div class="mb-3">
-    <label class="form-label">Department</label>
-    <select name="department_id" class="form-control inv-select2">
-        <option value="">— None —</option>
-        @foreach($departments as $department)
-            <option value="{{ $department->id }}" @selected(old('department_id', $entry?->department_id ?? '') == $department->id)>{{ $department->name }}</option>
-        @endforeach
-    </select>
+<div class="row">
+    <div class="col-md-6 mb-3">
+        <label class="form-label">Department</label>
+        <select name="department_id" class="form-control inv-select2">
+            <option value="">— None —</option>
+            @foreach($departments as $department)
+                <option value="{{ $department->id }}" @selected(old('department_id', $entry?->department_id ?? '') == $department->id)>{{ $department->name }}</option>
+            @endforeach
+        </select>
+    </div>
+    <div class="col-md-6 mb-3">
+        <label class="form-label">Machine</label>
+        <select name="machine_id" class="form-control inv-select2">
+            <option value="">— None —</option>
+            @foreach($machines as $machine)
+                <option value="{{ $machine->id }}" @selected(old('machine_id', $entry?->machine_id ?? '') == $machine->id)>{{ $machine->name }} ({{ $machine->code }})</option>
+            @endforeach
+        </select>
+    </div>
 </div>
 <div class="row">
     <div class="col-md-6 mb-3">

@@ -28,6 +28,7 @@
                 <div class="d-flex align-items-center gap-2">
                     <a href="{{ route('inventory.broken-needles.report.export', request()->query()) }}" class="btn btn-sm btn-outline-success"><i class="fa-solid fa-file-excel"></i> Excel</a>
                     <a href="{{ url()->current() }}?{{ http_build_query(array_merge(request()->query(), ['print' => 1])) }}" target="_blank" class="btn btn-sm btn-outline-secondary"><i class="fa-solid fa-print"></i> Print</a>
+                    <a href="{{ route('inventory.broken-needles.machine-report') }}" class="btn btn-outline-info btn-sm"><i class="fa-solid fa-industry"></i> Machine Report</a>
                     <a href="{{ route('inventory.broken-needles.index') }}" class="btn btn-light btn-sm"><i class="fa-solid fa-arrow-left"></i> Entries</a>
                 </div>
             @endunless

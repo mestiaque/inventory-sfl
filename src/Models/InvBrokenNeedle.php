@@ -15,7 +15,7 @@ class InvBrokenNeedle extends Model
 
     protected $table = 'inv_broken_needles';
 
-    protected $fillable = ['employee_id', 'department_id', 'broken_date', 'quantity', 'remarks', 'created_by'];
+    protected $fillable = ['employee_id', 'department_id', 'machine_id', 'broken_date', 'quantity', 'remarks', 'created_by'];
 
     protected $casts = [
         'broken_date' => 'date',
@@ -37,6 +37,11 @@ class InvBrokenNeedle extends Model
     public function department(): BelongsTo
     {
         return $this->belongsTo(InvDepartment::class, 'department_id');
+    }
+
+    public function machine(): BelongsTo
+    {
+        return $this->belongsTo(InvMachine::class, 'machine_id');
     }
 
     public function creator(): BelongsTo
