@@ -53,21 +53,6 @@
         <input type="number" min="1" step="1" name="quantity" class="form-control" value="{{ old('quantity', $entry?->quantity ?? 1) }}" required>
     </div>
 </div>
-<div class="row">
-    <div class="col-md-6 mb-3">
-        <label class="form-label">Buyer</label>
-        <select name="buyer_id" class="form-control inv-select2">
-            <option value="">— None —</option>
-            @foreach($buyers as $buyer)
-                <option value="{{ $buyer->id }}" @selected(old('buyer_id', $entry?->buyer_id ?? '') == $buyer->id)>{{ $buyer->name }}</option>
-            @endforeach
-        </select>
-    </div>
-    <div class="col-md-6 mb-3">
-        <label class="form-label">Style</label>
-        <input type="text" name="style" class="form-control" value="{{ old('style', $entry?->style ?? '') }}">
-    </div>
-</div>
 <div class="mb-3">
     <label class="form-label">Remarks</label>
     <textarea name="remarks" class="form-control" rows="2">{{ old('remarks', $entry?->remarks ?? '') }}</textarea>
