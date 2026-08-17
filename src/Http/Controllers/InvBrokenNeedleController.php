@@ -217,6 +217,7 @@ class InvBrokenNeedleController extends Controller
     private function employeeRows(string $from, string $to, string $sort, ?int $employeeId = null)
     {
         $rows = DB::table('inv_broken_needles')
+            ->whereNull('deleted_at')
             ->whereDate('broken_date', '>=', $from)
             ->whereDate('broken_date', '<=', $to)
             ->when($employeeId, fn ($q) => $q->where('employee_id', $employeeId))
@@ -239,6 +240,7 @@ class InvBrokenNeedleController extends Controller
     private function machineRows(string $from, string $to, string $sort, ?int $departmentId)
     {
         $rows = DB::table('inv_broken_needles')
+            ->whereNull('deleted_at')
             ->whereDate('broken_date', '>=', $from)
             ->whereDate('broken_date', '<=', $to)
             ->when($departmentId, fn ($q) => $q->where('department_id', $departmentId))
@@ -259,6 +261,7 @@ class InvBrokenNeedleController extends Controller
     private function machineEmployeeBreakdownRows(string $from, string $to, string $sort, ?int $departmentId, int $machineId)
     {
         $rows = DB::table('inv_broken_needles')
+            ->whereNull('deleted_at')
             ->whereDate('broken_date', '>=', $from)
             ->whereDate('broken_date', '<=', $to)
             ->when($departmentId, fn ($q) => $q->where('department_id', $departmentId))
