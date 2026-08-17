@@ -108,7 +108,7 @@
                                         </button>
                                     @endcan
                                     @can('inv_broken_needle.force_delete')
-                                        <button type="button" class="btn btn-sm btn-outline-danger" title="Force Delete (permanent)" data-toggle="modal" data-target="#forceDeleteBrokenNeedleModal" data-action="{{ route('inventory.broken-needles.force-destroy', $entry) }}">
+                                        <button type="button" class="btn btn-sm btn-outline-danger d-none" title="Force Delete (permanent)" data-toggle="modal" data-target="#forceDeleteBrokenNeedleModal" data-action="{{ route('inventory.broken-needles.force-destroy', $entry) }}">
                                             <i class="fa-solid fa-triangle-exclamation"></i>
                                         </button>
                                     @endcan

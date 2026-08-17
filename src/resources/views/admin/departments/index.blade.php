@@ -70,7 +70,7 @@
                                         </button>
                                     @endcan
                                     @can('inv_department.force_delete')
-                                        <button type="button" class="btn btn-sm btn-outline-danger" title="Force Delete (removes department reference from all records too)" data-toggle="modal" data-target="#forceDeleteDepartmentModal" data-action="{{ route('inventory.departments.force-destroy', $department) }}" data-dept-name="{{ $department->name }} ({{ $department->code }})">
+                                        <button type="button" class="btn btn-sm btn-outline-danger d-none" title="Force Delete (removes department reference from all records too)" data-toggle="modal" data-target="#forceDeleteDepartmentModal" data-action="{{ route('inventory.departments.force-destroy', $department) }}" data-dept-name="{{ $department->name }} ({{ $department->code }})">
                                             <i class="fa-solid fa-triangle-exclamation"></i>
                                         </button>
                                     @endcan

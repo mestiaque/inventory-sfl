@@ -107,7 +107,7 @@
                                         <a href="{{ route('inventory.requisitions.print', $requisition) }}" target="_blank" class="btn btn-sm btn-outline-secondary"><i class="fa-solid fa-print"></i></a>
                                     @endcan
                                     @can('inv_requisition.force_delete')
-                                        <button type="button" class="btn btn-sm btn-outline-danger" title="Force Delete" data-toggle="modal" data-target="#forceDeleteReqModal" data-action="{{ route('inventory.requisitions.force-destroy', $requisition) }}" data-req-name="{{ $requisition->requisition_no }}">
+                                        <button type="button" class="btn btn-sm btn-outline-danger d-none" title="Force Delete" data-toggle="modal" data-target="#forceDeleteReqModal" data-action="{{ route('inventory.requisitions.force-destroy', $requisition) }}" data-req-name="{{ $requisition->requisition_no }}">
                                             <i class="fa-solid fa-triangle-exclamation"></i>
                                         </button>
                                     @endcan

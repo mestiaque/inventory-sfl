@@ -140,7 +140,7 @@
                                         </button>
                                     @endcan
                                     @can('inv_item.force_delete')
-                                        <button type="button" class="btn btn-sm btn-outline-danger" title="Force Delete (wipes stock history too)" data-toggle="modal" data-target="#forceDeleteItemModal" data-action="{{ route('inventory.items.force-destroy', $item) }}" data-item-name="{{ $item->item_code }} — {{ $item->item_name }}">
+                                        <button type="button" class="btn btn-sm btn-outline-danger d-none" title="Force Delete (wipes stock history too)" data-toggle="modal" data-target="#forceDeleteItemModal" data-action="{{ route('inventory.items.force-destroy', $item) }}" data-item-name="{{ $item->item_code }} — {{ $item->item_name }}">
                                             <i class="fa-solid fa-triangle-exclamation"></i>
                                         </button>
                                     @endcan
