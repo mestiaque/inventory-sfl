@@ -5,6 +5,7 @@ namespace ME\SflInventory\Http\Controllers;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 use ME\SflInventory\Http\Requests\InvStockTransferReceiveRequest;
 use ME\SflInventory\Http\Requests\InvStockTransferRequest;
@@ -49,6 +50,135 @@ class InvStockTransferController extends Controller
         $this->authorize('inv_transfer.add');
 
         return view('sfl-inventory::admin.transfers.create', $this->formOptions());
+    }
+
+    public function show(InvStockTransfer $transfer): View
+    {
+        $this->authorize('inv_transfer.view');
+
+        $transfer->load(['fromStore', 'toStore', 'items.item.unit', 'requester', 'approver', 'receiver']);
+
+        return view('sfl-inventory::admin.transfers.show', ['transfer' => $transfer]);
+    }
+
+    /**
+     * Only a still-pending request can be edited — once approved, stock has
+     * actually left from_store_id, so changing the items/stores at that
+     * point is a delete-and-reverse operation instead (see destroy()).
+     */
+    public function edit(InvStockTransfer $transfer): View
+    {
+        $this->authorize('inv_transfer.edit');
+
+        abort_if($transfer->status !== 'pending', 403, 'Only pending transfer requests can be edited.');
+
+        $transfer->load('items');
+
+        return view('sfl-inventory::admin.transfers.edit', ['transfer' => $transfer] + $this->formOptions());
+    }
+
+    public function update(InvStockTransferRequest $request, InvStockTransfer $transfer): RedirectResponse
+    {
+        abort_if($transfer->status !== 'pending', 403, 'Only pending transfer requests can be edited.');
+
+        $data = $request->validated();
+
+        DB::transaction(function () use ($data, $transfer) {
+            $transfer->update([
+                'from_store_id' => $data['from_store_id'],
+                'to_store_id'   => $data['to_store_id'],
+                'transfer_date' => $data['transfer_date'],
+                'remarks'       => $data['remarks'] ?? null,
+            ]);
+
+            $transfer->items()->delete();
+            foreach ($data['items'] as $line) {
+                $transfer->items()->create(['item_id' => $line['item_id'], 'quantity' => $line['quantity']]);
+            }
+        });
+
+        return redirect()->route('inventory.transfers.index')->with('success', "Transfer {$transfer->transfer_no} updated.");
+    }
+
+    /**
+     * Reverses whatever stock has actually moved so far, depending on
+     * status, then removes the transfer:
+     * - pending/rejected: nothing was ever posted, just delete.
+     * - in_transit: qty_out already left from_store_id — reverse that with
+     *   a qty_in there, which is always safe (adding stock back can never
+     *   go negative, so no guard needed on that side).
+     * - received: qty_out left from_store_id (reversed the same safe way)
+     *   AND qty_in landed in to_store_id — reversing *that* removes stock
+     *   (qty_out), so it's guarded in case that stock has since moved on
+     *   elsewhere.
+     */
+    public function destroy(InvStockTransfer $transfer): RedirectResponse
+    {
+        $this->authorize('inv_transfer.delete');
+
+        $transfer->load('items');
+
+        try {
+            if ($transfer->status === 'received') {
+                foreach ($transfer->items as $line) {
+                    if ($line->received_qty > 0) {
+                        $this->assertReversible($line->item_id, $transfer->to_store_id, $line->received_qty, $line->item?->item_name);
+                    }
+                }
+            }
+        } catch (ValidationException $e) {
+            return back()->with('error', $e->getMessage());
+        }
+
+        DB::transaction(function () use ($transfer) {
+            if (in_array($transfer->status, ['in_transit', 'received'], true)) {
+                foreach ($transfer->items as $line) {
+                    $this->stock->post([
+                        'item_id'          => $line->item_id,
+                        'store_id'         => $transfer->from_store_id,
+                        'transaction_date' => now()->toDateString(),
+                        'transaction_type' => 'transfer_reversal',
+                        'qty_in'           => $line->quantity,
+                        'reference_type'   => 'inv_stock_transfer',
+                        'reference_id'     => $transfer->id,
+                        'remarks'          => "Reversal (dispatch) of Transfer {$transfer->transfer_no}",
+                        'created_by'       => auth()->id(),
+                    ]);
+                }
+            }
+
+            if ($transfer->status === 'received') {
+                foreach ($transfer->items as $line) {
+                    if ($line->received_qty > 0) {
+                        $this->stock->post([
+                            'item_id'          => $line->item_id,
+                            'store_id'         => $transfer->to_store_id,
+                            'transaction_date' => now()->toDateString(),
+                            'transaction_type' => 'transfer_reversal',
+                            'qty_out'          => $line->received_qty,
+                            'reference_type'   => 'inv_stock_transfer',
+                            'reference_id'     => $transfer->id,
+                            'remarks'          => "Reversal (receipt) of Transfer {$transfer->transfer_no}",
+                            'created_by'       => auth()->id(),
+                        ]);
+                    }
+                }
+            }
+
+            $transfer->delete();
+        });
+
+        return redirect()->route('inventory.transfers.index')->with('success', "Transfer {$transfer->transfer_no} deleted and stock reversed.");
+    }
+
+    private function assertReversible(int $itemId, int $storeId, float $qty, ?string $itemName): void
+    {
+        $available = $this->stock->currentStock($itemId, $storeId);
+        if ($available < $qty) {
+            throw ValidationException::withMessages([
+                'items' => 'Cannot delete this transfer: "' . ($itemName ?? "item #{$itemId}") . '" only has ' . inv_qty($available) . ' left in that store, but this transfer moved ' . inv_qty($qty) . ' — some has already been used elsewhere. Post a Stock Adjustment instead.',
+            ]);
+        }
     }
 
     public function store(InvStockTransferRequest $request): RedirectResponse

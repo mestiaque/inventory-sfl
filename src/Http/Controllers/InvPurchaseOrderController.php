@@ -23,11 +23,8 @@ class InvPurchaseOrderController extends Controller
     {
         $this->authorize('inv_purchase_order.list');
 
-        // Purchase Orders are supplier-facing, not store-specific, so there's
-        // no store column to scope Store Incharge by — every operator profile
-        // (any designation) is restricted to POs they personally created here.
         $purchaseOrders = InvPurchaseOrder::query()
-            ->with('supplier')
+            ->with(['supplier', 'creator'])
             ->withCount(['grns', 'items'])
             ->when($request->filled('search'), fn ($q) => $q->where('po_number', 'like', '%' . $request->search . '%'))
             ->when($request->filled('supplier_id'), fn ($q) => $q->where('supplier_id', $request->supplier_id))
@@ -83,12 +80,6 @@ class InvPurchaseOrderController extends Controller
         return redirect()->route('inventory.purchase-orders.index')->with('success', "Purchase order {$po->po_number} created successfully.");
     }
 
-    /**
-     * PO detail page: item-wise ordered / received / remaining quantities,
-     * plus every GRN (challan) posted against this PO so far — a PO can be
-     * received in multiple partial deliveries, each its own GRN with its own
-     * challan/invoice number, until the whole order is closed.
-     */
     public function show(InvPurchaseOrder $purchase_order): View
     {
         $this->authorize('inv_purchase_order.view');
@@ -172,14 +163,17 @@ class InvPurchaseOrderController extends Controller
 
     private function formOptions(): array
     {
-        // Purchase Orders always target the Accessories store — items are
-        // fixed to one store, so only that store's items are orderable here.
+        // Purchase Orders always target the Accessories store — items
+        // explicitly assigned to a *different* store are excluded, but an
+        // item with no opening store set yet isn't restricted to anywhere
+        // (same "unset = unrestricted" rule every other document form's
+        // item picker already follows via its data-store JS filter).
         $accessoriesStoreId = InvStore::active()->where('type', 'accessories')->value('id');
 
         return [
             'suppliers' => InvSupplier::active()->orderBy('name')->get(),
             'items'     => InvItem::active()->with('unit')
-                ->when($accessoriesStoreId, fn ($q) => $q->where('opening_store_id', $accessoriesStoreId))
+                ->when($accessoriesStoreId, fn ($q) => $q->where(fn ($q2) => $q2->whereNull('opening_store_id')->orWhere('opening_store_id', $accessoriesStoreId)))
                 ->orderBy('item_name')->get(),
         ];
     }

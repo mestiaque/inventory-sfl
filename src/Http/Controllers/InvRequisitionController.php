@@ -214,6 +214,26 @@ class InvRequisitionController extends Controller
     }
 
     /**
+     * A requisition never posts to the stock ledger itself — only the Issue
+     * made against it does — so there's no stock to reverse here. If a real
+     * Issue references this requisition, that Issue is kept and just loses
+     * its requisition link (nullable FK) rather than being destroyed.
+     */
+    public function forceDestroy(InvRequisition $requisition): RedirectResponse
+    {
+        $this->authorize('inv_requisition.force_delete');
+
+        DB::transaction(function () use ($requisition) {
+            DB::table('inv_issues')->where('requisition_id', $requisition->id)->update(['requisition_id' => null]);
+            DB::table('inv_requisition_items')->where('requisition_id', $requisition->id)->delete();
+
+            $requisition->forceDelete();
+        });
+
+        return back()->with('success', 'Requisition permanently deleted.');
+    }
+
+    /**
      * Mirrors the decision made on this dedicated approval form (with its
      * per-line quantities) back onto the central Approvals record, so it
      * stops showing as pending there too. Updated directly — not through

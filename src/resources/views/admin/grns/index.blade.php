@@ -61,13 +61,13 @@
             <div class="table-responsive">
                 <table class="table table-bordered table-striped align-middle">
                     <thead>
-                        <tr><th>#</th><th>GRN Number</th><th>Source</th><th>PO Number</th><th>Store</th><th>Supplier / Buyer</th><th>Receive Date</th><th>Total</th><th>Status</th></tr>
+                        <tr><th>#</th><th>GRN Number</th><th>Source</th><th>PO Number</th><th>Store</th><th>Supplier / Buyer</th><th>Receive Date</th><th>Items</th><th>Total</th><th>Status</th><th>Created Date</th><th>Created By</th><th class="text-end">Actions</th></tr>
                     </thead>
                     <tbody>
                         @forelse($grns as $grn)
                             <tr>
                                 <td>{{ $loop->iteration + $grns->firstItem() - 1 }}</td>
-                                <td>{{ $grn->grn_number }}</td>
+                                <td><a href="{{ route('inventory.grns.show', $grn) }}">{{ $grn->grn_number }}</a></td>
                                 <td>
                                     @if($grn->source_type === 'buyer_supplied')
                                         <span class="badge p-1 text-white bg-info">Buyer Supplied</span>
@@ -86,11 +86,25 @@
                                     @endif
                                 </td>
                                 <td>{{ $grn->receive_date?->format('d M Y') }}</td>
+                                <td>{{ $grn->items_count }}</td>
                                 <td>{{ number_format($grn->total_amount, 2) }}</td>
                                 <td><span class="badge p-1 text-white bg-success">{{ ucfirst($grn->status) }}</span></td>
+                                <td>{{ $grn->created_at?->format('d M Y, h:i A') }}</td>
+                                <td>{{ $grn->creator?->name ?? '—' }}</td>
+                                <td class="text-end">
+                                    <a href="{{ route('inventory.grns.show', $grn) }}" class="btn btn-sm btn-outline-secondary"><i class="fa-solid fa-eye"></i></a>
+                                    @can('inv_grn.edit')
+                                        <a href="{{ route('inventory.grns.edit', $grn) }}" class="btn btn-sm btn-outline-primary"><i class="fa-solid fa-pen"></i></a>
+                                    @endcan
+                                    @can('inv_grn.delete')
+                                        <button type="button" class="btn btn-sm btn-outline-danger" data-toggle="modal" data-target="#deleteGrnModal" data-action="{{ route('inventory.grns.destroy', $grn) }}">
+                                            <i class="fa-solid fa-trash"></i>
+                                        </button>
+                                    @endcan
+                                </td>
                             </tr>
                         @empty
-                            <tr><td colspan="9" class="text-center text-muted">No GRNs found.</td></tr>
+                            <tr><td colspan="13" class="text-center text-muted">No GRNs found.</td></tr>
                         @endforelse
                     </tbody>
                 </table>
@@ -100,5 +114,6 @@
         </div>
     </div>
 </div>
+@include('sfl-inventory::admin.partials.delete-confirm-modal', ['modalId' => 'deleteGrnModal', 'label' => 'GRN'])
 @include('sfl-inventory::admin.partials.select2-init')
 @endsection

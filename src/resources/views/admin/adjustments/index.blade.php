@@ -43,6 +43,7 @@
                         <option value="">All Status</option>
                         <option value="pending" @selected(request('status') === 'pending')>Pending</option>
                         <option value="approved" @selected(request('status') === 'approved')>Approved</option>
+                        <option value="rejected" @selected(request('status') === 'rejected')>Rejected</option>
                     </select>
                 </div>
                 <div class="col-md-2">
@@ -73,18 +74,27 @@
                                 <td>{{ ucwords(str_replace('_', ' ', $adjustment->type)) }}</td>
                                 <td>{{ $adjustment->adjustment_date?->format('d M Y') }}</td>
                                 <td>
-                                    <span class="badge p-1 text-white bg-{{ $adjustment->status === 'approved' ? 'success' : 'secondary' }}">
+                                    <span class="badge p-1 text-white bg-{{ ['approved' => 'success', 'rejected' => 'danger'][$adjustment->status] ?? 'secondary' }}">
                                         {{ ucfirst($adjustment->status) }}
                                     </span>
                                 </td>
                                 <td class="text-end">
-                                    @can('inv_adjustment.approve')
-                                        @if($adjustment->status === 'pending')
+                                    @if($adjustment->status === 'pending')
+                                        @can('inv_adjustment.approve')
                                             <form method="POST" action="{{ route('inventory.adjustments.approve', $adjustment) }}" class="d-inline">
                                                 @csrf
                                                 <button type="submit" class="btn btn-sm btn-outline-success" onclick="return confirm('Approve this adjustment and update stock?')">Approve</button>
                                             </form>
-                                        @endif
+                                            <form method="POST" action="{{ route('inventory.adjustments.reject', $adjustment) }}" class="d-inline">
+                                                @csrf
+                                                <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Reject this adjustment?')">Reject</button>
+                                            </form>
+                                        @endcan
+                                    @endif
+                                    @can('inv_adjustment.delete')
+                                        <button type="button" class="btn btn-sm btn-outline-danger" data-toggle="modal" data-target="#deleteAdjustmentModal" data-action="{{ route('inventory.adjustments.destroy', $adjustment) }}">
+                                            <i class="fa-solid fa-trash"></i>
+                                        </button>
                                     @endcan
                                 </td>
                             </tr>
@@ -99,5 +109,6 @@
         </div>
     </div>
 </div>
+@include('sfl-inventory::admin.partials.delete-confirm-modal', ['modalId' => 'deleteAdjustmentModal', 'label' => 'adjustment'])
 @include('sfl-inventory::admin.partials.select2-init')
 @endsection

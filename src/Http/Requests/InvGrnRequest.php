@@ -9,7 +9,9 @@ class InvGrnRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return (bool) $this->user()?->can('inv_grn.add');
+        $ability = $this->route('grn') ? 'inv_grn.edit' : 'inv_grn.add';
+
+        return (bool) $this->user()?->can($ability);
     }
 
     public function rules(): array

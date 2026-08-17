@@ -84,6 +84,10 @@ class InvPurchaseOrder extends Model
             $this->status = 'closed';
         } elseif ($anyReceived) {
             $this->status = 'received';
+        } elseif (in_array($this->status, ['received', 'closed'], true)) {
+            // Everything received against this PO was edited/deleted away —
+            // drop back to approved so it's selectable for GRN again.
+            $this->status = 'approved';
         }
 
         $this->save();

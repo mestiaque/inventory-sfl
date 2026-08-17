@@ -70,6 +70,11 @@
                                     <button type="button" class="btn btn-sm btn-outline-secondary" data-toggle="modal" data-target="#viewConsModal{{ $consumption->id }}">
                                         <i class="fa-solid fa-eye"></i>
                                     </button>
+                                    @can('inv_production.delete')
+                                        <button type="button" class="btn btn-sm btn-outline-danger" data-toggle="modal" data-target="#deleteConsModal" data-action="{{ route('inventory.production-consumptions.destroy', $consumption) }}">
+                                            <i class="fa-solid fa-trash"></i>
+                                        </button>
+                                    @endcan
                                 </td>
                             </tr>
                         @empty
@@ -137,5 +142,6 @@
     </div>
 @endforeach
 
+@include('sfl-inventory::admin.partials.delete-confirm-modal', ['modalId' => 'deleteConsModal', 'label' => 'consumption record'])
 @include('sfl-inventory::admin.partials.select2-init')
 @endsection

@@ -106,6 +106,11 @@
                                     @can('inv_requisition.print')
                                         <a href="{{ route('inventory.requisitions.print', $requisition) }}" target="_blank" class="btn btn-sm btn-outline-secondary"><i class="fa-solid fa-print"></i></a>
                                     @endcan
+                                    @can('inv_requisition.force_delete')
+                                        <button type="button" class="btn btn-sm btn-outline-danger" title="Force Delete" data-toggle="modal" data-target="#forceDeleteReqModal" data-action="{{ route('inventory.requisitions.force-destroy', $requisition) }}" data-req-name="{{ $requisition->requisition_no }}">
+                                            <i class="fa-solid fa-triangle-exclamation"></i>
+                                        </button>
+                                    @endcan
                                 </td>
                             </tr>
                         @empty
@@ -191,5 +196,38 @@
 @endforeach
 
 @include('sfl-inventory::admin.partials.delete-confirm-modal', ['modalId' => 'deleteReqModal', 'label' => 'requisition'])
+
+<div class="modal fade" id="forceDeleteReqModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="POST" id="forceDeleteReqModalForm">
+                @csrf
+                @method('DELETE')
+                <div class="modal-header">
+                    <h5 class="modal-title text-danger"><i class="fa-solid fa-triangle-exclamation"></i> Force Delete Requisition</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                </div>
+                <div class="modal-body">
+                    <p class="mb-1">Permanently delete <strong id="forceDeleteReqName"></strong>?</p>
+                    <p class="text-danger mb-0">This works regardless of status. If any real Issue was made against this requisition, that Issue is kept — it just loses its link back to this requisition.</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-light" data-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-danger">Force Delete</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+@push('js')
+<script>
+    $('#forceDeleteReqModal').on('show.bs.modal', function (event) {
+        const trigger = $(event.relatedTarget);
+        $('#forceDeleteReqModalForm').attr('action', trigger.data('action'));
+        $('#forceDeleteReqName').text(trigger.data('req-name'));
+    });
+</script>
+@endpush
+
 @include('sfl-inventory::admin.partials.select2-init')
 @endsection

@@ -4,6 +4,7 @@ namespace ME\SflInventory\Http\Controllers;
 
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 use ME\SflInventory\Http\Requests\InvItemRequest;
 use ME\SflInventory\Models\InvBrand;
@@ -90,6 +91,47 @@ class InvItemController extends Controller
         $item->delete();
 
         return back()->with('success', 'Item deleted successfully.');
+    }
+
+    /**
+     * Wipes the item's stock ledger (inv_stock_transactions) and permanently
+     * removes the item itself — for cleaning up test/junk items that were
+     * never part of a real GRN/requisition/issue/etc. Checked explicitly
+     * against every document line-item table rather than relying on their
+     * `restrictOnDelete()` foreign keys to block it: this database has rows
+     * whose FK constraints don't actually exist (verified via
+     * information_schema — a pre-existing gap, not something this method
+     * should ever depend on for safety).
+     */
+    public function forceDestroy(InvItem $item): RedirectResponse
+    {
+        $this->authorize('inv_item.force_delete');
+
+        $referencingTables = [
+            'GRN'                      => 'inv_grn_items',
+            'Purchase Order'           => 'inv_purchase_order_items',
+            'Requisition'              => 'inv_requisition_items',
+            'Issue'                    => 'inv_issue_items',
+            'Stock Transfer'           => 'inv_stock_transfer_items',
+            'Production Consumption'   => 'inv_production_consumption_items',
+            'Finished Goods Receive'   => 'inv_finished_goods_receive_items',
+            'Gate Pass'                => 'inv_gate_pass_items',
+            'Shipment'                 => 'inv_shipment_items',
+            'Stock Adjustment'         => 'inv_stock_adjustment_items',
+        ];
+
+        foreach ($referencingTables as $label => $table) {
+            if (DB::table($table)->where('item_id', $item->id)->exists()) {
+                return back()->with('error', "Cannot force delete: this item is used on a real {$label} document. Remove that document first.");
+            }
+        }
+
+        DB::transaction(function () use ($item) {
+            $item->stockTransactions()->delete();
+            $item->forceDelete();
+        });
+
+        return back()->with('success', 'Item and its stock history permanently deleted.');
     }
 
     private function formOptions(): array

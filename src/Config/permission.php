@@ -51,7 +51,7 @@ return [
         ],
         'inv_item' => [
             'label' => 'Item Master',
-            'permissions' => $crud + ['import' => 'Import', 'export' => 'Export'],
+            'permissions' => $crud + ['import' => 'Import', 'export' => 'Export', 'force_delete' => 'Force Delete'],
         ],
         'inv_supplier' => [
             'label' => 'Suppliers',
@@ -63,7 +63,7 @@ return [
         ],
         'inv_department' => [
             'label' => 'Departments',
-            'permissions' => $crud,
+            'permissions' => $crud + ['force_delete' => 'Force Delete'],
         ],
         'inv_machine' => [
             'label' => 'Machines',
@@ -83,7 +83,7 @@ return [
         ],
         'inv_requisition' => [
             'label' => 'Store Requisition',
-            'permissions' => $crud + ['approve' => 'Approve', 'reject' => 'Reject', 'print' => 'Print', 'export' => 'Export'],
+            'permissions' => $crud + ['approve' => 'Approve', 'reject' => 'Reject', 'print' => 'Print', 'export' => 'Export', 'force_delete' => 'Force Delete'],
         ],
         'inv_issue' => [
             'label' => 'Store Issue & Department Receive',
@@ -123,7 +123,7 @@ return [
         ],
         'inv_broken_needle' => [
             'label' => 'Broken Needle',
-            'permissions' => $crud + ['export' => 'Export'],
+            'permissions' => $crud + ['export' => 'Export', 'force_delete' => 'Force Delete'],
         ],
     ],
 ];

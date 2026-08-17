@@ -8,7 +8,9 @@ class InvStockTransferRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return (bool) $this->user()?->can('inv_transfer.add');
+        $ability = $this->route('transfer') ? 'inv_transfer.edit' : 'inv_transfer.add';
+
+        return (bool) $this->user()?->can($ability);
     }
 
     public function rules(): array

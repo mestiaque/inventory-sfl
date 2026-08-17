@@ -139,6 +139,11 @@
                                             <i class="fa-solid fa-trash"></i>
                                         </button>
                                     @endcan
+                                    @can('inv_item.force_delete')
+                                        <button type="button" class="btn btn-sm btn-outline-danger" title="Force Delete (wipes stock history too)" data-toggle="modal" data-target="#forceDeleteItemModal" data-action="{{ route('inventory.items.force-destroy', $item) }}" data-item-name="{{ $item->item_code }} — {{ $item->item_name }}">
+                                            <i class="fa-solid fa-triangle-exclamation"></i>
+                                        </button>
+                                    @endcan
                                 </td>
                             </tr>
 
@@ -191,5 +196,38 @@
 </div>
 
 @include('sfl-inventory::admin.partials.delete-confirm-modal', ['modalId' => 'deleteItemModal', 'label' => 'item'])
+
+<div class="modal fade" id="forceDeleteItemModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="POST" id="forceDeleteItemModalForm">
+                @csrf
+                @method('DELETE')
+                <div class="modal-header">
+                    <h5 class="modal-title text-danger"><i class="fa-solid fa-triangle-exclamation"></i> Force Delete Item</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                </div>
+                <div class="modal-body">
+                    <p class="mb-1">Permanently delete <strong id="forceDeleteItemName"></strong>?</p>
+                    <p class="text-danger mb-0">This wipes the item's entire stock ledger (all stock transactions) and removes the item itself — it cannot be undone. If this item is used on any real GRN, Purchase Order, Requisition, Issue, etc., the delete will be blocked instead.</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-light" data-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-danger">Force Delete</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+@push('js')
+<script>
+    $('#forceDeleteItemModal').on('show.bs.modal', function (event) {
+        const trigger = $(event.relatedTarget);
+        $('#forceDeleteItemModalForm').attr('action', trigger.data('action'));
+        $('#forceDeleteItemName').text(trigger.data('item-name'));
+    });
+</script>
+@endpush
+
 @include('sfl-inventory::admin.partials.select2-init')
 @endsection

@@ -11,6 +11,7 @@ use ME\SflInventory\Models\InvBuyer;
 use ME\SflInventory\Models\InvDepartment;
 use ME\SflInventory\Models\InvGatePass;
 use ME\SflInventory\Models\InvGrn;
+use ME\SflInventory\Models\InvGrnItem;
 use ME\SflInventory\Models\InvIssue;
 use ME\SflInventory\Models\InvItem;
 use ME\SflInventory\Models\InvItemCategory;
@@ -79,21 +80,22 @@ class InvReportController extends Controller
         $this->authorize('inv_report.view');
 
         $items = InvItem::active()->orderBy('item_name')->get();
-        $transactions = collect();
-        $selectedItem = null;
+        $selectedItem = $request->filled('item_id') ? InvItem::find($request->item_id) : null;
 
-        if ($request->filled('item_id')) {
-            $selectedItem = InvItem::find($request->item_id);
-            $transactions = \ME\SflInventory\Models\InvStockTransaction::where('item_id', $request->item_id)
-                ->with('store')
-                ->when($request->filled('date_from'), fn ($q) => $q->whereDate('transaction_date', '>=', $request->date_from))
-                ->when($request->filled('date_to'), fn ($q) => $q->whereDate('transaction_date', '<=', $request->date_to))
-                ->orderBy('transaction_date')
-                ->orderBy('id')
-                ->get();
-        }
+        $from = $request->filled('date_from') ? $request->date_from : now()->startOfMonth()->toDateString();
+        $to = $request->filled('date_to') ? $request->date_to : now()->toDateString();
 
-        return view('sfl-inventory::admin.reports.item-history', compact('items', 'transactions', 'selectedItem'));
+        $transactions = \ME\SflInventory\Models\InvStockTransaction::query()
+            ->with(['store', 'item'])
+            ->when($selectedItem, fn ($q) => $q->where('item_id', $selectedItem->id))
+            ->whereDate('transaction_date', '>=', $from)
+            ->whereDate('transaction_date', '<=', $to)
+            ->orderBy('transaction_date')
+            ->orderBy('id')
+            ->paginate($request->boolean('print') ? 100000 : 50)
+            ->withQueryString();
+
+        return view('sfl-inventory::admin.reports.item-history', compact('items', 'transactions', 'selectedItem', 'from', 'to'));
     }
 
     public function storeWiseStock(Request $request): View
@@ -171,6 +173,37 @@ class InvReportController extends Controller
         $suppliers = InvSupplier::active()->orderBy('name')->get();
 
         return view('sfl-inventory::admin.reports.grn-report', compact('grns', 'stores', 'suppliers'));
+    }
+
+    /**
+     * One row per received line (not per GRN document), with the audit trail
+     * fields the document-level GRN Report doesn't carry: which system user
+     * created the entry and when, alongside the physical receive date.
+     */
+    public function grnItemWiseReport(Request $request): View
+    {
+        $this->authorize('inv_report.view');
+
+        $lines = InvGrnItem::query()
+            ->select('inv_grn_items.*')
+            ->join('inv_grns', 'inv_grns.id', '=', 'inv_grn_items.grn_id')
+            ->whereNull('inv_grns.deleted_at')
+            ->with(['item.unit', 'grn.store', 'grn.supplier', 'grn.buyer', 'grn.purchaseOrder', 'grn.creator'])
+            ->when($request->filled('item_id'), fn ($q) => $q->where('inv_grn_items.item_id', $request->item_id))
+            ->when($request->filled('store_id'), fn ($q) => $q->where('inv_grns.store_id', $request->store_id))
+            ->when($request->filled('supplier_id'), fn ($q) => $q->where('inv_grns.supplier_id', $request->supplier_id))
+            ->when($request->filled('date_from'), fn ($q) => $q->whereDate('inv_grns.receive_date', '>=', $request->date_from))
+            ->when($request->filled('date_to'), fn ($q) => $q->whereDate('inv_grns.receive_date', '<=', $request->date_to))
+            ->orderByDesc('inv_grns.receive_date')
+            ->orderByDesc('inv_grn_items.id')
+            ->paginate($request->boolean('print') ? 100000 : 30)
+            ->withQueryString();
+
+        $items = InvItem::active()->orderBy('item_name')->get();
+        $stores = InvStore::active()->orderBy('name')->get();
+        $suppliers = InvSupplier::active()->orderBy('name')->get();
+
+        return view('sfl-inventory::admin.reports.grn-item-wise-report', compact('lines', 'items', 'stores', 'suppliers'));
     }
 
     public function issueReport(Request $request): View
@@ -367,6 +400,7 @@ class InvReportController extends Controller
             'department-consumption' => 'departmentWiseConsumption',
             'supplier-purchase'      => 'supplierWisePurchase',
             'grn'                    => 'grnReport',
+            'grn-item-wise'          => 'grnItemWiseReport',
             'issue'                  => 'issueReport',
             'gate-pass'              => 'gatePassReport',
             'shipment'               => 'shipmentReport',

@@ -4,6 +4,7 @@ namespace ME\SflInventory\Http\Controllers;
 
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 use ME\SflInventory\Http\Requests\InvDepartmentRequest;
 use ME\SflInventory\Models\InvDepartment;
@@ -55,5 +56,32 @@ class InvDepartmentController extends Controller
         $department->delete();
 
         return back()->with('success', 'Department deleted successfully.');
+    }
+
+    /**
+     * Blocks on the same real documents isReferenced() checks (requisition,
+     * issue, production consumption — restrictOnDelete FKs), then, if clear,
+     * clears the softer/nullable references (stock ledger, broken needles,
+     * machines, items' own department field) before permanently removing
+     * the department — matching the item force-delete pattern.
+     */
+    public function forceDestroy(InvDepartment $department): RedirectResponse
+    {
+        $this->authorize('inv_department.force_delete');
+
+        if ($department->isReferenced()) {
+            return back()->with('error', 'Cannot force delete: this department is used on real Requisition, Issue, or Production Consumption documents. Remove those first.');
+        }
+
+        DB::transaction(function () use ($department) {
+            DB::table('inv_stock_transactions')->where('department_id', $department->id)->update(['department_id' => null]);
+            DB::table('inv_broken_needles')->where('department_id', $department->id)->update(['department_id' => null]);
+            DB::table('inv_machines')->where('department_id', $department->id)->update(['department_id' => null]);
+            DB::table('inv_items')->where('department_id', $department->id)->update(['department_id' => null]);
+
+            $department->forceDelete();
+        });
+
+        return back()->with('success', 'Department permanently deleted.');
     }
 }

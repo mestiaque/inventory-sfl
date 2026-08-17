@@ -54,7 +54,7 @@
             <div class="table-responsive">
                 <table class="table table-bordered table-striped align-middle">
                     <thead>
-                        <tr><th>#</th><th>PO Number</th><th>Supplier</th><th>Order Date</th><th>Expected Date</th><th>Items</th><th>Total</th><th>Status</th><th class="text-end">Actions</th></tr>
+                        <tr><th>#</th><th>PO Number</th><th>Supplier</th><th>Order Date</th><th>Expected Date</th><th>Items</th><th>Total</th><th>Status</th><th>Created Date</th><th>Created By</th><th class="text-end">Actions</th></tr>
                     </thead>
                     <tbody>
                         @forelse($purchaseOrders as $po)
@@ -71,6 +71,8 @@
                                         {{ ucfirst($po->status) }}
                                     </span>
                                 </td>
+                                <td>{{ $po->created_at?->format('d M Y, h:i A') }}</td>
+                                <td>{{ $po->creator?->name ?? '—' }}</td>
                                 <td class="text-end">
                                     @can('inv_purchase_order.view')
                                         <a href="{{ route('inventory.purchase-orders.show', $po) }}" class="btn btn-sm btn-outline-secondary" title="Challans ({{ $po->grns_count }})">
@@ -103,7 +105,7 @@
                                 </td>
                             </tr>
                         @empty
-                            <tr><td colspan="9" class="text-center text-muted">No purchase orders found.</td></tr>
+                            <tr><td colspan="11" class="text-center text-muted">No purchase orders found.</td></tr>
                         @endforelse
                     </tbody>
                 </table>

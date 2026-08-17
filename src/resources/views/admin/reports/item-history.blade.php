@@ -20,60 +20,68 @@
 
     <div class="card">
         <div class="card-header d-flex justify-content-between align-items-center">
-            <h5 class="mb-0">Item History{{ $selectedItem ? ' — ' . $selectedItem->item_code . ' ' . $selectedItem->item_name : '' }}</h5>
+            <h5 class="mb-0">Item History{{ $selectedItem ? ' — ' . $selectedItem->item_code . ' ' . $selectedItem->item_name : ' — All Items' }}</h5>
             @unless($printMode)
-                @if($selectedItem)
-                    @include('sfl-inventory::admin.reports.partials.export-print-buttons', ['report' => 'item-history'])
-                @endif
+                @include('sfl-inventory::admin.reports.partials.export-print-buttons', ['report' => 'item-history'])
             @endunless
         </div>
         <div class="card-body">
             @unless($printMode)
                 <form method="GET" class="row g-2 mb-3">
                     <div class="col-md-4">
-                        <select name="item_id" class="form-control inv-select2" required>
-                            <option value="">— Select an item —</option>
+                        <select name="item_id" class="form-control inv-select2">
+                            <option value="">— All Items —</option>
                             @foreach($items as $item)
                                 <option value="{{ $item->id }}" @selected(request('item_id') == $item->id)>{{ $item->item_code }} — {{ $item->item_name }}</option>
                             @endforeach
                         </select>
                     </div>
                     <div class="col-md-3">
-                        <input type="date" name="date_from" class="form-control" value="{{ request('date_from') }}" placeholder="From">
+                        <input type="date" name="date_from" class="form-control" value="{{ $from }}" placeholder="From">
                     </div>
                     <div class="col-md-3">
-                        <input type="date" name="date_to" class="form-control" value="{{ request('date_to') }}" placeholder="To">
+                        <input type="date" name="date_to" class="form-control" value="{{ $to }}" placeholder="To">
                     </div>
                     <div class="col-md-2">
-                        <button type="submit" class="btn btn-secondary">Show</button>
+                        <button type="submit" class="btn btn-secondary w-100">Show</button>
                     </div>
                 </form>
             @endunless
 
-            @if($selectedItem)
-                <div class="table-responsive">
-                    <table class="table table-bordered table-striped table-sm align-middle">
-                        <thead><tr><th>Date</th><th>Store</th><th>Type</th><th class="text-end">Qty In</th><th class="text-end">Qty Out</th><th class="text-end">Rate</th><th class="text-end">Value</th></tr></thead>
-                        <tbody>
-                            @forelse($transactions as $txn)
-                                <tr>
-                                    <td>{{ $txn->transaction_date?->format('d M Y') }}</td>
-                                    <td>{{ $txn->store?->name }}</td>
-                                    <td>{{ ucwords(str_replace('_', ' ', $txn->transaction_type)) }}</td>
-                                    <td class="text-end text-success">{{ $txn->qty_in > 0 ? number_format($txn->qty_in, 4) : '' }}</td>
-                                    <td class="text-end text-danger">{{ $txn->qty_out > 0 ? number_format($txn->qty_out, 4) : '' }}</td>
-                                    <td class="text-end">{{ number_format($txn->rate, 2) }}</td>
-                                    <td class="text-end">{{ number_format($txn->value, 2) }}</td>
-                                </tr>
-                            @empty
-                                <tr><td colspan="7" class="text-center text-muted">No movements found for this item.</td></tr>
-                            @endforelse
-                        </tbody>
-                    </table>
-                </div>
-            @else
-                <p class="text-muted">Select an item to view its full movement history.</p>
-            @endif
+            <div class="table-responsive">
+                <table class="table table-bordered table-striped table-sm align-middle">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            @unless($selectedItem)
+                                <th>Item</th>
+                            @endunless
+                            <th>Store</th><th>Type</th><th class="text-end">Qty In</th><th class="text-end">Qty Out</th><th class="text-end">Rate</th><th class="text-end">Value</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @forelse($transactions as $txn)
+                            <tr>
+                                <td>{{ $txn->transaction_date?->format('d M Y') }}</td>
+                                @unless($selectedItem)
+                                    <td>{{ $txn->item?->item_code }} — {{ $txn->item?->item_name }}</td>
+                                @endunless
+                                <td>{{ $txn->store?->name }}</td>
+                                <td>{{ ucwords(str_replace('_', ' ', $txn->transaction_type)) }}</td>
+                                <td class="text-end text-success">{{ $txn->qty_in > 0 ? number_format($txn->qty_in, 4) : '' }}</td>
+                                <td class="text-end text-danger">{{ $txn->qty_out > 0 ? number_format($txn->qty_out, 4) : '' }}</td>
+                                <td class="text-end">{{ number_format($txn->rate, 2) }}</td>
+                                <td class="text-end">{{ number_format($txn->value, 2) }}</td>
+                            </tr>
+                        @empty
+                            <tr><td colspan="{{ $selectedItem ? 7 : 8 }}" class="text-center text-muted">No movements found for this period.</td></tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+            @unless($printMode)
+                {{ $transactions->links('pagination::bootstrap-5') }}
+            @endunless
         </div>
     </div>
 </div>

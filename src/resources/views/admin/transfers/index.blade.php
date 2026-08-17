@@ -78,6 +78,7 @@
                                     </span>
                                 </td>
                                 <td class="text-end">
+                                    <a href="{{ route('inventory.transfers.show', $transfer) }}" class="btn btn-sm btn-outline-secondary"><i class="fa-solid fa-eye"></i></a>
                                     @if($transfer->status === 'pending')
                                         @can('inv_transfer.approve')
                                             <form method="POST" action="{{ route('inventory.transfers.approve', $transfer) }}" class="d-inline">
@@ -89,11 +90,19 @@
                                                 <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Reject this transfer?')">Reject</button>
                                             </form>
                                         @endcan
+                                        @can('inv_transfer.edit')
+                                            <a href="{{ route('inventory.transfers.edit', $transfer) }}" class="btn btn-sm btn-outline-primary"><i class="fa-solid fa-pen"></i></a>
+                                        @endcan
                                     @elseif($transfer->status === 'in_transit')
                                         @can('inv_transfer.receive')
                                             <a href="{{ route('inventory.transfers.receive-form', $transfer) }}" class="btn btn-sm btn-outline-primary">Receive</a>
                                         @endcan
                                     @endif
+                                    @can('inv_transfer.delete')
+                                        <button type="button" class="btn btn-sm btn-outline-danger" data-toggle="modal" data-target="#deleteTransferModal" data-action="{{ route('inventory.transfers.destroy', $transfer) }}">
+                                            <i class="fa-solid fa-trash"></i>
+                                        </button>
+                                    @endcan
                                 </td>
                             </tr>
                         @empty
@@ -107,5 +116,6 @@
         </div>
     </div>
 </div>
+@include('sfl-inventory::admin.partials.delete-confirm-modal', ['modalId' => 'deleteTransferModal', 'label' => 'transfer'])
 @include('sfl-inventory::admin.partials.select2-init')
 @endsection

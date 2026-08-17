@@ -5,6 +5,7 @@ namespace ME\SflInventory\Http\Controllers;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 use ME\SflInventory\Http\Requests\InvStockAdjustmentRequest;
 use ME\SflInventory\Models\InvItem;
@@ -121,6 +122,75 @@ class InvStockAdjustmentController extends Controller
         });
 
         return back()->with('success', "Adjustment {$adjustment->adjustment_no} approved and stock updated.");
+    }
+
+    public function reject(InvStockAdjustment $adjustment): RedirectResponse
+    {
+        $this->authorize('inv_adjustment.approve');
+
+        abort_if($adjustment->status !== 'pending', 403, 'Only pending adjustments can be rejected.');
+
+        $adjustment->update(['status' => 'rejected', 'approved_by' => auth()->id(), 'approved_at' => now()]);
+
+        return back()->with('success', "Adjustment {$adjustment->adjustment_no} rejected.");
+    }
+
+    /**
+     * Pending/rejected adjustments never posted to stock, so deleting them
+     * is a plain delete. An approved one already moved stock — reverse it
+     * first (guarded so it can't push the store negative if that stock has
+     * since been used elsewhere), then delete.
+     */
+    public function destroy(InvStockAdjustment $adjustment): RedirectResponse
+    {
+        $this->authorize('inv_adjustment.delete');
+
+        $adjustment->load('items');
+
+        if ($adjustment->status === 'approved') {
+            try {
+                foreach ($adjustment->items as $line) {
+                    if ((float) $line->difference_qty > 0) {
+                        $available = $this->stock->currentStock($line->item_id, $adjustment->store_id);
+                        if ($available < $line->difference_qty) {
+                            throw ValidationException::withMessages([
+                                'items' => 'Cannot delete this adjustment: "' . ($line->item?->item_name ?? "item #{$line->item_id}") . '" only has ' . inv_qty($available) . ' left in stock, but this adjustment added ' . inv_qty($line->difference_qty) . ' — some has already been used elsewhere. Post a new Stock Adjustment instead.',
+                            ]);
+                        }
+                    }
+                }
+            } catch (ValidationException $e) {
+                return back()->with('error', $e->getMessage());
+            }
+        }
+
+        DB::transaction(function () use ($adjustment) {
+            if ($adjustment->status === 'approved') {
+                foreach ($adjustment->items as $line) {
+                    if ((float) $line->difference_qty === 0.0) {
+                        continue;
+                    }
+
+                    $this->stock->post([
+                        'item_id'          => $line->item_id,
+                        'store_id'         => $adjustment->store_id,
+                        'transaction_date' => now()->toDateString(),
+                        'transaction_type' => 'adjustment_reversal',
+                        'qty_in'           => $line->difference_qty < 0 ? abs($line->difference_qty) : 0,
+                        'qty_out'          => $line->difference_qty > 0 ? $line->difference_qty : 0,
+                        'rate'             => $this->stock->averageRate($line->item_id, $adjustment->store_id),
+                        'reference_type'   => 'inv_stock_adjustment',
+                        'reference_id'     => $adjustment->id,
+                        'remarks'          => "Reversal of Adjustment {$adjustment->adjustment_no}",
+                        'created_by'       => auth()->id(),
+                    ]);
+                }
+            }
+
+            $adjustment->delete();
+        });
+
+        return redirect()->route('inventory.adjustments.index')->with('success', "Adjustment {$adjustment->adjustment_no} deleted" . ($adjustment->status === 'approved' ? ' and stock reversed.' : '.'));
     }
 
     private function formOptions(): array

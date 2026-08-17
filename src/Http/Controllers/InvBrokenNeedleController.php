@@ -67,6 +67,20 @@ class InvBrokenNeedleController extends Controller
     }
 
     /**
+     * Nothing else references a broken-needle entry (it's a leaf record —
+     * no stock ledger impact, no child documents), so force delete is just
+     * a permanent version of the same delete.
+     */
+    public function forceDestroy(InvBrokenNeedle $broken_needle): RedirectResponse
+    {
+        $this->authorize('inv_broken_needle.force_delete');
+
+        $broken_needle->forceDelete();
+
+        return back()->with('success', 'Broken needle entry permanently deleted.');
+    }
+
+    /**
      * Digital match of the factory's paper "Daily Broken Needle Report"
      * slip. On the paper form, one row is shared by up to 5 breaks from the
      * same operator on the same line/needle-type/size/machine that day —

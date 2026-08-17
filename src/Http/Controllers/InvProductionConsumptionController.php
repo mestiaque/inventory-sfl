@@ -97,6 +97,46 @@ class InvProductionConsumptionController extends Controller
         return redirect()->route('inventory.production-consumptions.index')->with('success', "Consumption {$consumption->consumption_no} posted and stock updated.");
     }
 
+    /**
+     * Posts immediately on store() (no approval step), so deleting always
+     * needs a reversal. Unlike a GRN reversal (which removes stock and so
+     * needs a not-enough-left guard), reversing a consumption *adds* the
+     * consumed qty back — that can never push a store negative, so there's
+     * nothing to guard against here.
+     */
+    public function destroy(InvProductionConsumption $production_consumption): RedirectResponse
+    {
+        $this->authorize('inv_production.delete');
+
+        $production_consumption->load('items.item');
+
+        DB::transaction(function () use ($production_consumption) {
+            foreach ($production_consumption->items as $line) {
+                $qty = (float) $line->consumed_qty + (float) $line->waste_qty;
+                if ($qty <= 0) {
+                    continue;
+                }
+
+                $this->stock->post([
+                    'item_id'          => $line->item_id,
+                    'store_id'         => $production_consumption->store_id,
+                    'transaction_date' => now()->toDateString(),
+                    'transaction_type' => 'production_consumption_reversal',
+                    'qty_in'           => $qty,
+                    'department_id'    => $production_consumption->department_id,
+                    'reference_type'   => 'inv_production_consumption',
+                    'reference_id'     => $production_consumption->id,
+                    'remarks'          => "Reversal of Consumption {$production_consumption->consumption_no}",
+                    'created_by'       => auth()->id(),
+                ]);
+            }
+
+            $production_consumption->delete();
+        });
+
+        return redirect()->route('inventory.production-consumptions.index')->with('success', "Consumption {$production_consumption->consumption_no} deleted and stock reversed.");
+    }
+
     private function formOptions(): array
     {
         return [
