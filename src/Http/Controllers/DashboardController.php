@@ -78,6 +78,8 @@ class DashboardController extends Controller
             $categoryBreakdown = DB::table('inv_stock_transactions as t')
                 ->join('inv_items as i', 'i.id', '=', 't.item_id')
                 ->join('inv_item_categories as c', 'c.id', '=', 'i.category_id')
+                ->whereNull('i.deleted_at')
+                ->whereNull('c.deleted_at')
                 ->selectRaw('c.name, SUM(CASE WHEN t.qty_in > 0 THEN t.value ELSE -t.value END) as value')
                 ->groupBy('c.id', 'c.name')
                 ->havingRaw('SUM(CASE WHEN t.qty_in > 0 THEN t.value ELSE -t.value END) > 0')

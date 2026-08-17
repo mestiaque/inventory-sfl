@@ -122,6 +122,8 @@ class InvReportController extends Controller
         $rows = DB::table('inv_production_consumption_items as pci')
             ->join('inv_production_consumptions as pc', 'pc.id', '=', 'pci.consumption_id')
             ->join('inv_departments as d', 'd.id', '=', 'pc.department_id')
+            ->whereNull('pc.deleted_at')
+            ->whereNull('d.deleted_at')
             ->when($request->filled('department_id'), fn ($q) => $q->where('pc.department_id', $request->department_id))
             ->when($request->filled('date_from'), fn ($q) => $q->whereDate('pc.consumption_date', '>=', $request->date_from))
             ->when($request->filled('date_to'), fn ($q) => $q->whereDate('pc.consumption_date', '<=', $request->date_to))
@@ -142,6 +144,8 @@ class InvReportController extends Controller
         $rows = DB::table('inv_grn_items as gi')
             ->join('inv_grns as g', 'g.id', '=', 'gi.grn_id')
             ->join('inv_suppliers as s', 's.id', '=', 'g.supplier_id')
+            ->whereNull('g.deleted_at')
+            ->whereNull('s.deleted_at')
             ->when($request->filled('supplier_id'), fn ($q) => $q->where('g.supplier_id', $request->supplier_id))
             ->when($request->filled('date_from'), fn ($q) => $q->whereDate('g.receive_date', '>=', $request->date_from))
             ->when($request->filled('date_to'), fn ($q) => $q->whereDate('g.receive_date', '<=', $request->date_to))
@@ -332,15 +336,19 @@ class InvReportController extends Controller
             ->join('inv_item_categories as c', 'c.id', '=', 'i.category_id')
             ->join('inv_units as u', 'u.id', '=', 'i.unit_id')
             ->join('inv_stores as s', 's.id', '=', 't.store_id')
-            ->leftJoin('inv_departments as d', 'd.id', '=', 't.department_id')
+            ->leftJoin('inv_departments as d', fn ($join) => $join->on('d.id', '=', 't.department_id')->whereNull('d.deleted_at'))
             ->leftJoin('inv_grns as g', function ($join) {
-                $join->on('g.id', '=', 't.reference_id')->where('t.reference_type', '=', 'inv_grn');
+                $join->on('g.id', '=', 't.reference_id')->where('t.reference_type', '=', 'inv_grn')->whereNull('g.deleted_at');
             })
             ->leftJoin('users as gu', 'gu.id', '=', 'g.received_by')
             ->leftJoin('inv_issues as iss', function ($join) {
-                $join->on('iss.id', '=', 't.reference_id')->where('t.reference_type', '=', 'inv_issue');
+                $join->on('iss.id', '=', 't.reference_id')->where('t.reference_type', '=', 'inv_issue')->whereNull('iss.deleted_at');
             })
             ->leftJoin('users as isu', 'isu.id', '=', 'iss.issued_by')
+            ->whereNull('i.deleted_at')
+            ->whereNull('c.deleted_at')
+            ->whereNull('u.deleted_at')
+            ->whereNull('s.deleted_at')
             ->when($request->filled('store_id'), fn ($q) => $q->where('t.store_id', $request->store_id))
             ->when($request->filled('item_id'), fn ($q) => $q->where('t.item_id', $request->item_id))
             ->when($request->filled('date_from'), fn ($q) => $q->whereDate('t.transaction_date', '>=', $request->date_from))
