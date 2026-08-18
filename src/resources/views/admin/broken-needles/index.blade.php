@@ -204,3 +204,8 @@
 @endpush
 @include('sfl-inventory::admin.partials.select2-init')
 @endsection
+
+
+
+
+
