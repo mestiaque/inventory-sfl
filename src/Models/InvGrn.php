@@ -56,8 +56,15 @@ class InvGrn extends Model
         return $this->belongsTo(User::class, 'created_by');
     }
 
+    /**
+     * The HR employee who physically received the challan — guarded with
+     * class_exists() so this package doesn't hard-depend on hr-new being
+     * installed, same pattern as InvBrokenNeedle::employee().
+     */
     public function receiver(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'received_by');
+        $employeeClass = class_exists(\ME\Hr\Models\HrEmployee::class) ? \ME\Hr\Models\HrEmployee::class : self::class;
+
+        return $this->belongsTo($employeeClass, 'received_by');
     }
 }

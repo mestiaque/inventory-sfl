@@ -1,7 +1,7 @@
 @extends(adminTheme() . 'layouts.app')
 
 @section('title')
-    <title>{{ websiteTitle('Purchase Order ' . $purchaseOrder->po_number) }}</title>
+    <title>{{ websiteTitle('Store Order ' . $purchaseOrder->po_number) }}</title>
 @endsection
 
 @section('contents')
@@ -11,7 +11,7 @@
 
     <div class="card mb-3">
         <div class="card-header d-flex justify-content-between align-items-center">
-            <h5 class="mb-0">Purchase Order {{ $purchaseOrder->po_number }}</h5>
+            <h5 class="mb-0">Store Order {{ $purchaseOrder->po_number }}</h5>
             <div>
                 @can('inv_grn.add')
                     @if(in_array($purchaseOrder->status, ['approved', 'received']))
@@ -19,7 +19,7 @@
                             <i class="fa-solid fa-truck-ramp-box"></i> Receive (New Challan / GRN)
                         </a>
                     @elseif($purchaseOrder->status === 'draft')
-                        <span class="badge p-2 text-white bg-secondary" title="Approve this purchase order first before a challan can be received against it.">
+                        <span class="badge p-2 text-white bg-secondary" title="Approve this store order first before a challan can be received against it.">
                             <i class="fa-solid fa-lock"></i> Approve first to receive
                         </span>
                     @endif
@@ -79,11 +79,11 @@
                 </table>
             </div>
 
-            <h6>Challans Received Against This PO ({{ $purchaseOrder->grns->count() }})</h6>
+            <h6>Challans Received Against This Store Order ({{ $purchaseOrder->grns->count() }})</h6>
             <p class="text-muted" style="font-size:13px;">Every delivery — even a partial one — is received as its own separate challan/GRN, shown one by one below in the order received.</p>
 
             @if($purchaseOrder->grns->isEmpty())
-                <p class="text-muted">No goods have been received against this purchase order yet.</p>
+                <p class="text-muted">No goods have been received against this store order yet.</p>
             @else
                 @foreach($purchaseOrder->grns as $grn)
                     <div class="card mb-3 border-{{ $loop->first ? 'primary' : 'secondary' }}">

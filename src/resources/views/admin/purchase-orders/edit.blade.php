@@ -1,7 +1,7 @@
 @extends(adminTheme() . 'layouts.app')
 
 @section('title')
-    <title>{{ websiteTitle('Edit Purchase Order') }}</title>
+    <title>{{ websiteTitle('Edit Store Order') }}</title>
 @endsection
 
 @section('contents')
@@ -11,7 +11,7 @@
 
     <div class="card">
         <div class="card-header d-flex justify-content-between align-items-center">
-            <h5 class="mb-0">Edit Purchase Order — {{ $purchaseOrder->po_number }}</h5>
+            <h5 class="mb-0">Edit Store Order — {{ $purchaseOrder->po_number }}</h5>
             <a href="{{ route('inventory.purchase-orders.index') }}" class="btn btn-light btn-sm"><i class="fa-solid fa-arrow-left"></i> Back</a>
         </div>
         <div class="card-body">
@@ -19,7 +19,7 @@
                 @csrf
                 @method('PUT')
                 @include('sfl-inventory::admin.purchase-orders.partials.form')
-                <button type="submit" class="btn btn-primary mt-3">Update Purchase Order</button>
+                <button type="submit" class="btn btn-primary mt-3">Update Store Order</button>
                 <a href="{{ route('inventory.purchase-orders.index') }}" class="btn btn-light mt-3">Cancel</a>
             </form>
         </div>

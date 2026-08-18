@@ -30,7 +30,7 @@ class InvGrnRequest extends FormRequest
             'order_ref'                     => ['nullable', 'string', 'max:150'],
             'challan_invoice_no'            => ['nullable', 'string', 'max:100'],
             'receive_date'                  => ['required', 'date'],
-            'received_by'                   => ['nullable', 'integer', 'exists:users,id'],
+            'received_by'                   => ['nullable', 'integer', 'exists:hr_employees,id'],
             'remarks'                       => ['nullable', 'string'],
             'items'                         => ['required', 'array', 'min:1'],
             'items.*.purchase_order_item_id' => ['nullable', 'integer', 'exists:inv_purchase_order_items,id'],

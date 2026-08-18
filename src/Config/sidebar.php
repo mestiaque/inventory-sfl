@@ -65,7 +65,7 @@ return [
                     'icon_color' => 'text-warning',
                     'permission' => '',
                     'children'   => [
-                        ['title' => 'Purchase Orders', 'icon' => 'fa-solid fa-file-signature', 'icon_color' => 'text-warning', 'permission' => 'inv_purchase_order', 'route' => "$base/purchase-orders"],
+                        ['title' => 'Store Order', 'icon' => 'fa-solid fa-file-signature', 'icon_color' => 'text-warning', 'permission' => 'inv_purchase_order', 'route' => "$base/purchase-orders"],
                         ['title' => 'Goods Receive (GRN)', 'icon' => 'fa-solid fa-truck-ramp-box', 'icon_color' => 'text-warning', 'permission' => 'inv_grn', 'route' => "$base/grns"],
                     ],
                 ],

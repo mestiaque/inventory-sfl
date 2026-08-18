@@ -209,7 +209,7 @@
                 </div>
                 <div class="modal-body">
                     <p class="mb-1">Permanently delete <strong id="forceDeleteItemName"></strong>?</p>
-                    <p class="text-danger mb-0">This wipes the item's entire stock ledger (all stock transactions) and removes the item itself — it cannot be undone. If this item is used on any real GRN, Purchase Order, Requisition, Issue, etc., the delete will be blocked instead.</p>
+                    <p class="text-danger mb-0">This wipes the item's entire stock ledger (all stock transactions) and removes the item itself — it cannot be undone. If this item is used on any real GRN, Store Order, Requisition, Issue, etc., the delete will be blocked instead.</p>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-light" data-dismiss="modal">Cancel</button>

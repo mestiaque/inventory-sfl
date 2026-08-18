@@ -70,7 +70,7 @@
                 <ul>
                     <li>মোট আইটেম সংখ্যা, মোট স্টক ভ্যালু</li>
                     <li>আজকের GRN (মাল ঢোকা) ও Issue (মাল বের হওয়া) কার্যক্রম</li>
-                    <li>Pending Requisition / Purchase Order / Gate Pass — যেগুলো অ্যাপ্রুভালের অপেক্ষায়</li>
+                    <li>Pending Requisition / Store Order / Gate Pass — যেগুলো অ্যাপ্রুভালের অপেক্ষায়</li>
                     <li>Low Stock আইটেমের তালিকা — যেগুলো আবার কিনতে হবে</li>
                     <li>গত ৩০ দিন ও ৬ মাসের মুভমেন্ট চার্ট, ক্যাটাগরি/স্টোর অনুযায়ী ব্রেকডাউন</li>
                 </ul>
@@ -96,8 +96,8 @@
 
             <div class="gd-card" id="purchase">
                 <h4><i class="fa-solid fa-cart-shopping text-warning"></i> ৩. Purchase (কেনাকাটা)</h4>
-                <div class="gd-subhead">Purchase Orders (PO)</div>
-                <span class="gd-path">Purchase → Purchase Orders</span>
+                <div class="gd-subhead">Store Order (SO)</div>
+                <span class="gd-path">Purchase → Store Order</span>
                 <p>সাপ্লায়ারকে অর্ডার দেওয়ার এন্ট্রি (মাল এখনো হাতে আসেনি) — Approve করতে হয়। প্রতিটা PO-র পাশে <strong>"Challans (N)"</strong> বাটনে ক্লিক করলে সেই PO-র বিপরীতে কতবার চালান এসেছে তা এক এক করে (Challan #1, #2...) দেখা যায় — কোন চালানে কোন প্রোডাক্ট কত পরিমাণ এসেছে।</p>
                 <div class="gd-note">একটা PO-র মাল একবারে না এসে কয়েক দফায় (কয়েকটা চালানে) আসতে পারে — যেমন ১০০ পিস অর্ডারের প্রথম চালানে ৪০ পিস, পরের চালানে ৬০ পিস। সিস্টেম প্রতিটা চালান আলাদাভাবে ট্র্যাক করে, বাকি (Remaining) কতটুকু আছে দেখায়, এবং পুরো অর্ডার সম্পূর্ণ হলে PO স্ট্যাটাস <strong>"Closed"</strong> হয়ে যায়।</div>
                 <div class="gd-subhead">Goods Receive (GRN) — মাল স্টোরে ঢোকানো</div>
@@ -201,7 +201,7 @@
 
             <div class="gd-card" id="workflow">
                 <h4><i class="fa-solid fa-diagram-project"></i> পুরো ওয়ার্কফ্লো এক নজরে</h4>
-                <div class="gd-flow">১. Supplier থেকে কাপড়/এক্সেসরিজ কেনার জন্য <b>Purchase Order</b> বানানো হলো
+                <div class="gd-flow">১. Supplier থেকে কাপড়/এক্সেসরিজ কেনার জন্য <b>Store Order</b> বানানো হলো
         ↓ (Approve)
 ২. মাল ফ্যাক্টরিতে এলো — <b>GRN</b> দিয়ে স্টোরে ঢোকানো হলো (হয়তো কয়েক দফা চালানে)
         ↓
@@ -223,7 +223,7 @@
 
             <div class="gd-card mb-0" id="permission">
                 <h4><i class="fa-solid fa-user-shield"></i> কে কী দেখতে/করতে পারবে (Permission)</h4>
-                <p class="mb-0">প্রতিটা পেজের জন্য আলাদা পারমিশন সেট করা যায় (List/Add/Edit/View/Delete/Approve ইত্যাদি) — Roles &amp; Permission সেটআপ থেকে। যেমন একজন "Cutting Operator" শুধু Cutting-সম্পর্কিত Requisition দেখতে/বানাতে পারবে, কিন্তু Purchase Order Approve করতে পারবে না। "Store Incharge" তার নিজের স্টোরের সব এন্ট্রি দেখতে পারবে, অন্য স্টোরেরটা না।</p>
+                <p class="mb-0">প্রতিটা পেজের জন্য আলাদা পারমিশন সেট করা যায় (List/Add/Edit/View/Delete/Approve ইত্যাদি) — Roles &amp; Permission সেটআপ থেকে। যেমন একজন "Cutting Operator" শুধু Cutting-সম্পর্কিত Requisition দেখতে/বানাতে পারবে, কিন্তু Store Order Approve করতে পারবে না। "Store Incharge" তার নিজের স্টোরের সব এন্ট্রি দেখতে পারবে, অন্য স্টোরেরটা না।</p>
             </div>
 
         </div>

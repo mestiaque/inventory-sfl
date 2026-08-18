@@ -300,6 +300,10 @@ class InvGrnController extends Controller
 
     private function formOptions(): array
     {
+        $employees = class_exists(\ME\Hr\Models\HrEmployee::class)
+            ? \ME\Hr\Models\HrEmployee::query()->where('status', 1)->orderBy('name')->get()
+            : collect();
+
         return [
             'stores'          => InvStore::active()->orderBy('name')->get(),
             'accessoriesStore' => InvStore::active()->where('type', 'accessories')->first(),
@@ -307,7 +311,7 @@ class InvGrnController extends Controller
             'suppliers'       => InvSupplier::active()->orderBy('name')->get(),
             'buyers'          => InvBuyer::active()->orderBy('name')->get(),
             'items'           => InvItem::active()->with('unit')->orderBy('item_name')->get(),
-            'users'           => \App\Models\User::orderBy('name')->get(),
+            'employees'       => $employees,
         ];
     }
 }

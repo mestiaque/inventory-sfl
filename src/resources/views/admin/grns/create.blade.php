@@ -22,7 +22,7 @@
                             <div class="card-body text-center py-5">
                                 <i class="fa-solid fa-file-invoice fa-2x text-primary mb-3"></i>
                                 <h6 class="mb-1">Purchase Challan</h6>
-                                <p class="text-muted mb-0" style="font-size:13px;">Receive against an approved Purchase Order from a Supplier.</p>
+                                <p class="text-muted mb-0" style="font-size:13px;">Receive against an approved Store Order from a Supplier.</p>
                             </div>
                         </div>
                     </a>

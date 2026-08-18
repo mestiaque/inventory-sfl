@@ -340,7 +340,7 @@ class InvReportController extends Controller
             ->leftJoin('inv_grns as g', function ($join) {
                 $join->on('g.id', '=', 't.reference_id')->where('t.reference_type', '=', 'inv_grn')->whereNull('g.deleted_at');
             })
-            ->leftJoin('users as gu', 'gu.id', '=', 'g.received_by')
+            ->leftJoin('hr_employees as gu', 'gu.id', '=', 'g.received_by')
             ->leftJoin('inv_issues as iss', function ($join) {
                 $join->on('iss.id', '=', 't.reference_id')->where('t.reference_type', '=', 'inv_issue')->whereNull('iss.deleted_at');
             })

@@ -25,7 +25,7 @@
                 <div class="row">
                     @unless($purchaseOrder)
                         <div class="col-md-6 mb-3">
-                            <label class="form-label">Purchase Order (optional)</label>
+                            <label class="form-label">Store Order (optional)</label>
                             <select name="purchase_order_id" class="form-control inv-select2" id="grnPoPicker">
                                 <option value="">— Direct Challan (no PO) —</option>
                                 @foreach(\ME\SflInventory\Models\InvPurchaseOrder::selectableForGrn()->orderByDesc('id')->get() as $po)
@@ -71,8 +71,8 @@
                         <label class="form-label">Received By</label>
                         <select name="received_by" class="form-control inv-select2">
                             <option value="">— Select —</option>
-                            @foreach($users as $user)
-                                <option value="{{ $user->id }}" @selected(old('received_by', auth()->id()) == $user->id)>{{ $user->name }}</option>
+                            @foreach($employees as $employee)
+                                <option value="{{ $employee->id }}" @selected(old('received_by') == $employee->id)>{{ $employee->name }} ({{ $employee->employee_id }})</option>
                             @endforeach
                         </select>
                     </div>

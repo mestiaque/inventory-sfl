@@ -128,7 +128,7 @@
                 </div>
                 <div class="col-6">
                     <div class="inv-stat-val" style="color:#6366f1;font-size:20px;">{{ $s['pendingPurchaseOrders'] }}</div>
-                    <div class="inv-stat-lbl">Purchase Orders</div>
+                    <div class="inv-stat-lbl">Store Order</div>
                 </div>
                 <div class="col-6 mt-3">
                     <div class="inv-stat-val" style="color:#f43f5e;font-size:20px;">{{ $s['pendingGatePasses'] }}</div>

@@ -47,8 +47,8 @@
                         <label class="form-label">Received By</label>
                         <select name="received_by" class="form-control inv-select2">
                             <option value="">— Select —</option>
-                            @foreach($users as $user)
-                                <option value="{{ $user->id }}" @selected(old('received_by', $grn->received_by) == $user->id)>{{ $user->name }}</option>
+                            @foreach($employees as $employee)
+                                <option value="{{ $employee->id }}" @selected(old('received_by', $grn->received_by) == $employee->id)>{{ $employee->name }} ({{ $employee->employee_id }})</option>
                             @endforeach
                         </select>
                     </div>

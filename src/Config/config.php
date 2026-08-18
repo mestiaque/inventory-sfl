@@ -20,7 +20,7 @@ return [
     'document_prefixes' => [
         'company'        => env('SFL_INVENTORY_COMPANY_CODE', 'SFL'),
         'item'           => 'ITM',
-        'purchase_order' => 'PO',
+        'purchase_order' => 'SO',
         'grn'            => 'GRN',
         'requisition'    => 'REQ',
         'issue'          => 'ISS',

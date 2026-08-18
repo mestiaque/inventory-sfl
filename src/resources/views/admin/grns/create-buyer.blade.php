@@ -46,7 +46,7 @@
                         <input type="text" name="style" class="form-control" value="{{ old('style') }}" placeholder="e.g. Style-A">
                     </div>
                     <div class="col-md-3 mb-3">
-                        <label class="form-label">Order Ref</label>
+                        <label class="form-label">Purchase order ref</label>
                         <input type="text" name="order_ref" class="form-control" value="{{ old('order_ref') }}">
                     </div>
                     <div class="col-md-3 mb-3">
@@ -61,8 +61,8 @@
                         <label class="form-label">Received By</label>
                         <select name="received_by" class="form-control inv-select2">
                             <option value="">— Select —</option>
-                            @foreach($users as $user)
-                                <option value="{{ $user->id }}" @selected(old('received_by', auth()->id()) == $user->id)>{{ $user->name }}</option>
+                            @foreach($employees as $employee)
+                                <option value="{{ $employee->id }}" @selected(old('received_by') == $employee->id)>{{ $employee->name }} ({{ $employee->employee_id }})</option>
                             @endforeach
                         </select>
                     </div>

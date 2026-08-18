@@ -1,7 +1,7 @@
 @extends(adminTheme() . 'layouts.app')
 
 @section('title')
-    <title>{{ websiteTitle('Purchase Orders') }}</title>
+    <title>{{ websiteTitle('Store Order') }}</title>
 @endsection
 
 @section('contents')
@@ -11,15 +11,15 @@
 
     <div class="card">
         <div class="card-header d-flex justify-content-between align-items-center">
-            <h5 class="mb-0">Purchase Orders</h5>
+            <h5 class="mb-0">Store Order</h5>
             @can('inv_purchase_order.add')
-                <a href="{{ route('inventory.purchase-orders.create') }}" class="btn btn-primary btn-sm"><i class="fa-solid fa-plus"></i> Add Purchase Order</a>
+                <a href="{{ route('inventory.purchase-orders.create') }}" class="btn btn-primary btn-sm"><i class="fa-solid fa-plus"></i> Add Store Order</a>
             @endcan
         </div>
         <div class="card-body">
             <form method="GET" class="row g-2 mb-3">
                 <div class="col-md-2">
-                    <input type="text" name="search" class="form-control" placeholder="Search PO number" value="{{ request('search') }}">
+                    <input type="text" name="search" class="form-control" placeholder="Search Store Order number" value="{{ request('search') }}">
                 </div>
                 <div class="col-md-2">
                     <select name="supplier_id" class="form-control inv-select2">
@@ -54,7 +54,7 @@
             <div class="table-responsive">
                 <table class="table table-bordered table-striped align-middle">
                     <thead>
-                        <tr><th>#</th><th>PO Number</th><th>Supplier</th><th>Order Date</th><th>Expected Date</th><th>Items</th><th>Total</th><th>Status</th><th>Created Date</th><th>Created By</th><th class="text-end">Actions</th></tr>
+                        <tr><th>#</th><th>Store Order No</th><th>Supplier</th><th>Order Date</th><th>Expected Date</th><th>Items</th><th>Total</th><th>Status</th><th>Created Date</th><th>Created By</th><th class="text-end">Actions</th></tr>
                     </thead>
                     <tbody>
                         @forelse($purchaseOrders as $po)
@@ -86,7 +86,7 @@
                                         @can('inv_purchase_order.approve')
                                             <form method="POST" action="{{ route('inventory.purchase-orders.approve', $po) }}" class="d-inline">
                                                 @csrf
-                                                <button type="submit" class="btn btn-sm btn-outline-success" title="Approve" onclick="return confirm('Approve this purchase order?')"><i class="fa-solid fa-check"></i></button>
+                                                <button type="submit" class="btn btn-sm btn-outline-success" title="Approve" onclick="return confirm('Approve this store order?')"><i class="fa-solid fa-check"></i></button>
                                             </form>
                                         @endcan
                                         @can('inv_purchase_order.delete')
@@ -105,7 +105,7 @@
                                 </td>
                             </tr>
                         @empty
-                            <tr><td colspan="11" class="text-center text-muted">No purchase orders found.</td></tr>
+                            <tr><td colspan="11" class="text-center text-muted">No store orders found.</td></tr>
                         @endforelse
                     </tbody>
                 </table>
@@ -116,6 +116,6 @@
     </div>
 </div>
 
-@include('sfl-inventory::admin.partials.delete-confirm-modal', ['modalId' => 'deletePoModal', 'label' => 'purchase order'])
+@include('sfl-inventory::admin.partials.delete-confirm-modal', ['modalId' => 'deletePoModal', 'label' => 'store order'])
 @include('sfl-inventory::admin.partials.select2-init')
 @endsection

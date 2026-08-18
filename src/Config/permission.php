@@ -70,7 +70,7 @@ return [
             'permissions' => $crud,
         ],
         'inv_purchase_order' => [
-            'label' => 'Purchase Orders',
+            'label' => 'Store Order',
             'permissions' => $crud + ['approve' => 'Approve', 'print' => 'Print', 'export' => 'Export'],
         ],
         'inv_grn' => [
