@@ -144,6 +144,21 @@
                     </tr>
                 </template>
 
+                @can('inv_issue.authorize')
+                    @can('inv_issue.approve')
+                        <div class="form-check mt-3">
+                            <input type="checkbox" name="auto_approve" value="1" class="form-check-input" id="autoApprove" @checked(old('auto_approve'))>
+                            @can('inv_issue.receive')
+                                <label class="form-check-label" for="autoApprove">Auto-authorize, auto-approve &amp; auto-confirm receipt for this challan</label>
+                                <div class="form-text">Skips Authorize, Approve and department Receipt Confirmation — the challan is created already fully received and stock is updated immediately.</div>
+                            @else
+                                <label class="form-check-label" for="autoApprove">Auto-authorize &amp; auto-approve this challan</label>
+                                <div class="form-text">Skips both the Authorize and Approve steps — the challan is created already approved and stock is updated immediately.</div>
+                            @endcan
+                        </div>
+                    @endcan
+                @endcan
+
                 <button type="submit" class="btn btn-primary mt-3">Issue &amp; Update Stock</button>
                 <a href="{{ route('inventory.issues.index') }}" class="btn btn-light mt-3">Cancel</a>
             </form>

@@ -87,13 +87,24 @@ class InvIssueController extends Controller
         // requisition) takes them straight from the form.
         $requisition = ! empty($data['requisition_id']) ? InvRequisition::find($data['requisition_id']) : null;
 
-        $issue = DB::transaction(function () use ($data, $requisition) {
+        // Auto-approve implies auto-authorize — it skips straight past both
+        // gates to a fully stock-posted challan, so it requires both
+        // permissions, not just one. If the user can also confirm department
+        // receipt, the same checkbox carries the challan all the way to a
+        // fully received state (used when one person handles the whole
+        // hand-off in person and the paper trail is just a formality).
+        $autoApprove = $request->boolean('auto_approve')
+            && auth()->user()->can('inv_issue.authorize')
+            && auth()->user()->can('inv_issue.approve');
+        $autoReceive = $autoApprove && auth()->user()->can('inv_issue.receive');
+
+        $issue = DB::transaction(function () use ($data, $requisition, $autoApprove, $autoReceive) {
             $issue = InvIssue::create([
                 'requisition_id' => $data['requisition_id'] ?? null,
                 'store_id'       => $data['store_id'],
                 'to_store_id'    => $data['to_store_id'] ?? null,
                 'department_id'  => $data['department_id'],
-                'status'         => 'pending',
+                'status'         => $autoApprove ? 'authorized' : 'pending',
                 'buyer_id'       => $requisition->buyer_id ?? $data['buyer_id'] ?? null,
                 'style'          => $requisition->style ?? $data['style'] ?? null,
                 'order_ref'      => $requisition->order_ref ?? $data['order_ref'] ?? null,
@@ -101,15 +112,18 @@ class InvIssueController extends Controller
                 'issued_by'      => auth()->id(),
                 'remarks'        => $data['remarks'] ?? null,
                 'created_by'     => auth()->id(),
+                'authorized_by'  => $autoApprove ? auth()->id() : null,
+                'authorized_at'  => $autoApprove ? now() : null,
             ]);
 
             foreach ($data['items'] as $line) {
                 $issue->items()->create([
-                    'requisition_item_id' => $line['requisition_item_id'] ?? null,
-                    'item_id'             => $line['item_id'],
-                    'issued_qty'          => $line['issued_qty'],
-                    'unit_rate'           => $line['unit_rate'] ?? 0,
-                    'amount'              => 0,
+                    'requisition_item_id'      => $line['requisition_item_id'] ?? null,
+                    'item_id'                  => $line['item_id'],
+                    'issued_qty'               => $line['issued_qty'],
+                    'unit_rate'                => $line['unit_rate'] ?? 0,
+                    'amount'                   => 0,
+                    'department_received_qty'  => $autoReceive ? $line['issued_qty'] : 0,
                 ]);
 
                 // Committed the moment the challan is prepared — not at final
@@ -123,10 +137,30 @@ class InvIssueController extends Controller
 
             $issue->requisition?->refreshIssueStatus();
 
+            if ($autoApprove) {
+                $issue->load('items');
+                $this->postIssueStock($issue);
+                $issue->update(['status' => 'approved', 'approved_by' => auth()->id(), 'approved_at' => now()]);
+            }
+
+            if ($autoReceive) {
+                $issue->update([
+                    'department_receive_status' => 'full',
+                    'department_received_by'    => auth()->id(),
+                    'department_received_at'    => now(),
+                ]);
+            }
+
             return $issue;
         });
 
-        return redirect()->route('inventory.issues.index')->with('success', "Challan {$issue->issue_no} prepared. Awaiting authorization.");
+        $message = match (true) {
+            $autoReceive => "Challan {$issue->issue_no} prepared, auto-authorized, auto-approved and receipt auto-confirmed. Stock updated.",
+            $autoApprove => "Challan {$issue->issue_no} prepared, auto-authorized and auto-approved. Stock updated.",
+            default => "Challan {$issue->issue_no} prepared. Awaiting authorization.",
+        };
+
+        return redirect()->route('inventory.issues.index')->with('success', $message);
     }
 
     /**
@@ -179,42 +213,7 @@ class InvIssueController extends Controller
 
         DB::transaction(function () use ($issue) {
             $issue->load('items');
-
-            foreach ($issue->items as $issueItem) {
-                $outTxn = $this->stock->post([
-                    'item_id'          => $issueItem->item_id,
-                    'store_id'         => $issue->store_id,
-                    'transaction_date' => $issue->issue_date,
-                    'transaction_type' => 'issue',
-                    'qty_out'          => $issueItem->issued_qty,
-                    'rate'             => $issueItem->unit_rate ?: null,
-                    'department_id'    => $issue->department_id,
-                    'reference_type'   => 'inv_issue',
-                    'reference_id'     => $issue->id,
-                    'remarks'          => "Issue {$issue->issue_no}",
-                    'created_by'       => $issue->created_by,
-                ]);
-
-                $issueItem->update(['unit_rate' => $outTxn->rate, 'amount' => round($issueItem->issued_qty * $outTxn->rate, 2)]);
-
-                // Floor-store destination (Cutting/Sewing/Finishing): post the paired inflow
-                // so Production Consumption has a real, non-zero balance to draw down.
-                if ($issue->to_store_id) {
-                    $this->stock->post([
-                        'item_id'          => $issueItem->item_id,
-                        'store_id'         => $issue->to_store_id,
-                        'transaction_date' => $issue->issue_date,
-                        'transaction_type' => 'issue',
-                        'qty_in'           => $issueItem->issued_qty,
-                        'rate'             => $outTxn->rate,
-                        'department_id'    => $issue->department_id,
-                        'reference_type'   => 'inv_issue',
-                        'reference_id'     => $issue->id,
-                        'remarks'          => "Issue {$issue->issue_no}",
-                        'created_by'       => $issue->created_by,
-                    ]);
-                }
-            }
+            $this->postIssueStock($issue);
 
             // requisition_item.issued_qty was already committed at store()
             // time (Prepare) — approval only posts the physical stock
@@ -223,6 +222,51 @@ class InvIssueController extends Controller
         });
 
         return back()->with('success', "Challan {$issue->issue_no} approved and stock updated.");
+    }
+
+    /**
+     * The real stock-out event, shared by the normal Approve action and the
+     * "auto-approve" checkbox on create — goods physically leave the store
+     * here. Caller is responsible for the surrounding transaction and for
+     * loading $issue->items beforehand.
+     */
+    private function postIssueStock(InvIssue $issue): void
+    {
+        foreach ($issue->items as $issueItem) {
+            $outTxn = $this->stock->post([
+                'item_id'          => $issueItem->item_id,
+                'store_id'         => $issue->store_id,
+                'transaction_date' => $issue->issue_date,
+                'transaction_type' => 'issue',
+                'qty_out'          => $issueItem->issued_qty,
+                'rate'             => $issueItem->unit_rate ?: null,
+                'department_id'    => $issue->department_id,
+                'reference_type'   => 'inv_issue',
+                'reference_id'     => $issue->id,
+                'remarks'          => "Issue {$issue->issue_no}",
+                'created_by'       => $issue->created_by,
+            ]);
+
+            $issueItem->update(['unit_rate' => $outTxn->rate, 'amount' => round($issueItem->issued_qty * $outTxn->rate, 2)]);
+
+            // Floor-store destination (Cutting/Sewing/Finishing): post the paired inflow
+            // so Production Consumption has a real, non-zero balance to draw down.
+            if ($issue->to_store_id) {
+                $this->stock->post([
+                    'item_id'          => $issueItem->item_id,
+                    'store_id'         => $issue->to_store_id,
+                    'transaction_date' => $issue->issue_date,
+                    'transaction_type' => 'issue',
+                    'qty_in'           => $issueItem->issued_qty,
+                    'rate'             => $outTxn->rate,
+                    'department_id'    => $issue->department_id,
+                    'reference_type'   => 'inv_issue',
+                    'reference_id'     => $issue->id,
+                    'remarks'          => "Issue {$issue->issue_no}",
+                    'created_by'       => $issue->created_by,
+                ]);
+            }
+        }
     }
 
     public function print(InvIssue $issue): View
