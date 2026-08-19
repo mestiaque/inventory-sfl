@@ -77,10 +77,17 @@
                     <h6 class="mb-0">Items</h6>
                     <button type="button" class="btn btn-sm btn-outline-primary" data-line-items-add="grn"><i class="fa-solid fa-plus"></i> Add Row</button>
                 </div>
+                @can('inv_barcode.use')
+                    <div class="mb-3" style="max-width:320px;">
+                        <label class="form-label">Scan Barcode to Receive</label>
+                        <input type="text" class="form-control" data-barcode-scan="grn" placeholder="Scan or type a barcode, then Enter" autocomplete="off">
+                        <div id="grnBarcodeScanFeedback" class="form-text"></div>
+                    </div>
+                @endcan
                 <div class="table-responsive">
                     <table class="table table-bordered table-sm align-middle">
                         <thead>
-                            <tr><th style="min-width:220px">Item</th><th style="width:90px">Unit</th><th>Received Qty</th><th></th></tr>
+                            <tr><th style="min-width:220px">Item</th><th style="width:90px">Unit</th><th>Received Qty</th><th>Expiry Date</th><th></th></tr>
                         </thead>
                         <tbody id="grnRowsBody">
                             @foreach(old('items', [[]]) as $index => $line)
@@ -90,12 +97,13 @@
                                         <select name="items[{{ $index }}][item_id]" class="form-control inv-select2" required>
                                             <option value="">— Select —</option>
                                             @foreach($items as $item)
-                                                <option value="{{ $item->id }}" data-unit="{{ $item->unit?->short_name }}" data-store="{{ $item->opening_store_id }}" @selected(($line['item_id'] ?? null) == $item->id)>{{ $item->item_code }} — {{ $item->item_name }}</option>
+                                                <option value="{{ $item->id }}" data-unit="{{ $item->unit?->short_name }}" data-store="{{ $item->opening_store_id }}" data-barcode="{{ $item->barcode }}" @selected(($line['item_id'] ?? null) == $item->id)>{{ $item->item_code }} — {{ $item->item_name }}</option>
                                             @endforeach
                                         </select>
                                     </td>
                                     <td><input type="text" class="form-control" data-role="unit" value="{{ $selectedItem?->unit?->short_name }}" disabled></td>
                                     <td><input type="number" step="0.0001" min="0.0001" name="items[{{ $index }}][received_qty]" class="form-control" value="{{ $line['received_qty'] ?? '' }}" required></td>
+                                    <td><input type="date" name="items[{{ $index }}][expiry_date]" class="form-control" value="{{ $line['expiry_date'] ?? '' }}"></td>
                                     <td>
                                         <input type="hidden" name="items[{{ $index }}][rate]" value="0">
                                         <input type="hidden" name="items[{{ $index }}][rejected_qty]" value="0">
@@ -113,12 +121,13 @@
                             <select name="items[__INDEX__][item_id]" class="form-control inv-select2" required>
                                 <option value="">— Select —</option>
                                 @foreach($items as $item)
-                                    <option value="{{ $item->id }}" data-unit="{{ $item->unit?->short_name }}" data-store="{{ $item->opening_store_id }}">{{ $item->item_code }} — {{ $item->item_name }}</option>
+                                    <option value="{{ $item->id }}" data-unit="{{ $item->unit?->short_name }}" data-store="{{ $item->opening_store_id }}" data-barcode="{{ $item->barcode }}">{{ $item->item_code }} — {{ $item->item_name }}</option>
                                 @endforeach
                             </select>
                         </td>
                         <td><input type="text" class="form-control" data-role="unit" disabled></td>
                         <td><input type="number" step="0.0001" min="0.0001" name="items[__INDEX__][received_qty]" class="form-control" required></td>
+                        <td><input type="date" name="items[__INDEX__][expiry_date]" class="form-control"></td>
                         <td>
                             <input type="hidden" name="items[__INDEX__][rate]" value="0">
                             <input type="hidden" name="items[__INDEX__][rejected_qty]" value="0">
@@ -136,4 +145,7 @@
 
 @include('sfl-inventory::admin.partials.select2-init')
 @include('sfl-inventory::admin.partials.line-items-script')
+@can('inv_barcode.use')
+    @include('sfl-inventory::admin.partials.barcode-scan-script')
+@endcan
 @endsection

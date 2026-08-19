@@ -59,6 +59,7 @@ Route::middleware($route['middleware'] ?? ['web', 'auth'])
         Route::resource('machines', InvMachineController::class)->only(['index', 'store', 'update', 'destroy']);
         Route::resource('items', InvItemController::class)->only(['index', 'create', 'store', 'edit', 'update', 'destroy']);
         Route::delete('items/{item}/force', [InvItemController::class, 'forceDestroy'])->name('items.force-destroy')->withTrashed();
+        Route::post('items/{item}/generate-barcode', [InvItemController::class, 'generateBarcode'])->name('items.generate-barcode');
 
         // Purchase -> GRN
         Route::resource('purchase-orders', InvPurchaseOrderController::class)
@@ -139,6 +140,7 @@ Route::middleware($route['middleware'] ?? ['web', 'auth'])
             Route::get('supplier-purchase', [InvReportController::class, 'supplierWisePurchase'])->name('supplier-purchase');
             Route::get('grn', [InvReportController::class, 'grnReport'])->name('grn');
             Route::get('grn-item-wise', [InvReportController::class, 'grnItemWiseReport'])->name('grn-item-wise');
+            Route::get('expiry-tracking', [InvReportController::class, 'expiryTracking'])->name('expiry-tracking');
             Route::get('issue', [InvReportController::class, 'issueReport'])->name('issue');
             Route::get('gate-pass', [InvReportController::class, 'gatePassReport'])->name('gate-pass');
             Route::get('shipment', [InvReportController::class, 'shipmentReport'])->name('shipment');

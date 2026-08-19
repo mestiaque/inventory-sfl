@@ -69,7 +69,7 @@
                     <thead>
                         <tr>
                             <th>Item</th><th>Unit</th><th class="text-end">Received Qty</th><th class="text-end">Rejected Qty</th>
-                            <th class="text-end">Rate</th><th class="text-end">Amount</th><th>Lot No</th><th>Batch No</th>
+                            <th class="text-end">Rate</th><th class="text-end">Amount</th><th>Lot No</th><th>Batch No</th><th>Expiry Date</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -83,11 +83,12 @@
                                 <td class="text-end">{{ number_format($item->amount, 2) }}</td>
                                 <td>{{ $item->lot_no ?? '—' }}</td>
                                 <td>{{ $item->batch_no ?? '—' }}</td>
+                                <td>{{ optional($item->expiry_date)->format('d M Y') ?? '—' }}</td>
                             </tr>
                         @endforeach
                     </tbody>
                     <tfoot>
-                        <tr class="fw-bold"><td colspan="5" class="text-end">Total</td><td class="text-end">{{ number_format($grn->total_amount, 2) }}</td><td colspan="2"></td></tr>
+                        <tr class="fw-bold"><td colspan="5" class="text-end">Total</td><td class="text-end">{{ number_format($grn->total_amount, 2) }}</td><td colspan="3"></td></tr>
                     </tfoot>
                 </table>
             </div>

@@ -19,15 +19,16 @@ class InvItem extends Model
     protected $fillable = [
         'item_code', 'item_name', 'category_id', 'sub_category_id', 'department_id', 'supplier_id', 'buyer_id',
         'unit_id', 'brand_id', 'color_id', 'size_id', 'specification', 'item_type', 'minimum_stock', 'maximum_stock',
-        'opening_stock', 'opening_value', 'opening_store_id', 'barcode', 'is_active', 'created_by',
+        'opening_stock', 'opening_value', 'opening_store_id', 'barcode', 'barcode_enabled', 'is_active', 'created_by',
     ];
 
     protected $casts = [
-        'minimum_stock'  => 'decimal:4',
-        'maximum_stock'  => 'decimal:4',
-        'opening_stock'  => 'decimal:4',
-        'opening_value'  => 'decimal:2',
-        'is_active'      => 'boolean',
+        'minimum_stock'   => 'decimal:4',
+        'maximum_stock'   => 'decimal:4',
+        'opening_stock'   => 'decimal:4',
+        'opening_value'   => 'decimal:2',
+        'is_active'       => 'boolean',
+        'barcode_enabled' => 'boolean',
     ];
 
     public function category(): BelongsTo

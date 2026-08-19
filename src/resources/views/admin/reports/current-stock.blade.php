@@ -28,7 +28,13 @@
         <div class="card-body">
             @unless($printMode)
                 <form method="GET" class="row g-2 mb-3">
-                    <div class="col-md-4">
+                    <div class="col-md-3">
+                        <input type="text" name="item_code" class="form-control" placeholder="Item Code" value="{{ request('item_code') }}">
+                    </div>
+                    <div class="col-md-3">
+                        <input type="text" name="item_name" class="form-control" placeholder="Item Name" value="{{ request('item_name') }}">
+                    </div>
+                    <div class="col-md-3">
                         <select name="category_id" class="form-control inv-select2">
                             <option value="">All Categories</option>
                             @foreach($categories as $category)
@@ -36,7 +42,15 @@
                             @endforeach
                         </select>
                     </div>
-                    <div class="col-md-4">
+                    <div class="col-md-3">
+                        <select name="unit_id" class="form-control inv-select2">
+                            <option value="">All Units</option>
+                            @foreach($units as $unit)
+                                <option value="{{ $unit->id }}" @selected(request('unit_id') == $unit->id)>{{ $unit->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="col-12">
                         <button type="submit" class="btn btn-secondary">Filter</button>
                         <a href="{{ route('inventory.reports.current-stock') }}" class="btn btn-light">Reset</a>
                     </div>
@@ -53,7 +67,7 @@
                                 <td>{{ $item->item_name }}</td>
                                 <td>{{ $item->category?->name }}</td>
                                 <td>{{ $item->unit?->short_name }}</td>
-                                <td class="text-end">{{ number_format($item->current_stock, 4) }}</td>
+                                <td class="text-end">{{ number_format($item->current_stock, 2) }}</td>
                                 <td class="text-end">{{ number_format($item->stock_value, 2) }}</td>
                             </tr>
                         @empty

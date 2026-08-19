@@ -134,6 +134,28 @@ class InvItemController extends Controller
         return back()->with('success', 'Item and its stock history permanently deleted.');
     }
 
+    /**
+     * Gated behind the standalone "Barcode System" permission (not
+     * inv_item.*) since the same permission also unlocks scan-to-receive on
+     * the GRN screens — one flag for the whole feature, per the spec's
+     * "permission thakle use hobe na hole hobe na" requirement. Only items
+     * explicitly opted in (barcode_enabled) get one generated; this is the
+     * "user tar posondomoto product e barcode generate korte parbe" part —
+     * small/loose items can be left off.
+     */
+    public function generateBarcode(InvItem $item): RedirectResponse
+    {
+        $this->authorize('inv_barcode.use');
+
+        if (! $item->barcode_enabled) {
+            return back()->with('error', 'Enable barcode for this item first (Edit → Enable Barcode), then generate it.');
+        }
+
+        $item->update(['barcode' => config('sfl-inventory.document_prefixes.company', 'SFL') . str_pad((string) $item->id, 9, '0', STR_PAD_LEFT)]);
+
+        return back()->with('success', "Barcode generated: {$item->barcode}");
+    }
+
     private function formOptions(): array
     {
         return [

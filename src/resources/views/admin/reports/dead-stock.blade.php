@@ -38,7 +38,7 @@
                                 <td>{{ $item->item_code }}</td>
                                 <td>{{ $item->item_name }}</td>
                                 <td>{{ $item->category?->name }}</td>
-                                <td class="text-end">{{ number_format($item->current_stock, 4) }} {{ $item->unit?->short_name }}</td>
+                                <td class="text-end">{{ number_format($item->current_stock, 2) }} {{ $item->unit?->short_name }}</td>
                                 <td class="text-end">{{ number_format($item->stock_value, 2) }}</td>
                             </tr>
                         @empty

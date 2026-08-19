@@ -146,6 +146,7 @@ class InvGrnController extends Controller
                     'amount'                 => $line['received_qty'] * $line['rate'],
                     'lot_no'                 => $line['lot_no'] ?? null,
                     'batch_no'               => $line['batch_no'] ?? null,
+                    'expiry_date'            => $line['expiry_date'] ?? null,
                 ]);
 
                 $this->stock->post([
@@ -207,6 +208,7 @@ class InvGrnController extends Controller
                     'amount'                 => $line['received_qty'] * $line['rate'],
                     'lot_no'                 => $line['lot_no'] ?? null,
                     'batch_no'               => $line['batch_no'] ?? null,
+                    'expiry_date'            => $line['expiry_date'] ?? null,
                 ]);
 
                 $this->stock->post([

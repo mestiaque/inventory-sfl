@@ -153,6 +153,7 @@ return [
                         ['title' => 'Supplier Wise Purchase', 'icon' => 'fa-solid fa-arrow-right', 'icon_color' => 'text-info', 'permission' => 'inv_report', 'route' => "$base/reports/supplier-purchase"],
                         ['title' => 'GRN Report', 'icon' => 'fa-solid fa-arrow-right', 'icon_color' => 'text-info', 'permission' => 'inv_report', 'route' => "$base/reports/grn"],
                         ['title' => 'Item Wise Goods Receive Report', 'icon' => 'fa-solid fa-arrow-right', 'icon_color' => 'text-info', 'permission' => 'inv_report', 'route' => "$base/reports/grn-item-wise"],
+                        ['title' => 'Expiry Tracking', 'icon' => 'fa-solid fa-arrow-right', 'icon_color' => 'text-info', 'permission' => 'inv_report', 'route' => "$base/reports/expiry-tracking"],
                         ['title' => 'Issue Report', 'icon' => 'fa-solid fa-arrow-right', 'icon_color' => 'text-info', 'permission' => 'inv_report', 'route' => "$base/reports/issue"],
                         ['title' => 'Gate Pass Report', 'icon' => 'fa-solid fa-arrow-right', 'icon_color' => 'text-info', 'permission' => 'inv_report', 'route' => "$base/reports/gate-pass"],
                         ['title' => 'Shipment Report', 'icon' => 'fa-solid fa-arrow-right', 'icon_color' => 'text-info', 'permission' => 'inv_report', 'route' => "$base/reports/shipment"],

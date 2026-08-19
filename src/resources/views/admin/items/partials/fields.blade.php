@@ -86,6 +86,12 @@
         </select>
     </div>
 
+    <div class="col-md-4 mb-3">
+        <label class="form-label">Low Stock Alert Qty</label>
+        <input type="number" step="0.0001" min="0" name="minimum_stock" class="form-control" placeholder="e.g. 5" value="{{ old('minimum_stock', $item->minimum_stock ?? '') }}">
+        <div class="form-text">Stock at or below this quantity is flagged in the Low Stock Report. Leave blank to disable.</div>
+    </div>
+
     @unless(isset($item))
         <div class="col-md-4 mb-3">
             <label class="form-label">Opening Stock</label>
@@ -118,6 +124,22 @@
             <div class="form-text">This item has no store assigned yet. Set it here.</div>
         </div>
     @endif
+
+    @can('inv_barcode.use')
+        <div class="col-md-4 mb-3">
+            <div class="form-check form-switch mt-4">
+                <input type="hidden" name="barcode_enabled" value="0">
+                <input type="checkbox" name="barcode_enabled" value="1" class="form-check-input" id="itemBarcodeEnabled{{ $item->id ?? 'new' }}"
+                    @checked(old('barcode_enabled', $item->barcode_enabled ?? false))>
+                <label class="form-check-label" for="itemBarcodeEnabled{{ $item->id ?? 'new' }}">Enable Barcode</label>
+            </div>
+            <div class="form-text">Leave off for very small/loose items that don't need one.</div>
+        </div>
+        <div class="col-md-4 mb-3">
+            <label class="form-label">Barcode</label>
+            <input type="text" name="barcode" class="form-control" value="{{ old('barcode', $item->barcode ?? '') }}" placeholder="Generate from the item list, or type an existing code">
+        </div>
+    @endcan
 
     <div class="col-12 mb-3">
         <label class="form-label">Specification</label>

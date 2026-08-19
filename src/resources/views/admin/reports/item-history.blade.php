@@ -68,8 +68,8 @@
                                 @endunless
                                 <td>{{ $txn->store?->name }}</td>
                                 <td>{{ ucwords(str_replace('_', ' ', $txn->transaction_type)) }}</td>
-                                <td class="text-end text-success">{{ $txn->qty_in > 0 ? number_format($txn->qty_in, 4) : '' }}</td>
-                                <td class="text-end text-danger">{{ $txn->qty_out > 0 ? number_format($txn->qty_out, 4) : '' }}</td>
+                                <td class="text-end text-success">{{ $txn->qty_in > 0 ? number_format($txn->qty_in, 2) : '' }}</td>
+                                <td class="text-end text-danger">{{ $txn->qty_out > 0 ? number_format($txn->qty_out, 2) : '' }}</td>
                                 <td class="text-end">{{ number_format($txn->rate, 2) }}</td>
                                 <td class="text-end">{{ number_format($txn->value, 2) }}</td>
                             </tr>

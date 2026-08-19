@@ -125,5 +125,9 @@ return [
             'label' => 'Broken Needle',
             'permissions' => $crud + ['export' => 'Export', 'force_delete' => 'Force Delete'],
         ],
+        'inv_barcode' => [
+            'label' => 'Barcode System',
+            'permissions' => ['use' => 'Use Barcode System', 'all' => 'All'],
+        ],
     ],
 ];

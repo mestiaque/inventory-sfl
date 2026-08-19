@@ -34,7 +34,7 @@
                             <tr>
                                 <td>{{ $row->category->name }}</td>
                                 <td class="text-end">{{ $row->items_count }}</td>
-                                <td class="text-end">{{ number_format($row->total_qty, 4) }}</td>
+                                <td class="text-end">{{ number_format($row->total_qty, 2) }}</td>
                                 <td class="text-end">{{ number_format($row->total_value, 2) }}</td>
                             </tr>
                         @empty

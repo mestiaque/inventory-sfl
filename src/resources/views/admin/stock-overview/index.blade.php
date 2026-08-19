@@ -59,9 +59,9 @@
                                 <td>{{ $item?->item_code }} — {{ $item?->item_name }}</td>
                                 <td>{{ $item?->category?->name }}</td>
                                 <td>{{ $store?->name }}</td>
-                                <td class="text-end">{{ number_format($row->current, 4) }} {{ $item?->unit?->short_name }}</td>
-                                <td class="text-end">{{ number_format($row->reserved, 4) }}</td>
-                                <td class="text-end">{{ number_format($row->available, 4) }}</td>
+                                <td class="text-end">{{ number_format($row->current, 2) }} {{ $item?->unit?->short_name }}</td>
+                                <td class="text-end">{{ number_format($row->reserved, 2) }}</td>
+                                <td class="text-end">{{ number_format($row->available, 2) }}</td>
                                 <td class="text-end">{{ number_format($row->value, 2) }}</td>
                             </tr>
                         @empty

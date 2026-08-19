@@ -38,6 +38,7 @@ class InvItemRequest extends FormRequest
             'opening_value'    => [$isCreate ? 'nullable' : 'prohibited', 'numeric', 'min:0'],
             'opening_store_id' => ['nullable', 'required_with:opening_stock', 'integer', 'exists:inv_stores,id'],
             'barcode'          => ['nullable', 'string', 'max:100', 'unique:inv_items,barcode,' . $itemId],
+            'barcode_enabled'  => ['nullable', 'boolean'],
             'is_active'        => ['nullable', 'boolean'],
         ];
     }

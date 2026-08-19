@@ -18,6 +18,7 @@ use ME\SflInventory\Models\InvItemCategory;
 use ME\SflInventory\Models\InvShipment;
 use ME\SflInventory\Models\InvStore;
 use ME\SflInventory\Models\InvSupplier;
+use ME\SflInventory\Models\InvUnit;
 use ME\SflInventory\Services\StockService;
 
 /**
@@ -38,7 +39,10 @@ class InvReportController extends Controller
 
         $items = InvItem::query()
             ->with(['category', 'unit'])
+            ->when($request->filled('item_code'), fn ($q) => $q->where('item_code', 'like', '%' . $request->item_code . '%'))
+            ->when($request->filled('item_name'), fn ($q) => $q->where('item_name', 'like', '%' . $request->item_name . '%'))
             ->when($request->filled('category_id'), fn ($q) => $q->where('category_id', $request->category_id))
+            ->when($request->filled('unit_id'), fn ($q) => $q->where('unit_id', $request->unit_id))
             ->when($request->filled('item_id'), fn ($q) => $q->where('id', $request->item_id))
             ->active()
             ->orderBy('item_name')
@@ -52,8 +56,9 @@ class InvReportController extends Controller
             ->filter(fn ($item) => $item->current_stock != 0);
 
         $categories = InvItemCategory::active()->orderBy('name')->get();
+        $units = InvUnit::active()->orderBy('name')->get();
 
-        return view('sfl-inventory::admin.reports.current-stock', compact('items', 'categories'));
+        return view('sfl-inventory::admin.reports.current-stock', compact('items', 'categories', 'units'));
     }
 
     public function stockSummary(Request $request): View
@@ -208,6 +213,49 @@ class InvReportController extends Controller
         $suppliers = InvSupplier::active()->orderBy('name')->get();
 
         return view('sfl-inventory::admin.reports.grn-item-wise-report', compact('lines', 'items', 'stores', 'suppliers'));
+    }
+
+    /**
+     * One row per received line that was given an expiry date at GRN time
+     * (src/database/migrations/2026_08_18_000002_...). Status is derived
+     * live from today's date against that date — nothing is cached, same
+     * "never store what can be computed" rule the rest of this package
+     * follows for stock.
+     */
+    public function expiryTracking(Request $request): View
+    {
+        $this->authorize('inv_report.view');
+
+        $withinDays = $request->filled('within_days') ? (int) $request->within_days : 30;
+
+        $lines = InvGrnItem::query()
+            ->select('inv_grn_items.*')
+            ->join('inv_grns', 'inv_grns.id', '=', 'inv_grn_items.grn_id')
+            ->whereNull('inv_grns.deleted_at')
+            ->whereNotNull('inv_grn_items.expiry_date')
+            ->with(['item.unit', 'grn.store'])
+            ->when($request->filled('item_id'), fn ($q) => $q->where('inv_grn_items.item_id', $request->item_id))
+            ->when($request->filled('store_id'), fn ($q) => $q->where('inv_grns.store_id', $request->store_id))
+            ->when($request->filled('status'), function ($q) use ($request, $withinDays) {
+                $today = now()->toDateString();
+                $horizon = now()->addDays($withinDays)->toDateString();
+                if ($request->status === 'expired') {
+                    $q->whereDate('inv_grn_items.expiry_date', '<', $today);
+                } elseif ($request->status === 'expiring_soon') {
+                    $q->whereDate('inv_grn_items.expiry_date', '>=', $today)
+                        ->whereDate('inv_grn_items.expiry_date', '<=', $horizon);
+                } elseif ($request->status === 'ok') {
+                    $q->whereDate('inv_grn_items.expiry_date', '>', $horizon);
+                }
+            })
+            ->orderBy('inv_grn_items.expiry_date')
+            ->paginate($request->boolean('print') ? 100000 : 30)
+            ->withQueryString();
+
+        $items = InvItem::active()->orderBy('item_name')->get();
+        $stores = InvStore::active()->orderBy('name')->get();
+
+        return view('sfl-inventory::admin.reports.expiry-tracking', compact('lines', 'items', 'stores', 'withinDays'));
     }
 
     public function issueReport(Request $request): View
@@ -409,6 +457,7 @@ class InvReportController extends Controller
             'supplier-purchase'      => 'supplierWisePurchase',
             'grn'                    => 'grnReport',
             'grn-item-wise'          => 'grnItemWiseReport',
+            'expiry-tracking'        => 'expiryTracking',
             'issue'                  => 'issueReport',
             'gate-pass'              => 'gatePassReport',
             'shipment'               => 'shipmentReport',

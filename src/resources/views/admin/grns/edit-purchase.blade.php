@@ -72,7 +72,7 @@
                     <div class="table-responsive">
                         <table class="table table-bordered table-sm align-middle">
                             <thead>
-                                <tr><th style="min-width:220px">Item</th><th>Due Qty</th><th>Received Qty</th></tr>
+                                <tr><th style="min-width:220px">Item</th><th>Due Qty</th><th>Received Qty</th><th>Expiry Date</th></tr>
                             </thead>
                             <tbody>
                                 @foreach($grn->items as $index => $grnItem)
@@ -91,6 +91,7 @@
                                         </td>
                                         <td>{{ inv_qty($due) }}</td>
                                         <td><input type="number" step="0.0001" min="0.0001" max="{{ $due }}" name="items[{{ $index }}][received_qty]" class="form-control" value="{{ old('items.' . $index . '.received_qty', $grnItem->received_qty) }}" required></td>
+                                        <td><input type="date" name="items[{{ $index }}][expiry_date]" class="form-control" value="{{ old('items.' . $index . '.expiry_date', optional($grnItem->expiry_date)->format('Y-m-d')) }}"></td>
                                     </tr>
                                 @endforeach
                             </tbody>
@@ -100,10 +101,10 @@
                     <div class="table-responsive">
                         <table class="table table-bordered table-sm align-middle">
                             <thead>
-                                <tr><th style="min-width:220px">Item</th><th style="width:90px">Unit</th><th>Received Qty</th><th>Rejected Qty</th><th>Rate</th><th>Lot No</th><th>Batch No</th><th>Amount</th><th></th></tr>
+                                <tr><th style="min-width:220px">Item</th><th style="width:90px">Unit</th><th>Received Qty</th><th>Rejected Qty</th><th>Rate</th><th>Lot No</th><th>Batch No</th><th>Expiry Date</th><th>Amount</th><th></th></tr>
                             </thead>
                             <tbody id="grnRowsBody">
-                                @foreach(old('items', $grn->items->map(fn ($i) => ['item_id' => $i->item_id, 'received_qty' => (float) $i->received_qty, 'rejected_qty' => (float) $i->rejected_qty, 'rate' => (float) $i->rate, 'lot_no' => $i->lot_no, 'batch_no' => $i->batch_no])->all()) as $index => $line)
+                                @foreach(old('items', $grn->items->map(fn ($i) => ['item_id' => $i->item_id, 'received_qty' => (float) $i->received_qty, 'rejected_qty' => (float) $i->rejected_qty, 'rate' => (float) $i->rate, 'lot_no' => $i->lot_no, 'batch_no' => $i->batch_no, 'expiry_date' => optional($i->expiry_date)->format('Y-m-d')])->all()) as $index => $line)
                                     @php $selectedItem = $items->firstWhere('id', (int) ($line['item_id'] ?? null)); @endphp
                                     <tr>
                                         <td>
@@ -120,6 +121,7 @@
                                         <td><input type="number" step="0.01" min="0" name="items[{{ $index }}][rate]" class="form-control" data-role="rate" value="{{ $line['rate'] ?? '' }}" required></td>
                                         <td><input type="text" name="items[{{ $index }}][lot_no]" class="form-control" value="{{ $line['lot_no'] ?? '' }}"></td>
                                         <td><input type="text" name="items[{{ $index }}][batch_no]" class="form-control" value="{{ $line['batch_no'] ?? '' }}"></td>
+                                        <td><input type="date" name="items[{{ $index }}][expiry_date]" class="form-control" value="{{ $line['expiry_date'] ?? '' }}"></td>
                                         <td><input type="text" class="form-control" data-role="amount" disabled></td>
                                         <td><button type="button" class="btn btn-sm btn-outline-danger" data-line-items-remove><i class="fa-solid fa-xmark"></i></button></td>
                                     </tr>
@@ -144,6 +146,7 @@
                             <td><input type="number" step="0.01" min="0" name="items[__INDEX__][rate]" class="form-control" data-role="rate" required></td>
                             <td><input type="text" name="items[__INDEX__][lot_no]" class="form-control"></td>
                             <td><input type="text" name="items[__INDEX__][batch_no]" class="form-control"></td>
+                            <td><input type="date" name="items[__INDEX__][expiry_date]" class="form-control"></td>
                             <td><input type="text" class="form-control" data-role="amount" disabled></td>
                             <td><button type="button" class="btn btn-sm btn-outline-danger" data-line-items-remove><i class="fa-solid fa-xmark"></i></button></td>
                         </tr>

@@ -49,7 +49,7 @@
                         @forelse($rows as $row)
                             <tr>
                                 <td>{{ $row->supplier_name }}</td>
-                                <td class="text-end">{{ number_format($row->total_qty, 4) }}</td>
+                                <td class="text-end">{{ number_format($row->total_qty, 2) }}</td>
                                 <td class="text-end">{{ number_format($row->total_amount, 2) }}</td>
                             </tr>
                         @empty

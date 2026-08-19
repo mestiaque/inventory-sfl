@@ -71,10 +71,10 @@
                 <div class="table-responsive">
                     <table class="table table-bordered table-sm align-middle">
                         <thead>
-                            <tr><th style="min-width:220px">Item</th><th style="width:90px">Unit</th><th>Received Qty</th><th></th></tr>
+                            <tr><th style="min-width:220px">Item</th><th style="width:90px">Unit</th><th>Received Qty</th><th>Expiry Date</th><th></th></tr>
                         </thead>
                         <tbody id="grnRowsBody">
-                            @foreach(old('items', $grn->items->map(fn ($i) => ['item_id' => $i->item_id, 'received_qty' => (float) $i->received_qty])->all()) as $index => $line)
+                            @foreach(old('items', $grn->items->map(fn ($i) => ['item_id' => $i->item_id, 'received_qty' => (float) $i->received_qty, 'expiry_date' => optional($i->expiry_date)->format('Y-m-d')])->all()) as $index => $line)
                                 @php $selectedItem = $items->firstWhere('id', (int) ($line['item_id'] ?? null)); @endphp
                                 <tr>
                                     <td>
@@ -87,6 +87,7 @@
                                     </td>
                                     <td><input type="text" class="form-control" data-role="unit" value="{{ $selectedItem?->unit?->short_name }}" disabled></td>
                                     <td><input type="number" step="0.0001" min="0.0001" name="items[{{ $index }}][received_qty]" class="form-control" value="{{ $line['received_qty'] ?? '' }}" required></td>
+                                    <td><input type="date" name="items[{{ $index }}][expiry_date]" class="form-control" value="{{ $line['expiry_date'] ?? '' }}"></td>
                                     <td>
                                         <input type="hidden" name="items[{{ $index }}][rate]" value="0">
                                         <input type="hidden" name="items[{{ $index }}][rejected_qty]" value="0">
@@ -110,6 +111,7 @@
                         </td>
                         <td><input type="text" class="form-control" data-role="unit" disabled></td>
                         <td><input type="number" step="0.0001" min="0.0001" name="items[__INDEX__][received_qty]" class="form-control" required></td>
+                        <td><input type="date" name="items[__INDEX__][expiry_date]" class="form-control"></td>
                         <td>
                             <input type="hidden" name="items[__INDEX__][rate]" value="0">
                             <input type="hidden" name="items[__INDEX__][rejected_qty]" value="0">

@@ -58,7 +58,9 @@ class InvRequisitionController extends Controller
     {
         $data = $request->validated();
 
-        $requisition = DB::transaction(function () use ($data) {
+        $autoApprove = $request->boolean('auto_approve') && auth()->user()->can('inv_requisition.approve');
+
+        $requisition = DB::transaction(function () use ($data, $autoApprove) {
             $requisition = InvRequisition::create([
                 'requisition_date' => $data['requisition_date'],
                 'department_id'    => $data['department_id'],
@@ -69,20 +71,27 @@ class InvRequisitionController extends Controller
                 'order_ref'        => $data['order_ref'] ?? null,
                 'requested_by'     => auth()->id(),
                 'received_by'      => $data['received_by'] ?? null,
-                'status'           => 'pending',
+                'status'           => $autoApprove ? 'approved' : 'pending',
                 'remarks'          => $data['remarks'] ?? null,
                 'created_by'       => auth()->id(),
+                'approved_by'      => $autoApprove ? auth()->id() : null,
+                'approved_at'      => $autoApprove ? now() : null,
             ]);
 
             foreach ($data['items'] as $line) {
                 $requisition->items()->create([
                     'item_id'       => $line['item_id'],
                     'requested_qty' => $line['requested_qty'],
+                    ...($autoApprove ? ['approved_qty' => $line['requested_qty']] : []),
                 ]);
             }
 
             return $requisition;
         });
+
+        if ($autoApprove) {
+            return redirect()->route('inventory.requisitions.index')->with('success', "Requisition {$requisition->requisition_no} created and auto-approved.");
+        }
 
         app(ApprovalService::class)->request([
             'module'       => 'inventory.requisition',

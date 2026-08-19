@@ -41,6 +41,7 @@ class InvGrnRequest extends FormRequest
             'items.*.rate'                  => ['required', 'numeric', 'min:0'],
             'items.*.lot_no'                => ['nullable', 'string', 'max:100'],
             'items.*.batch_no'              => ['nullable', 'string', 'max:100'],
+            'items.*.expiry_date'           => ['nullable', 'date'],
         ];
     }
 

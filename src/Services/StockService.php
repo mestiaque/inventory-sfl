@@ -116,7 +116,7 @@ class StockService
             return false;
         }
 
-        return $this->currentStock($item->id) < (float) $item->minimum_stock;
+        return $this->currentStock($item->id) <= (float) $item->minimum_stock;
     }
 
     /**

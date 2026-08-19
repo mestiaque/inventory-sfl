@@ -7,7 +7,7 @@ if (! function_exists('inv_qty')) {
      * rtrim(rtrim($value, '0'), '.'), which turns "100" into "1" since it
      * has no decimal point to stop at).
      */
-    function inv_qty($value, int $decimals = 4): string
+    function inv_qty($value, int $decimals = 2): string
     {
         return rtrim(rtrim(number_format((float) $value, $decimals, '.', ''), '0'), '.') ?: '0';
     }

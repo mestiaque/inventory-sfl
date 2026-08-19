@@ -14,7 +14,7 @@ class InvGrnItem extends Model
 
     protected $fillable = [
         'grn_id', 'purchase_order_item_id', 'item_id', 'ordered_qty', 'received_qty', 'rejected_qty',
-        'rate', 'amount', 'lot_no', 'batch_no', 'remarks',
+        'rate', 'amount', 'lot_no', 'batch_no', 'expiry_date', 'remarks',
     ];
 
     protected $casts = [
@@ -23,6 +23,7 @@ class InvGrnItem extends Model
         'rejected_qty' => 'decimal:4',
         'rate'         => 'decimal:2',
         'amount'       => 'decimal:2',
+        'expiry_date'  => 'date',
     ];
 
     public function grn(): BelongsTo

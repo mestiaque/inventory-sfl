@@ -101,7 +101,11 @@
                 <table class="table table-bordered table-striped align-middle">
                     <thead>
                         <tr>
-                            <th>#</th><th>Code</th><th>Name</th><th>Category</th><th>Department</th><th>Supplier</th><th>Buyer</th><th>Unit</th><th>Type</th><th>Store</th><th>Status</th><th class="text-end">Actions</th>
+                            <th>#</th><th>Code</th><th>Name</th><th>Category</th><th>Department</th><th>Supplier</th><th>Buyer</th><th>Unit</th><th>Type</th><th>Store</th><th>Status</th>
+                            @can('inv_barcode.use')
+                                <th>Barcode</th>
+                            @endcan
+                            <th class="text-end">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -127,6 +131,20 @@
                                         {{ $item->is_active ? 'Active' : 'Inactive' }}
                                     </span>
                                 </td>
+                                @can('inv_barcode.use')
+                                    <td>
+                                        @if($item->barcode)
+                                            <code>{{ $item->barcode }}</code>
+                                        @elseif($item->barcode_enabled)
+                                            <form method="POST" action="{{ route('inventory.items.generate-barcode', $item) }}" class="d-inline">
+                                                @csrf
+                                                <button type="submit" class="btn btn-xs btn-outline-secondary" style="font-size:11px; padding:2px 6px;">Generate</button>
+                                            </form>
+                                        @else
+                                            <span class="text-muted">—</span>
+                                        @endif
+                                    </td>
+                                @endcan
                                 <td class="text-end">
                                     <button type="button" class="btn btn-sm btn-outline-secondary" data-toggle="modal" data-target="#viewItemModal{{ $item->id }}">
                                         <i class="fa-solid fa-eye"></i>
@@ -169,6 +187,7 @@
                                                 <dt class="col-sm-3">Type</dt><dd class="col-sm-9">{{ $item->item_type ? ucwords(str_replace('_', ' ', $item->item_type)) : '—' }}</dd>
                                                 <dt class="col-sm-3">Store</dt><dd class="col-sm-9">{{ $item->openingStore?->name ?? '—' }}</dd>
                                                 <dt class="col-sm-3">Specification</dt><dd class="col-sm-9">{{ $item->specification ?: '—' }}</dd>
+                                                <dt class="col-sm-3">Low Stock Alert Qty</dt><dd class="col-sm-9">{{ $item->minimum_stock > 0 ? inv_qty($item->minimum_stock) : '—' }}</dd>
                                                 <dt class="col-sm-3">Status</dt>
                                                 <dd class="col-sm-9">
                                                     <span class="badge p-1 text-white bg-{{ $item->is_active ? 'success' : 'secondary' }}">
@@ -176,6 +195,15 @@
                                                     </span>
                                                 </dd>
                                             </dl>
+                                            @can('inv_barcode.use')
+                                                @if($item->barcode)
+                                                    <hr>
+                                                    <div class="text-center">
+                                                        <svg class="item-barcode-svg" data-barcode-value="{{ $item->barcode }}"></svg>
+                                                        <div class="text-muted" style="font-size:12px;">{{ $item->barcode }}</div>
+                                                    </div>
+                                                @endif
+                                            @endcan
                                         </div>
                                         <div class="modal-footer">
                                             <button type="button" class="btn btn-light" data-dismiss="modal">Close</button>
@@ -184,7 +212,7 @@
                                 </div>
                             </div>
                         @empty
-                            <tr><td colspan="12" class="text-center text-muted">No items found.</td></tr>
+                            <tr><td colspan="13" class="text-center text-muted">No items found.</td></tr>
                         @endforelse
                     </tbody>
                 </table>
@@ -228,6 +256,23 @@
     });
 </script>
 @endpush
+
+@can('inv_barcode.use')
+    @push('js')
+    <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
+    <script>
+        // Rendered on-demand when a "View Item" modal opens (not for every
+        // row up front — with 600+ items that would be wasted work).
+        $(document).on('show.bs.modal', '.modal', function () {
+            document.querySelectorAll('.item-barcode-svg').forEach(function (svg) {
+                if (window.JsBarcode && svg.dataset.barcodeValue) {
+                    JsBarcode(svg, svg.dataset.barcodeValue, { format: 'CODE128', height: 50, displayValue: false });
+                }
+            });
+        });
+    </script>
+    @endpush
+@endcan
 
 @include('sfl-inventory::admin.partials.select2-init')
 @endsection

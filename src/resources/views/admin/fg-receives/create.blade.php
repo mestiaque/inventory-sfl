@@ -20,7 +20,7 @@
                 <div class="row">
                     <div class="col-md-3 mb-3">
                         <label class="form-label">Style</label>
-                        <input type="text" name="style" class="form-control" value="{{ old('style') }}">
+                        <input type="text" name="style" class="form-control" value="{{ old('style', request('style')) }}">
                     </div>
                     <div class="col-md-3 mb-3">
                         <label class="form-label">Buyer</label>
@@ -33,7 +33,7 @@
                     </div>
                     <div class="col-md-3 mb-3">
                         <label class="form-label">Order Ref</label>
-                        <input type="text" name="order_ref" class="form-control" value="{{ old('order_ref') }}">
+                        <input type="text" name="order_ref" class="form-control" value="{{ old('order_ref', request('order_ref')) }}">
                     </div>
                     <div class="col-md-3 mb-3">
                         <label class="form-label">Finished Goods Store <span class="text-danger">*</span></label>
