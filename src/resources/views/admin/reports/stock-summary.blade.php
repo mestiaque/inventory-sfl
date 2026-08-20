@@ -34,8 +34,8 @@
                             <tr>
                                 <td>{{ $row->category->name }}</td>
                                 <td class="text-end">{{ $row->items_count }}</td>
-                                <td class="text-end">{{ number_format($row->total_qty, 2) }}</td>
-                                <td class="text-end">{{ number_format($row->total_value, 2) }}</td>
+                                <td class="text-end">{{ inv_qty($row->total_qty) }}</td>
+                                <td class="text-end">{{ inv_qty($row->total_value) }}</td>
                             </tr>
                         @empty
                             <tr><td colspan="4" class="text-center text-muted">No stock records found.</td></tr>
@@ -43,7 +43,7 @@
                     </tbody>
                     @if($summary->isNotEmpty())
                         <tfoot>
-                            <tr class="fw-bold"><td colspan="3" class="text-end">Grand Total</td><td class="text-end">{{ number_format($summary->sum('total_value'), 2) }}</td></tr>
+                            <tr class="fw-bold"><td colspan="3" class="text-end">Grand Total</td><td class="text-end">{{ inv_qty($summary->sum('total_value')) }}</td></tr>
                         </tfoot>
                     @endif
                 </table>

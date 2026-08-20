@@ -79,8 +79,8 @@
                                 <td>{{ $item->item?->unit?->short_name }}</td>
                                 <td class="text-end">{{ inv_qty($item->received_qty) }}</td>
                                 <td class="text-end">{{ inv_qty($item->rejected_qty) }}</td>
-                                <td class="text-end">{{ number_format($item->rate, 2) }}</td>
-                                <td class="text-end">{{ number_format($item->amount, 2) }}</td>
+                                <td class="text-end">{{ inv_qty($item->rate) }}</td>
+                                <td class="text-end">{{ inv_qty($item->amount) }}</td>
                                 <td>{{ $item->lot_no ?? '—' }}</td>
                                 <td>{{ $item->batch_no ?? '—' }}</td>
                                 <td>{{ optional($item->expiry_date)->format('d M Y') ?? '—' }}</td>
@@ -88,7 +88,7 @@
                         @endforeach
                     </tbody>
                     <tfoot>
-                        <tr class="fw-bold"><td colspan="5" class="text-end">Total</td><td class="text-end">{{ number_format($grn->total_amount, 2) }}</td><td colspan="3"></td></tr>
+                        <tr class="fw-bold"><td colspan="5" class="text-end">Total</td><td class="text-end">{{ inv_qty($grn->total_amount) }}</td><td colspan="3"></td></tr>
                     </tfoot>
                 </table>
             </div>

@@ -86,8 +86,8 @@
                                 @endforeach
                                 <td class="text-end fw-bold">{{ inv_qty($row->running_balance) }}</td>
                                 <td>{{ $row->unit }}</td>
-                                <td class="text-end">{{ number_format($row->rate, 2) }}</td>
-                                <td class="text-end">{{ number_format($row->value, 2) }}</td>
+                                <td class="text-end">{{ inv_qty($row->rate) }}</td>
+                                <td class="text-end">{{ inv_qty($row->value) }}</td>
                                 <td>{{ $row->received_by_name }}</td>
                                 <td>{{ $row->issued_by_name }}</td>
                             </tr>

@@ -78,8 +78,8 @@
                                 <td>{{ $line->grn?->source_type === 'buyer_supplied' ? $line->grn?->buyer?->name : $line->grn?->supplier?->name }}</td>
                                 <td class="text-end">{{ inv_qty($line->received_qty) }}</td>
                                 <td>{{ $line->item?->unit?->short_name }}</td>
-                                <td class="text-end">{{ number_format($line->rate, 2) }}</td>
-                                <td class="text-end">{{ number_format($line->amount, 2) }}</td>
+                                <td class="text-end">{{ inv_qty($line->rate) }}</td>
+                                <td class="text-end">{{ inv_qty($line->amount) }}</td>
                                 <td>{{ $line->grn?->receive_date?->format('d M Y') }}</td>
                                 <td>{{ $line->created_at?->format('d M Y, h:i A') }}</td>
                                 <td>{{ $line->grn?->creator?->name ?? '—' }}</td>
@@ -90,7 +90,7 @@
                     </tbody>
                     @if($lines->isNotEmpty())
                         <tfoot>
-                            <tr class="fw-bold"><td colspan="9" class="text-end">Total</td><td class="text-end">{{ number_format($lines->sum('amount'), 2) }}</td><td colspan="3"></td></tr>
+                            <tr class="fw-bold"><td colspan="9" class="text-end">Total</td><td class="text-end">{{ inv_qty($lines->sum('amount')) }}</td><td colspan="3"></td></tr>
                         </tfoot>
                     @endif
                 </table>

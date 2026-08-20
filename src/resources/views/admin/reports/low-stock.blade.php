@@ -35,8 +35,8 @@
                                 <td>{{ $item->item_code }}</td>
                                 <td>{{ $item->item_name }}</td>
                                 <td>{{ $item->category?->name }}</td>
-                                <td class="text-end">{{ number_format($item->current_stock, 2) }} {{ $item->unit?->short_name }}</td>
-                                <td class="text-end">{{ number_format($item->minimum_stock, 2) }}</td>
+                                <td class="text-end">{{ inv_qty($item->current_stock) }} {{ $item->unit?->short_name }}</td>
+                                <td class="text-end">{{ inv_qty($item->minimum_stock) }}</td>
                             </tr>
                         @empty
                             <tr><td colspan="5" class="text-center text-muted">No items are below minimum stock.</td></tr>

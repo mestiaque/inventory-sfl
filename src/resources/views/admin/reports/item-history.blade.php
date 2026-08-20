@@ -68,10 +68,10 @@
                                 @endunless
                                 <td>{{ $txn->store?->name }}</td>
                                 <td>{{ ucwords(str_replace('_', ' ', $txn->transaction_type)) }}</td>
-                                <td class="text-end text-success">{{ $txn->qty_in > 0 ? number_format($txn->qty_in, 2) : '' }}</td>
-                                <td class="text-end text-danger">{{ $txn->qty_out > 0 ? number_format($txn->qty_out, 2) : '' }}</td>
-                                <td class="text-end">{{ number_format($txn->rate, 2) }}</td>
-                                <td class="text-end">{{ number_format($txn->value, 2) }}</td>
+                                <td class="text-end text-success">{{ $txn->qty_in > 0 ? inv_qty($txn->qty_in) : '' }}</td>
+                                <td class="text-end text-danger">{{ $txn->qty_out > 0 ? inv_qty($txn->qty_out) : '' }}</td>
+                                <td class="text-end">{{ inv_qty($txn->rate) }}</td>
+                                <td class="text-end">{{ inv_qty($txn->value) }}</td>
                             </tr>
                         @empty
                             <tr><td colspan="{{ $selectedItem ? 7 : 8 }}" class="text-center text-muted">No movements found for this period.</td></tr>

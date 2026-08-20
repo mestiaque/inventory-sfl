@@ -65,7 +65,7 @@
                                 <td>{{ $po->order_date?->format('d M Y') }}</td>
                                 <td>{{ $po->expected_date?->format('d M Y') ?? '—' }}</td>
                                 <td>{{ $po->items_count }}</td>
-                                <td>{{ number_format($po->total_amount, 2) }}</td>
+                                <td>{{ inv_qty($po->total_amount) }}</td>
                                 <td>
                                     <span class="badge p-1 text-white bg-{{ ['draft' => 'secondary', 'approved' => 'info', 'received' => 'primary', 'closed' => 'success', 'cancelled' => 'danger'][$po->status] ?? 'secondary' }}">
                                         {{ ucfirst($po->status) }}

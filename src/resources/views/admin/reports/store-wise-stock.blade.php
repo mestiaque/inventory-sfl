@@ -34,7 +34,7 @@
                             <tr>
                                 <td>{{ $row->store->name }}</td>
                                 <td class="text-end">{{ $row->items_count }}</td>
-                                <td class="text-end">{{ number_format($row->total_value, 2) }}</td>
+                                <td class="text-end">{{ inv_qty($row->total_value) }}</td>
                             </tr>
                         @empty
                             <tr><td colspan="3" class="text-center text-muted">No stores found.</td></tr>

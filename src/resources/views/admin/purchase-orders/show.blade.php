@@ -47,7 +47,7 @@
                         <span class="text-muted">({{ $purchaseOrder->approved_at->format('d M Y h:i A') }})</span>
                     @endif
                 </div>
-                <div class="col-md-3 mb-2"><strong>Total Amount:</strong> {{ number_format($purchaseOrder->total_amount, 2) }}</div>
+                <div class="col-md-3 mb-2"><strong>Total Amount:</strong> {{ inv_qty($purchaseOrder->total_amount) }}</div>
                 <div class="col-12"><strong>Remarks:</strong> {{ $purchaseOrder->remarks ?: '—' }}</div>
             </div>
 
@@ -68,13 +68,13 @@
                                 <td class="text-end">
                                     <span class="badge p-1 text-white bg-{{ $remaining <= 0 ? 'success' : 'warning' }}">{{ inv_qty($remaining) }}</span>
                                 </td>
-                                <td class="text-end">{{ number_format($line->rate, 2) }}</td>
-                                <td class="text-end">{{ number_format($line->amount, 2) }}</td>
+                                <td class="text-end">{{ inv_qty($line->rate) }}</td>
+                                <td class="text-end">{{ inv_qty($line->amount) }}</td>
                             </tr>
                         @endforeach
                     </tbody>
                     <tfoot>
-                        <tr class="fw-bold"><td colspan="6" class="text-end">Total</td><td class="text-end">{{ number_format($purchaseOrder->total_amount, 2) }}</td></tr>
+                        <tr class="fw-bold"><td colspan="6" class="text-end">Total</td><td class="text-end">{{ inv_qty($purchaseOrder->total_amount) }}</td></tr>
                     </tfoot>
                 </table>
             </div>
@@ -110,14 +110,14 @@
                                                 <td>{{ $gi->item?->item_name }}</td>
                                                 <td class="text-end">{{ inv_qty($gi->received_qty) }}</td>
                                                 <td class="text-end">{{ inv_qty($gi->rejected_qty) }}</td>
-                                                <td class="text-end">{{ number_format($gi->rate, 2) }}</td>
-                                                <td class="text-end">{{ number_format($gi->amount, 2) }}</td>
+                                                <td class="text-end">{{ inv_qty($gi->rate) }}</td>
+                                                <td class="text-end">{{ inv_qty($gi->amount) }}</td>
                                                 <td>{{ collect([$gi->lot_no, $gi->batch_no])->filter()->implode(' / ') ?: '—' }}</td>
                                             </tr>
                                         @endforeach
                                     </tbody>
                                     <tfoot>
-                                        <tr class="fw-bold"><td colspan="5" class="text-end">Challan Total</td><td class="text-end">{{ number_format($grn->total_amount, 2) }}</td><td></td></tr>
+                                        <tr class="fw-bold"><td colspan="5" class="text-end">Challan Total</td><td class="text-end">{{ inv_qty($grn->total_amount) }}</td><td></td></tr>
                                     </tfoot>
                                 </table>
                             </div>

@@ -49,8 +49,8 @@
                         @forelse($rows as $row)
                             <tr>
                                 <td>{{ $row->department_name }}</td>
-                                <td class="text-end">{{ number_format($row->total_consumed, 2) }}</td>
-                                <td class="text-end">{{ number_format($row->total_waste, 2) }}</td>
+                                <td class="text-end">{{ inv_qty($row->total_consumed) }}</td>
+                                <td class="text-end">{{ inv_qty($row->total_waste) }}</td>
                             </tr>
                         @empty
                             <tr><td colspan="3" class="text-center text-muted">No consumption records found.</td></tr>

@@ -59,10 +59,10 @@
                                 <td>{{ $item?->item_code }} — {{ $item?->item_name }}</td>
                                 <td>{{ $item?->category?->name }}</td>
                                 <td>{{ $store?->name }}</td>
-                                <td class="text-end">{{ number_format($row->current, 2) }} {{ $item?->unit?->short_name }}</td>
-                                <td class="text-end">{{ number_format($row->reserved, 2) }}</td>
-                                <td class="text-end">{{ number_format($row->available, 2) }}</td>
-                                <td class="text-end">{{ number_format($row->value, 2) }}</td>
+                                <td class="text-end">{{ inv_qty($row->current) }} {{ $item?->unit?->short_name }}</td>
+                                <td class="text-end">{{ inv_qty($row->reserved) }}</td>
+                                <td class="text-end">{{ inv_qty($row->available) }}</td>
+                                <td class="text-end">{{ inv_qty($row->value) }}</td>
                             </tr>
                         @empty
                             <tr><td colspan="7" class="text-center text-muted">No stock records found.</td></tr>
@@ -72,7 +72,7 @@
                         <tfoot>
                             <tr class="fw-bold">
                                 <td colspan="6" class="text-end">Total Stock Value</td>
-                                <td class="text-end">{{ number_format($rows->sum('value'), 2) }}</td>
+                                <td class="text-end">{{ inv_qty($rows->sum('value')) }}</td>
                             </tr>
                         </tfoot>
                     @endif

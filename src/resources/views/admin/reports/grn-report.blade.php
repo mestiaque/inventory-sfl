@@ -61,7 +61,7 @@
                                 <td>{{ $grn->store?->name }}</td>
                                 <td>{{ $grn->supplier?->name }}</td>
                                 <td>{{ $grn->receive_date?->format('d M Y') }}</td>
-                                <td class="text-end">{{ number_format($grn->total_amount, 2) }}</td>
+                                <td class="text-end">{{ inv_qty($grn->total_amount) }}</td>
                             </tr>
                         @empty
                             <tr><td colspan="6" class="text-center text-muted">No GRNs found.</td></tr>

@@ -49,9 +49,9 @@
                                 <td>{{ $item->item_code }}</td>
                                 <td>{{ $item->item_name }}</td>
                                 <td>{{ $item->category?->name }}</td>
-                                <td class="text-end">{{ number_format($item->current_stock, 2) }} {{ $item->unit?->short_name }}</td>
-                                <td class="text-end">{{ number_format($item->average_rate, 2) }}</td>
-                                <td class="text-end">{{ number_format($item->stock_value, 2) }}</td>
+                                <td class="text-end">{{ inv_qty($item->current_stock) }} {{ $item->unit?->short_name }}</td>
+                                <td class="text-end">{{ inv_qty($item->average_rate) }}</td>
+                                <td class="text-end">{{ inv_qty($item->stock_value) }}</td>
                             </tr>
                         @empty
                             <tr><td colspan="6" class="text-center text-muted">No stock records found.</td></tr>
@@ -59,7 +59,7 @@
                     </tbody>
                     @if($items->isNotEmpty())
                         <tfoot>
-                            <tr class="fw-bold"><td colspan="5" class="text-end">Total Stock Value</td><td class="text-end">{{ number_format($items->sum('stock_value'), 2) }}</td></tr>
+                            <tr class="fw-bold"><td colspan="5" class="text-end">Total Stock Value</td><td class="text-end">{{ inv_qty($items->sum('stock_value')) }}</td></tr>
                         </tfoot>
                     @endif
                 </table>

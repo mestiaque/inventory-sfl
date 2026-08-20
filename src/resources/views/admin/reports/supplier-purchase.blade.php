@@ -49,8 +49,8 @@
                         @forelse($rows as $row)
                             <tr>
                                 <td>{{ $row->supplier_name }}</td>
-                                <td class="text-end">{{ number_format($row->total_qty, 2) }}</td>
-                                <td class="text-end">{{ number_format($row->total_amount, 2) }}</td>
+                                <td class="text-end">{{ inv_qty($row->total_qty) }}</td>
+                                <td class="text-end">{{ inv_qty($row->total_amount) }}</td>
                             </tr>
                         @empty
                             <tr><td colspan="3" class="text-center text-muted">No purchases found.</td></tr>

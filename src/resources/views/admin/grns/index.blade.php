@@ -87,7 +87,7 @@
                                 </td>
                                 <td>{{ $grn->receive_date?->format('d M Y') }}</td>
                                 <td>{{ $grn->items_count }}</td>
-                                <td>{{ number_format($grn->total_amount, 2) }}</td>
+                                <td>{{ inv_qty($grn->total_amount) }}</td>
                                 <td><span class="badge p-1 text-white bg-success">{{ ucfirst($grn->status) }}</span></td>
                                 <td>{{ $grn->created_at?->format('d M Y, h:i A') }}</td>
                                 <td>{{ $grn->creator?->name ?? '—' }}</td>
