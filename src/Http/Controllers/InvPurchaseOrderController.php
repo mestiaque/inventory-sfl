@@ -28,6 +28,7 @@ class InvPurchaseOrderController extends Controller
             ->withCount(['grns', 'items'])
             ->when($request->filled('search'), fn ($q) => $q->where('po_number', 'like', '%' . $request->search . '%'))
             ->when($request->filled('supplier_id'), fn ($q) => $q->where('supplier_id', $request->supplier_id))
+            ->when($request->filled('item_id'), fn ($q) => $q->whereHas('items', fn ($iq) => $iq->where('item_id', $request->item_id)))
             ->when($request->filled('status'), fn ($q) => $q->where('status', $request->status))
             ->when($request->filled('date_from'), fn ($q) => $q->whereDate('order_date', '>=', $request->date_from))
             ->when($request->filled('date_to'), fn ($q) => $q->whereDate('order_date', '<=', $request->date_to))
@@ -37,8 +38,9 @@ class InvPurchaseOrderController extends Controller
             ->withQueryString();
 
         $suppliers = InvSupplier::active()->orderBy('name')->get();
+        $items = InvItem::active()->orderBy('item_name')->get();
 
-        return view('sfl-inventory::admin.purchase-orders.index', compact('purchaseOrders', 'suppliers'));
+        return view('sfl-inventory::admin.purchase-orders.index', compact('purchaseOrders', 'suppliers', 'items'));
     }
 
     public function create(): View

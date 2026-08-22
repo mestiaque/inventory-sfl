@@ -36,6 +36,7 @@ class InvGrnController extends Controller
             ->when($request->filled('search'), fn ($q) => $q->where('grn_number', 'like', '%' . $request->search . '%'))
             ->when($request->filled('store_id'), fn ($q) => $q->where('store_id', $request->store_id))
             ->when($request->filled('supplier_id'), fn ($q) => $q->where('supplier_id', $request->supplier_id))
+            ->when($request->filled('item_id'), fn ($q) => $q->whereHas('items', fn ($iq) => $iq->where('item_id', $request->item_id)))
             ->when($request->filled('source_type'), fn ($q) => $q->where('source_type', $request->source_type))
             ->when($request->filled('date_from'), fn ($q) => $q->whereDate('receive_date', '>=', $request->date_from))
             ->when($request->filled('date_to'), fn ($q) => $q->whereDate('receive_date', '<=', $request->date_to))
@@ -46,8 +47,9 @@ class InvGrnController extends Controller
 
         $stores = InvStore::active()->orderBy('name')->get();
         $suppliers = InvSupplier::active()->orderBy('name')->get();
+        $items = InvItem::active()->orderBy('item_name')->get();
 
-        return view('sfl-inventory::admin.grns.index', compact('grns', 'stores', 'suppliers'));
+        return view('sfl-inventory::admin.grns.index', compact('grns', 'stores', 'suppliers', 'items'));
     }
 
     /**

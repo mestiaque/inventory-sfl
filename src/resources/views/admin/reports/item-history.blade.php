@@ -13,6 +13,7 @@
 <div class="flex-grow-1 inv-module">
     @if($printMode)
         @include('sfl-inventory::admin.reports.partials.print-header', ['title' => 'Item History Report'])
+        <p class="text-center mb-2">Period: {{ \Carbon\Carbon::parse($from)->format('d M Y') }} — {{ \Carbon\Carbon::parse($to)->format('d M Y') }}</p>
     @else
         @include('sfl-inventory::admin.partials.alerts')
         @include('sfl-inventory::admin.partials.ui-kit')

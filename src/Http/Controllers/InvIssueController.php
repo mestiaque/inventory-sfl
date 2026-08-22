@@ -36,6 +36,7 @@ class InvIssueController extends Controller
             ->when($request->filled('department_id'), fn ($q) => $q->where('department_id', $request->department_id))
             ->when($request->filled('buyer_id'), fn ($q) => $q->where('buyer_id', $request->buyer_id))
             ->when($request->filled('store_id'), fn ($q) => $q->where('store_id', $request->store_id))
+            ->when($request->filled('item_id'), fn ($q) => $q->whereHas('items', fn ($iq) => $iq->where('item_id', $request->item_id)))
             ->when($request->filled('status'), fn ($q) => $q->where('status', $request->status))
             ->when($request->filled('date_from'), fn ($q) => $q->whereDate('issue_date', '>=', $request->date_from))
             ->when($request->filled('date_to'), fn ($q) => $q->whereDate('issue_date', '<=', $request->date_to))
@@ -47,8 +48,9 @@ class InvIssueController extends Controller
         $departments = InvDepartment::active()->orderBy('name')->get();
         $buyers = InvBuyer::active()->orderBy('name')->get();
         $stores = InvStore::active()->orderBy('name')->get();
+        $items = InvItem::active()->orderBy('item_name')->get();
 
-        return view('sfl-inventory::admin.issues.index', compact('issues', 'departments', 'buyers', 'stores'));
+        return view('sfl-inventory::admin.issues.index', compact('issues', 'departments', 'buyers', 'stores', 'items'));
     }
 
     /**

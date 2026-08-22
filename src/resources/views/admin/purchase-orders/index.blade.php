@@ -43,6 +43,14 @@
                 <div class="col-md-2">
                     <input type="date" name="date_to" class="form-control" value="{{ request('date_to') }}" placeholder="To">
                 </div>
+                <div class="col-md-2">
+                    <select name="item_id" class="form-control inv-select2">
+                        <option value="">All Items</option>
+                        @foreach($items as $item)
+                            <option value="{{ $item->id }}" @selected(request('item_id') == $item->id)>{{ $item->item_code }} — {{ $item->item_name }}</option>
+                        @endforeach
+                    </select>
+                </div>
                 <div class="col-md-1">
                     <button type="submit" class="btn btn-secondary w-100">Filter</button>
                 </div>
