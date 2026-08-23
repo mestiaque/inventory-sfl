@@ -97,7 +97,9 @@ class DashboardController extends Controller
 
             $recentGrns = InvGrn::with(['store', 'supplier'])->latest('id')->take(5)->get();
             $recentIssues = InvIssue::with(['store', 'department'])->latest('id')->take(5)->get();
-            $recentActivities = InvStockTransaction::with(['item', 'store'])->latest('id')->take(8)->get();
+            $recentActivities = InvStockTransaction::with(['item', 'store'])
+                ->where('transaction_type', 'not like', '%\_reversal')
+                ->latest('id')->take(8)->get();
 
             return [
                 'totalItems'          => $totalItems,

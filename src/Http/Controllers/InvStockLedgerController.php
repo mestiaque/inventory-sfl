@@ -19,6 +19,7 @@ class InvStockLedgerController extends Controller
             ->when($request->filled('item_id'), fn ($q) => $q->where('item_id', $request->item_id))
             ->when($request->filled('store_id'), fn ($q) => $q->where('store_id', $request->store_id))
             ->when($request->filled('transaction_type'), fn ($q) => $q->where('transaction_type', $request->transaction_type))
+            ->where('transaction_type', 'not like', '%\_reversal')
             ->when($request->filled('date_from'), fn ($q) => $q->whereDate('transaction_date', '>=', $request->date_from))
             ->when($request->filled('date_to'), fn ($q) => $q->whereDate('transaction_date', '<=', $request->date_to))
             ->orderByDesc('transaction_date')

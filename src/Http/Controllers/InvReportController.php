@@ -95,12 +95,74 @@ class InvReportController extends Controller
             ->when($selectedItem, fn ($q) => $q->where('item_id', $selectedItem->id))
             ->whereDate('transaction_date', '>=', $from)
             ->whereDate('transaction_date', '<=', $to)
+            ->where('transaction_type', 'not like', '%\_reversal')
             ->orderBy('transaction_date')
             ->orderBy('id')
             ->paginate($request->boolean('print') ? 100000 : 50)
             ->withQueryString();
 
         return view('sfl-inventory::admin.reports.item-history', compact('items', 'transactions', 'selectedItem', 'from', 'to'));
+    }
+
+    /**
+     * One row per document that ever touched this item — Purchase Order,
+     * GRN, Requisition, Issue — each carrying who did it and the document
+     * number, so "kobe kon purchase e ke entry disey, ke receive korese"
+     * etc. can be answered from a single screen instead of hunting through
+     * four separate list pages.
+     */
+    public function itemFullTrail(Request $request): View
+    {
+        $this->authorize('inv_report.view');
+
+        $items = InvItem::active()->orderBy('item_name')->get();
+        $selectedItem = $request->filled('item_id') ? InvItem::find($request->item_id) : null;
+
+        $rows = collect();
+
+        if ($selectedItem) {
+            $purchaseOrders = DB::table('inv_purchase_order_items as poi')
+                ->join('inv_purchase_orders as po', 'po.id', '=', 'poi.purchase_order_id')
+                ->leftJoin('users as u', 'u.id', '=', 'po.created_by')
+                ->leftJoin('inv_suppliers as sup', 'sup.id', '=', 'po.supplier_id')
+                ->where('poi.item_id', $selectedItem->id)
+                ->whereNull('po.deleted_at')
+                ->selectRaw("'Purchase Order' as document_type, po.po_number as document_no, po.order_date as txn_date, poi.quantity as qty, u.name as person_name, sup.name as party_name, po.status as status");
+
+            $grns = DB::table('inv_grn_items as gi')
+                ->join('inv_grns as g', 'g.id', '=', 'gi.grn_id')
+                ->leftJoin('users as u', 'u.id', '=', 'g.created_by')
+                ->leftJoin('hr_employees as emp', 'emp.id', '=', 'g.received_by')
+                ->leftJoin('inv_stores as s', 's.id', '=', 'g.store_id')
+                ->where('gi.item_id', $selectedItem->id)
+                ->whereNull('g.deleted_at')
+                ->selectRaw("'GRN' as document_type, g.grn_number as document_no, g.receive_date as txn_date, gi.received_qty as qty, COALESCE(emp.name, u.name) as person_name, s.name as party_name, g.status as status");
+
+            $requisitions = DB::table('inv_requisition_items as ri')
+                ->join('inv_requisitions as r', 'r.id', '=', 'ri.requisition_id')
+                ->leftJoin('users as u', 'u.id', '=', 'r.requested_by')
+                ->leftJoin('inv_departments as d', 'd.id', '=', 'r.department_id')
+                ->where('ri.item_id', $selectedItem->id)
+                ->whereNull('r.deleted_at')
+                ->selectRaw("'Requisition' as document_type, r.requisition_no as document_no, r.requisition_date as txn_date, ri.requested_qty as qty, u.name as person_name, d.name as party_name, r.status as status");
+
+            $issues = DB::table('inv_issue_items as ii')
+                ->join('inv_issues as i', 'i.id', '=', 'ii.issue_id')
+                ->leftJoin('users as u', 'u.id', '=', 'i.issued_by')
+                ->leftJoin('inv_departments as d', 'd.id', '=', 'i.department_id')
+                ->where('ii.item_id', $selectedItem->id)
+                ->whereNull('i.deleted_at')
+                ->selectRaw("'Issue' as document_type, i.issue_no as document_no, i.issue_date as txn_date, ii.issued_qty as qty, u.name as person_name, d.name as party_name, i.status as status");
+
+            $rows = $purchaseOrders
+                ->unionAll($grns)
+                ->unionAll($requisitions)
+                ->unionAll($issues)
+                ->orderBy('txn_date')
+                ->get();
+        }
+
+        return view('sfl-inventory::admin.reports.item-full-trail', compact('items', 'selectedItem', 'rows'));
     }
 
     public function storeWiseStock(Request $request): View
@@ -379,7 +441,15 @@ class InvReportController extends Controller
 
         $departments = InvDepartment::active()->orderBy('name')->get();
 
-        $rows = DB::table('inv_stock_transactions as t')
+        // The running balance must be computed over every transaction
+        // (including *_reversal entries posted when a GRN/adjustment/etc. is
+        // edited or deleted) so it stays numerically correct — but reversal
+        // rows themselves are just internal corrections for a user's own
+        // mistake, not something they need to see line-by-line. So the
+        // window function runs unfiltered in this inner query, and the
+        // reversal rows are dropped only in the outer query, after the
+        // balance for every later row already accounts for them.
+        $withBalance = DB::table('inv_stock_transactions as t')
             ->join('inv_items as i', 'i.id', '=', 't.item_id')
             ->join('inv_item_categories as c', 'c.id', '=', 'i.category_id')
             ->join('inv_units as u', 'u.id', '=', 'i.unit_id')
@@ -410,10 +480,13 @@ class InvReportController extends Controller
                 iss.issue_no, isu.name as issued_by_name,
                 SUM(CASE WHEN t.qty_in > 0 THEN t.qty_in ELSE -t.qty_out END)
                     OVER (PARTITION BY t.item_id, t.store_id ORDER BY t.transaction_date, t.id) as running_balance
-            ')
-            ->orderBy('i.item_name')
-            ->orderBy('t.transaction_date')
-            ->orderBy('t.id')
+            ');
+
+        $rows = DB::query()->fromSub($withBalance, 'x')
+            ->where('x.transaction_type', 'not like', '%\_reversal')
+            ->orderBy('x.item_name')
+            ->orderBy('x.transaction_date')
+            ->orderBy('x.id')
             ->limit(500)
             ->get();
 
@@ -452,6 +525,7 @@ class InvReportController extends Controller
             'current-stock'          => 'currentStock',
             'stock-summary'          => 'stockSummary',
             'item-history'           => 'itemHistory',
+            'item-full-trail'        => 'itemFullTrail',
             'store-wise-stock'       => 'storeWiseStock',
             'department-consumption' => 'departmentWiseConsumption',
             'supplier-purchase'      => 'supplierWisePurchase',

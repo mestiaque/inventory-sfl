@@ -148,6 +148,7 @@ return [
                         ['title' => 'Current Stock', 'icon' => 'fa-solid fa-arrow-right', 'icon_color' => 'text-info', 'permission' => 'inv_report', 'route' => "$base/reports/current-stock"],
                         ['title' => 'Stock Summary', 'icon' => 'fa-solid fa-arrow-right', 'icon_color' => 'text-info', 'permission' => 'inv_report', 'route' => "$base/reports/stock-summary"],
                         ['title' => 'Item History', 'icon' => 'fa-solid fa-arrow-right', 'icon_color' => 'text-info', 'permission' => 'inv_report', 'route' => "$base/reports/item-history"],
+                        ['title' => 'Item Full Trail', 'icon' => 'fa-solid fa-arrow-right', 'icon_color' => 'text-info', 'permission' => 'inv_report', 'route' => "$base/reports/item-full-trail"],
                         ['title' => 'Store Wise Stock', 'icon' => 'fa-solid fa-arrow-right', 'icon_color' => 'text-info', 'permission' => 'inv_report', 'route' => "$base/reports/store-wise-stock"],
                         ['title' => 'Department Wise Consumption', 'icon' => 'fa-solid fa-arrow-right', 'icon_color' => 'text-info', 'permission' => 'inv_report', 'route' => "$base/reports/department-consumption"],
                         ['title' => 'Supplier Wise Purchase', 'icon' => 'fa-solid fa-arrow-right', 'icon_color' => 'text-info', 'permission' => 'inv_report', 'route' => "$base/reports/supplier-purchase"],

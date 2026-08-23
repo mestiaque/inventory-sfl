@@ -135,6 +135,7 @@ Route::middleware($route['middleware'] ?? ['web', 'auth'])
             Route::get('current-stock', [InvReportController::class, 'currentStock'])->name('current-stock');
             Route::get('stock-summary', [InvReportController::class, 'stockSummary'])->name('stock-summary');
             Route::get('item-history', [InvReportController::class, 'itemHistory'])->name('item-history');
+            Route::get('item-full-trail', [InvReportController::class, 'itemFullTrail'])->name('item-full-trail');
             Route::get('store-wise-stock', [InvReportController::class, 'storeWiseStock'])->name('store-wise-stock');
             Route::get('department-consumption', [InvReportController::class, 'departmentWiseConsumption'])->name('department-consumption');
             Route::get('supplier-purchase', [InvReportController::class, 'supplierWisePurchase'])->name('supplier-purchase');
