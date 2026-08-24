@@ -16,7 +16,7 @@ return [
             'icon'       => 'fa-solid fa-boxes-stacked',
             'icon_color' => 'text-primary',
             'permission' => '',
-            'order'      => 11,
+            'order'      => 12,
             'children'   => [
                 [
                     'title'      => 'Dashboard',
