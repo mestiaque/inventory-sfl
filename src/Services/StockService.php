@@ -60,7 +60,58 @@ class StockService
         return (float) $query->selectRaw('COALESCE(SUM(qty_in), 0) - COALESCE(SUM(qty_out), 0) as balance')->value('balance');
     }
 
+    /**
+     * Report-facing valuation: current stock quantity priced at the item's
+     * latest known rate (not a weighted average) — per request, every report
+     * showing "Stock Value" should reflect the latest rate, not the moving
+     * average. Internal COGS costing (Issue/Transfer/Production Consumption/
+     * Adjustment postings) is unaffected — that still uses averageRate()
+     * below, which stays a true ledger-derived weighted average.
+     */
     public function stockValue(int $itemId, ?int $storeId = null): float
+    {
+        return round($this->currentStock($itemId, $storeId) * $this->latestRate($itemId, $storeId), 2);
+    }
+
+    /**
+     * Rate of the item's most recent purchase (GRN, or the opening-stock
+     * entry if it's never been purchased since) — the "last known price".
+     * Deliberately restricted to these two source-of-truth types: any other
+     * transaction type (issue, transfer, adjustment, etc.) carries a
+     * *derived* moving-average cost, not a real price, so picking up
+     * whichever happened to post last would silently reintroduce averaging
+     * through the back door instead of showing the actual latest rate.
+     */
+    public function latestRate(int $itemId, ?int $storeId = null): float
+    {
+        $query = InvStockTransaction::where('item_id', $itemId)
+            ->whereIn('transaction_type', ['grn', 'opening'])
+            ->where('rate', '>', 0);
+        if ($storeId) {
+            $query->where('store_id', $storeId);
+        }
+
+        return (float) ($query->orderByDesc('transaction_date')->orderByDesc('id')->value('rate') ?? 0);
+    }
+
+    /**
+     * Moving weighted-average cost: ledger-derived stock value divided by
+     * current stock quantity in a given store. Used only to cost outflow
+     * transactions in post() — kept independent of stockValue() above so
+     * changing how reports display "Stock Value" never changes what COGS
+     * an Issue/Transfer/etc. actually gets posted at.
+     */
+    public function averageRate(int $itemId, int $storeId): float
+    {
+        $qty = $this->currentStock($itemId, $storeId);
+        if ($qty <= 0) {
+            return 0.0;
+        }
+
+        return round($this->ledgerDerivedValue($itemId, $storeId) / $qty, 2);
+    }
+
+    private function ledgerDerivedValue(int $itemId, ?int $storeId = null): float
     {
         $query = InvStockTransaction::where('item_id', $itemId);
         if ($storeId) {
@@ -70,20 +121,6 @@ class StockService
         return (float) $query
             ->selectRaw('COALESCE(SUM(CASE WHEN qty_in > 0 THEN value ELSE -value END), 0) as stock_value')
             ->value('stock_value');
-    }
-
-    /**
-     * Moving weighted-average cost: current stock value divided by current
-     * stock quantity in a given store.
-     */
-    public function averageRate(int $itemId, int $storeId): float
-    {
-        $qty = $this->currentStock($itemId, $storeId);
-        if ($qty <= 0) {
-            return 0.0;
-        }
-
-        return round($this->stockValue($itemId, $storeId) / $qty, 2);
     }
 
     /**

@@ -42,7 +42,7 @@
 
             <div class="table-responsive">
                 <table class="table table-bordered table-striped table-sm align-middle">
-                    <thead><tr><th>Item Code</th><th>Item Name</th><th>Category</th><th class="text-end">Qty</th><th class="text-end">Avg Rate</th><th class="text-end">Value</th></tr></thead>
+                    <thead><tr><th>Item Code</th><th>Item Name</th><th>Category</th><th class="text-end">Qty</th><th class="text-end">Latest Rate</th><th class="text-end">Value</th></tr></thead>
                     <tbody>
                         @forelse($items as $item)
                             <tr>
@@ -50,7 +50,7 @@
                                 <td>{{ $item->item_name }}</td>
                                 <td>{{ $item->category?->name }}</td>
                                 <td class="text-end">{{ inv_qty($item->current_stock) }} {{ $item->unit?->short_name }}</td>
-                                <td class="text-end">{{ inv_qty($item->average_rate) }}</td>
+                                <td class="text-end">{{ inv_qty($item->latest_rate) }}</td>
                                 <td class="text-end">{{ inv_qty($item->stock_value) }}</td>
                             </tr>
                         @empty

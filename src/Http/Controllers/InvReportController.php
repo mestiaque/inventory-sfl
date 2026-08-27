@@ -49,6 +49,7 @@ class InvReportController extends Controller
             ->get()
             ->map(function (InvItem $item) {
                 $item->current_stock = $this->stock->currentStock($item->id);
+                $item->latest_rate = $this->stock->latestRate($item->id);
                 $item->stock_value = $this->stock->stockValue($item->id);
 
                 return $item;
@@ -437,7 +438,7 @@ class InvReportController extends Controller
             ->get()
             ->map(function (InvItem $item) {
                 $item->current_stock = $this->stock->currentStock($item->id);
-                $item->average_rate = $item->current_stock > 0 ? round($this->stock->stockValue($item->id) / $item->current_stock, 2) : 0;
+                $item->latest_rate = $this->stock->latestRate($item->id);
                 $item->stock_value = $this->stock->stockValue($item->id);
 
                 return $item;

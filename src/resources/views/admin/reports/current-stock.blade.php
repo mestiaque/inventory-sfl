@@ -59,7 +59,7 @@
 
             <div class="table-responsive">
                 <table class="table table-bordered table-striped table-sm align-middle">
-                    <thead><tr><th>Item Code</th><th>Item Name</th><th>Category</th><th>Unit</th><th class="text-end">Current Stock (All Stores)</th><th class="text-end">Stock Value</th></tr></thead>
+                    <thead><tr><th>Item Code</th><th>Item Name</th><th>Category</th><th>Unit</th><th class="text-end">Current Stock (All Stores)</th><th class="text-end">Rate</th><th class="text-end">Stock Value</th></tr></thead>
                     <tbody>
                         @forelse($items as $item)
                             <tr>
@@ -68,10 +68,11 @@
                                 <td>{{ $item->category?->name }}</td>
                                 <td>{{ $item->unit?->short_name }}</td>
                                 <td class="text-end">{{ inv_qty($item->current_stock) }}</td>
+                                <td class="text-end">{{ inv_qty($item->latest_rate) }}</td>
                                 <td class="text-end">{{ inv_qty($item->stock_value) }}</td>
                             </tr>
                         @empty
-                            <tr><td colspan="6" class="text-center text-muted">No stock records found.</td></tr>
+                            <tr><td colspan="7" class="text-center text-muted">No stock records found.</td></tr>
                         @endforelse
                     </tbody>
                 </table>
