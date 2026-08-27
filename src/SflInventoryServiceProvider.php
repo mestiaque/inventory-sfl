@@ -23,6 +23,12 @@ class SflInventoryServiceProvider extends ServiceProvider
         $this->mergeInventoryPermissions();
         $this->registerMorphMap();
         $this->registerObservers();
+
+        if ($this->app->runningInConsole()) {
+            $this->commands([
+                Console\Commands\RebuildStockLedgerValues::class,
+            ]);
+        }
     }
 
     public function register(): void

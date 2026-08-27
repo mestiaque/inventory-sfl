@@ -117,12 +117,23 @@ class InvProductionConsumptionController extends Controller
                     continue;
                 }
 
+                // A qty_in-only post with no 'rate' falls back to 0 in
+                // StockService::post() (the average-rate fallback only
+                // triggers for qty_out) — so restore at the exact rate the
+                // original consumption deducted at, not 0.
+                $consumptionRate = \ME\SflInventory\Models\InvStockTransaction::where('reference_type', 'inv_production_consumption')
+                    ->where('reference_id', $production_consumption->id)
+                    ->where('item_id', $line->item_id)
+                    ->where('transaction_type', 'production_consumption')
+                    ->value('rate');
+
                 $this->stock->post([
                     'item_id'          => $line->item_id,
                     'store_id'         => $production_consumption->store_id,
                     'transaction_date' => now()->toDateString(),
                     'transaction_type' => 'production_consumption_reversal',
                     'qty_in'           => $qty,
+                    'rate'             => $consumptionRate,
                     'department_id'    => $production_consumption->department_id,
                     'reference_type'   => 'inv_production_consumption',
                     'reference_id'     => $production_consumption->id,

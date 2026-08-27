@@ -10,6 +10,7 @@ use Illuminate\View\View;
 use ME\SflInventory\Http\Requests\InvStockTransferReceiveRequest;
 use ME\SflInventory\Http\Requests\InvStockTransferRequest;
 use ME\SflInventory\Models\InvItem;
+use ME\SflInventory\Models\InvStockTransaction;
 use ME\SflInventory\Models\InvStockTransfer;
 use ME\SflInventory\Models\InvStore;
 use ME\SflInventory\Services\InvOperatorScopeService;
@@ -133,12 +134,25 @@ class InvStockTransferController extends Controller
         DB::transaction(function () use ($transfer) {
             if (in_array($transfer->status, ['in_transit', 'received'], true)) {
                 foreach ($transfer->items as $line) {
+                    // A qty_in-only post with no 'rate' falls back to 0 in
+                    // StockService::post() (the average-rate fallback only
+                    // triggers for qty_out) — so restore at the exact rate
+                    // the original dispatch deducted at, not 0.
+                    $dispatchRate = InvStockTransaction::where('reference_type', 'inv_stock_transfer')
+                        ->where('reference_id', $transfer->id)
+                        ->where('item_id', $line->item_id)
+                        ->where('store_id', $transfer->from_store_id)
+                        ->where('transaction_type', 'transfer')
+                        ->where('qty_out', '>', 0)
+                        ->value('rate');
+
                     $this->stock->post([
                         'item_id'          => $line->item_id,
                         'store_id'         => $transfer->from_store_id,
                         'transaction_date' => now()->toDateString(),
                         'transaction_type' => 'transfer_reversal',
                         'qty_in'           => $line->quantity,
+                        'rate'             => $dispatchRate,
                         'reference_type'   => 'inv_stock_transfer',
                         'reference_id'     => $transfer->id,
                         'remarks'          => "Reversal (dispatch) of Transfer {$transfer->transfer_no}",
@@ -272,12 +286,24 @@ class InvStockTransferController extends Controller
                 $item->update(['received_qty' => $line['received_qty']]);
 
                 if ($line['received_qty'] > 0) {
+                    // Same qty_in-defaults-to-rate-0 trap as the dispatch
+                    // reversal above — carry over the source store's average
+                    // cost at dispatch time instead of losing it to 0.
+                    $dispatchRate = InvStockTransaction::where('reference_type', 'inv_stock_transfer')
+                        ->where('reference_id', $transfer->id)
+                        ->where('item_id', $item->item_id)
+                        ->where('store_id', $transfer->from_store_id)
+                        ->where('transaction_type', 'transfer')
+                        ->where('qty_out', '>', 0)
+                        ->value('rate');
+
                     $this->stock->post([
                         'item_id'          => $item->item_id,
                         'store_id'         => $transfer->to_store_id,
                         'transaction_date' => now()->toDateString(),
                         'transaction_type' => 'transfer',
                         'qty_in'           => $line['received_qty'],
+                        'rate'             => $dispatchRate,
                         'reference_type'   => 'inv_stock_transfer',
                         'reference_id'     => $transfer->id,
                         'remarks'          => "Transfer {$transfer->transfer_no} received",

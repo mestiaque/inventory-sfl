@@ -241,7 +241,13 @@ class InvIssueController extends Controller
                 'transaction_date' => $issue->issue_date,
                 'transaction_type' => 'issue',
                 'qty_out'          => $issueItem->issued_qty,
-                'rate'             => $issueItem->unit_rate ?: null,
+                // unit_rate is a decimal-cast attribute, so it comes back as
+                // a string like "0.00" — `?:` treats that as truthy (only
+                // the literal string "0" is falsy in PHP), so it never fell
+                // through to StockService::post()'s moving-average fallback.
+                // Every issue ended up posted at rate/value 0. Compare as a
+                // number instead.
+                'rate'             => ((float) $issueItem->unit_rate) > 0 ? $issueItem->unit_rate : null,
                 'department_id'    => $issue->department_id,
                 'reference_type'   => 'inv_issue',
                 'reference_id'     => $issue->id,
