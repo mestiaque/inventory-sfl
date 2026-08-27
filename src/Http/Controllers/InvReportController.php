@@ -90,18 +90,39 @@ class InvReportController extends Controller
         $from = $request->filled('date_from') ? $request->date_from : now()->startOfMonth()->toDateString();
         $to = $request->filled('date_to') ? $request->date_to : now()->toDateString();
 
-        $transactions = \ME\SflInventory\Models\InvStockTransaction::query()
-            ->with(['store', 'item'])
-            ->when($selectedItem, fn ($q) => $q->where('item_id', $selectedItem->id))
-            ->whereDate('transaction_date', '>=', $from)
-            ->whereDate('transaction_date', '<=', $to)
-            ->where('transaction_type', 'not like', '%\_reversal')
-            ->orderBy('transaction_date')
-            ->orderBy('id')
+        // The running balance ("row-wise current stock") must be computed
+        // over every transaction ever posted for this item/store — not just
+        // the ones inside the selected date range — otherwise a row's
+        // balance would only reflect movements since the range start, not
+        // the item's real stock at that point in time. So the window
+        // function runs unfiltered in this inner query, and the date-range
+        // and reversal-row filters are applied only in the outer query.
+        $withBalance = DB::table('inv_stock_transactions as t')
+            ->join('inv_items as i', 'i.id', '=', 't.item_id')
+            ->join('inv_stores as s', 's.id', '=', 't.store_id')
+            ->whereNull('i.deleted_at')
+            ->whereNull('s.deleted_at')
+            ->when($selectedItem, fn ($q) => $q->where('t.item_id', $selectedItem->id))
+            ->selectRaw('
+                t.id, t.item_id, t.store_id, t.transaction_date, t.transaction_type,
+                t.qty_in, t.qty_out, t.rate, t.value,
+                i.item_code, i.item_name, s.name as store_name,
+                SUM(CASE WHEN t.qty_in > 0 THEN t.qty_in ELSE -t.qty_out END)
+                    OVER (PARTITION BY t.item_id, t.store_id ORDER BY t.transaction_date, t.id) as running_balance
+            ');
+
+        $transactions = DB::query()->fromSub($withBalance, 'x')
+            ->whereDate('x.transaction_date', '>=', $from)
+            ->whereDate('x.transaction_date', '<=', $to)
+            ->where('x.transaction_type', 'not like', '%\_reversal')
+            ->orderBy('x.transaction_date')
+            ->orderBy('x.id')
             ->paginate($request->boolean('print') ? 100000 : 50)
             ->withQueryString();
 
-        return view('sfl-inventory::admin.reports.item-history', compact('items', 'transactions', 'selectedItem', 'from', 'to'));
+        $currentStock = $selectedItem ? $this->stock->currentStock($selectedItem->id) : null;
+
+        return view('sfl-inventory::admin.reports.item-history', compact('items', 'transactions', 'selectedItem', 'from', 'to', 'currentStock'));
     }
 
     /**

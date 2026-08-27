@@ -21,7 +21,12 @@
 
     <div class="card">
         <div class="card-header d-flex justify-content-between align-items-center">
-            <h5 class="mb-0">Item History{{ $selectedItem ? ' — ' . $selectedItem->item_code . ' ' . $selectedItem->item_name : ' — All Items' }}</h5>
+            <div>
+                <h5 class="mb-0">Item History{{ $selectedItem ? ' — ' . $selectedItem->item_code . ' ' . $selectedItem->item_name : ' — All Items' }}</h5>
+                @if($selectedItem)
+                    <span class="badge bg-info mt-1">Current Stock: {{ inv_qty($currentStock) }} {{ $selectedItem->unit?->short_name }}</span>
+                @endif
+            </div>
             @unless($printMode)
                 @include('sfl-inventory::admin.reports.partials.export-print-buttons', ['report' => 'item-history'])
             @endunless
@@ -57,25 +62,26 @@
                             @unless($selectedItem)
                                 <th>Item</th>
                             @endunless
-                            <th>Store</th><th>Type</th><th class="text-end">Qty In</th><th class="text-end">Qty Out</th><th class="text-end">Rate</th><th class="text-end">Value</th>
+                            <th>Store</th><th>Type</th><th class="text-end">Qty In</th><th class="text-end">Qty Out</th><th class="text-end">Rate</th><th class="text-end">Value</th><th class="text-end">Current Stock</th>
                         </tr>
                     </thead>
                     <tbody>
                         @forelse($transactions as $txn)
                             <tr>
-                                <td>{{ $txn->transaction_date?->format('d M Y') }}</td>
+                                <td>{{ \Carbon\Carbon::parse($txn->transaction_date)->format('d M Y') }}</td>
                                 @unless($selectedItem)
-                                    <td>{{ $txn->item?->item_code }} — {{ $txn->item?->item_name }}</td>
+                                    <td>{{ $txn->item_code }} — {{ $txn->item_name }}</td>
                                 @endunless
-                                <td>{{ $txn->store?->name }}</td>
+                                <td>{{ $txn->store_name }}</td>
                                 <td>{{ ucwords(str_replace('_', ' ', $txn->transaction_type)) }}</td>
                                 <td class="text-end text-success">{{ $txn->qty_in > 0 ? inv_qty($txn->qty_in) : '' }}</td>
                                 <td class="text-end text-danger">{{ $txn->qty_out > 0 ? inv_qty($txn->qty_out) : '' }}</td>
                                 <td class="text-end">{{ inv_qty($txn->rate) }}</td>
                                 <td class="text-end">{{ inv_qty($txn->value) }}</td>
+                                <td class="text-end fw-bold">{{ inv_qty($txn->running_balance) }}</td>
                             </tr>
                         @empty
-                            <tr><td colspan="{{ $selectedItem ? 7 : 8 }}" class="text-center text-muted">No movements found for this period.</td></tr>
+                            <tr><td colspan="{{ $selectedItem ? 8 : 9 }}" class="text-center text-muted">No movements found for this period.</td></tr>
                         @endforelse
                     </tbody>
                 </table>
