@@ -184,7 +184,8 @@ class InvRequisitionController extends Controller
             foreach ($data['items'] ?? [] as $line) {
                 InvRequisitionItem::where('id', $line['id'])
                     ->where('requisition_id', $requisition->id)
-                    ->update(['approved_qty' => $line['approved_qty'] ?? 0]);
+                    ->first()
+                    ?->update(['approved_qty' => $line['approved_qty'] ?? 0]);
             }
 
             $requisition->update([

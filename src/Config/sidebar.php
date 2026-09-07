@@ -152,6 +152,7 @@ return [
                         ['title' => 'Store Wise Stock', 'icon' => 'fa-solid fa-arrow-right', 'icon_color' => 'text-info', 'permission' => 'inv_report', 'route' => "$base/reports/store-wise-stock"],
                         ['title' => 'Department Wise Consumption', 'icon' => 'fa-solid fa-arrow-right', 'icon_color' => 'text-info', 'permission' => 'inv_report', 'route' => "$base/reports/department-consumption"],
                         ['title' => 'Supplier Wise Purchase', 'icon' => 'fa-solid fa-arrow-right', 'icon_color' => 'text-info', 'permission' => 'inv_report', 'route' => "$base/reports/supplier-purchase"],
+                        ['title' => 'Supplier List', 'icon' => 'fa-solid fa-arrow-right', 'icon_color' => 'text-info', 'permission' => 'inv_report', 'route' => "$base/reports/supplier-list"],
                         ['title' => 'GRN Report', 'icon' => 'fa-solid fa-arrow-right', 'icon_color' => 'text-info', 'permission' => 'inv_report', 'route' => "$base/reports/grn"],
                         ['title' => 'Item Wise Goods Receive Report', 'icon' => 'fa-solid fa-arrow-right', 'icon_color' => 'text-info', 'permission' => 'inv_report', 'route' => "$base/reports/grn-item-wise"],
                         ['title' => 'Expiry Tracking', 'icon' => 'fa-solid fa-arrow-right', 'icon_color' => 'text-info', 'permission' => 'inv_report', 'route' => "$base/reports/expiry-tracking"],

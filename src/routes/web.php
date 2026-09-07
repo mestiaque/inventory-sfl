@@ -139,6 +139,7 @@ Route::middleware($route['middleware'] ?? ['web', 'auth'])
             Route::get('store-wise-stock', [InvReportController::class, 'storeWiseStock'])->name('store-wise-stock');
             Route::get('department-consumption', [InvReportController::class, 'departmentWiseConsumption'])->name('department-consumption');
             Route::get('supplier-purchase', [InvReportController::class, 'supplierWisePurchase'])->name('supplier-purchase');
+            Route::get('supplier-list', [InvReportController::class, 'supplierList'])->name('supplier-list');
             Route::get('grn', [InvReportController::class, 'grnReport'])->name('grn');
             Route::get('grn-item-wise', [InvReportController::class, 'grnItemWiseReport'])->name('grn-item-wise');
             Route::get('expiry-tracking', [InvReportController::class, 'expiryTracking'])->name('expiry-tracking');

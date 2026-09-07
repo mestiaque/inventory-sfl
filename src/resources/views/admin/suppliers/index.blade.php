@@ -88,6 +88,10 @@
                                                 <dt class="col-sm-3">Email</dt><dd class="col-sm-9">{{ $supplier->email ?: '—' }}</dd>
                                                 <dt class="col-sm-3">TIN/VAT</dt><dd class="col-sm-9">{{ $supplier->tin_vat ?: '—' }}</dd>
                                                 <dt class="col-sm-3">Address</dt><dd class="col-sm-9">{{ $supplier->address ?: '—' }}</dd>
+                                                <dt class="col-sm-3">Products / Items Supplied</dt><dd class="col-sm-9">{{ $supplier->products_supplied ?: '—' }}</dd>
+                                                <dt class="col-sm-3">Business Relation Since</dt><dd class="col-sm-9">{{ $supplier->relation_since_year ?: '—' }}</dd>
+                                                <dt class="col-sm-3">Price Rating</dt><dd class="col-sm-9">{{ $supplier->price_rating ?: '—' }}</dd>
+                                                <dt class="col-sm-3">Quality Rating</dt><dd class="col-sm-9">{{ $supplier->quality_rating ?: '—' }}</dd>
                                                 <dt class="col-sm-3">Remarks</dt><dd class="col-sm-9">{{ $supplier->remarks ?: '—' }}</dd>
                                                 <dt class="col-sm-3">Status</dt>
                                                 <dd class="col-sm-9">

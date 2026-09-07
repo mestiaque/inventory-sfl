@@ -248,6 +248,30 @@ class InvReportController extends Controller
         return view('sfl-inventory::admin.reports.supplier-purchase', compact('rows', 'suppliers'));
     }
 
+    public function supplierList(Request $request): View
+    {
+        $this->authorize('inv_report.view');
+
+        $status = $request->input('status');
+
+        $suppliers = InvSupplier::query()
+            ->when($request->filled('search'), fn ($q) => $q->where(fn ($q2) => $q2
+                ->where('name', 'like', '%' . $request->search . '%')
+                ->orWhere('code', 'like', '%' . $request->search . '%')))
+            ->when($status, fn ($q) => $q->where('is_active', $status === 'active'))
+            ->orderBy('name')
+            ->get();
+
+        $dataRangeLabel = match (true) {
+            $request->filled('search') => 'Search: ' . $request->search,
+            $status === 'active'       => 'Active Suppliers',
+            $status === 'inactive'     => 'Inactive Suppliers',
+            default                    => 'All Supplier',
+        };
+
+        return view('sfl-inventory::admin.reports.supplier-list', compact('suppliers', 'dataRangeLabel'));
+    }
+
     public function grnReport(Request $request): View
     {
         $this->authorize('inv_report.view');
@@ -551,6 +575,7 @@ class InvReportController extends Controller
             'store-wise-stock'       => 'storeWiseStock',
             'department-consumption' => 'departmentWiseConsumption',
             'supplier-purchase'      => 'supplierWisePurchase',
+            'supplier-list'          => 'supplierList',
             'grn'                    => 'grnReport',
             'grn-item-wise'          => 'grnItemWiseReport',
             'expiry-tracking'        => 'expiryTracking',

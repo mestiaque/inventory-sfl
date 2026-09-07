@@ -5,9 +5,11 @@ namespace ME\SflInventory\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use App\Traits\HasAudit;
 
 class InvGatePassItem extends Model
 {
+    use HasAudit;
     use HasFactory;
 
     protected $table = 'inv_gate_pass_items';

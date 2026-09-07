@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
+use App\Traits\HasAudit;
 
 /**
  * The stock ledger. Insert-only — the entire "never store current stock"
@@ -16,6 +17,7 @@ use Illuminate\Database\Eloquent\Relations\MorphTo;
  */
 class InvStockTransaction extends Model
 {
+    use HasAudit;
     use HasFactory;
 
     protected $table = 'inv_stock_transactions';

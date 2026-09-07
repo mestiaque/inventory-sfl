@@ -1,6 +1,9 @@
 {{-- props: title (report title shown under the company block) --}}
 <div class="print-header">
     <div class="company-info" style="justify-content:center; flex-direction:column; align-items:center; text-align:center;">
+        @if(general() && general()->logo())
+            <img src="{{ asset(general()->logo()) }}" alt="Logo" class="company-logo" style="margin-bottom:6px;">
+        @endif
         <div class="company-name">{{ config('sfl-inventory.company.name') }}</div>
         @if(config('sfl-inventory.company.address'))
             <div class="company-address">{{ config('sfl-inventory.company.address') }}</div>
