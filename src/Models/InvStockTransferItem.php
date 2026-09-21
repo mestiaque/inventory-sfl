@@ -14,7 +14,7 @@ class InvStockTransferItem extends Model
 
     protected $table = 'inv_stock_transfer_items';
 
-    protected $fillable = ['transfer_id', 'item_id', 'quantity', 'received_qty', 'remarks'];
+    protected $fillable = ['transfer_id', 'item_id', 'color_id', 'size_id', 'quantity', 'received_qty', 'remarks'];
 
     protected $casts = [
         'quantity'     => 'decimal:4',
@@ -29,5 +29,15 @@ class InvStockTransferItem extends Model
     public function item(): BelongsTo
     {
         return $this->belongsTo(InvItem::class, 'item_id');
+    }
+
+    public function color(): BelongsTo
+    {
+        return $this->belongsTo(InvColor::class, 'color_id');
+    }
+
+    public function size(): BelongsTo
+    {
+        return $this->belongsTo(InvSize::class, 'size_id');
     }
 }

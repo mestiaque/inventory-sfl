@@ -14,7 +14,7 @@ class InvStockAdjustmentItem extends Model
 
     protected $table = 'inv_stock_adjustment_items';
 
-    protected $fillable = ['adjustment_id', 'item_id', 'system_qty', 'physical_qty', 'difference_qty', 'remarks'];
+    protected $fillable = ['adjustment_id', 'item_id', 'color_id', 'size_id', 'system_qty', 'physical_qty', 'difference_qty', 'remarks'];
 
     protected $casts = [
         'system_qty'     => 'decimal:4',
@@ -30,5 +30,15 @@ class InvStockAdjustmentItem extends Model
     public function item(): BelongsTo
     {
         return $this->belongsTo(InvItem::class, 'item_id');
+    }
+
+    public function color(): BelongsTo
+    {
+        return $this->belongsTo(InvColor::class, 'color_id');
+    }
+
+    public function size(): BelongsTo
+    {
+        return $this->belongsTo(InvSize::class, 'size_id');
     }
 }

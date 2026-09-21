@@ -35,7 +35,15 @@ class InvBrokenNeedleController extends Controller
             ->paginate(20)
             ->withQueryString();
 
-        return view('sfl-inventory::admin.broken-needles.index', compact('entries') + $this->formOptions());
+        $trashedEntries = InvBrokenNeedle::onlyTrashed()->with('employee')->latest('deleted_at')->get()
+            ->map(fn ($entry) => [
+                'id' => $entry->id,
+                'title' => optional($entry->broken_date)->format('d-M-Y') . ' — ' . ($entry->employee?->name ?? 'Unknown'),
+                'subtitle' => $entry->needle_type ? ($entry->needle_type . ' / ' . $entry->needle_size) : null,
+                'deleted_at' => $entry->deleted_at,
+            ]);
+
+        return view('sfl-inventory::admin.broken-needles.index', compact('entries', 'trashedEntries') + $this->formOptions());
     }
 
     public function store(InvBrokenNeedleRequest $request): RedirectResponse
@@ -64,6 +72,15 @@ class InvBrokenNeedleController extends Controller
         $broken_needle->delete();
 
         return back()->with('success', 'Broken needle entry deleted.');
+    }
+
+    public function restore(InvBrokenNeedle $broken_needle): RedirectResponse
+    {
+        $this->authorize('inv_broken_needle.delete');
+
+        $broken_needle->restore();
+
+        return back()->with('success', 'Broken needle entry restored.');
     }
 
     /**

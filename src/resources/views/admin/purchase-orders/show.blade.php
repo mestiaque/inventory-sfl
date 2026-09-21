@@ -29,6 +29,7 @@
         </div>
         <div class="card-body">
             <div class="row mb-3">
+                <div class="col-md-3 mb-2"><strong>Purchase Requisition:</strong> {{ $purchaseOrder->purchaseRequisition?->requisition_no ?? '—' }}</div>
                 <div class="col-md-3 mb-2"><strong>Supplier:</strong> {{ $purchaseOrder->supplier?->name }}</div>
                 <div class="col-md-3 mb-2"><strong>Order Date:</strong> {{ $purchaseOrder->order_date?->format('d M Y') }}</div>
                 <div class="col-md-3 mb-2"><strong>Expected Date:</strong> {{ $purchaseOrder->expected_date?->format('d M Y') ?? '—' }}</div>
@@ -52,10 +53,11 @@
             </div>
 
             <h6>Order Lines — Ordered vs. Received (across all challans)</h6>
+            <p class="text-muted" style="font-size:12px;">Price isn't fixed at order time — each challan below is priced separately against the actual supplier invoice at Store Receive.</p>
             <div class="table-responsive mb-4">
                 <table class="table table-bordered table-sm align-middle">
                     <thead>
-                        <tr><th>Item</th><th>Unit</th><th class="text-end">Ordered</th><th class="text-end">Received (so far)</th><th class="text-end">Remaining</th><th class="text-end">Rate</th><th class="text-end">Amount</th></tr>
+                        <tr><th>Item</th><th>Unit</th><th>Color</th><th>Size</th><th class="text-end">Ordered</th><th class="text-end">Received (so far)</th><th class="text-end">Remaining</th><th class="text-end">Rate (at order)</th></tr>
                     </thead>
                     <tbody>
                         @foreach($purchaseOrder->items as $line)
@@ -63,19 +65,17 @@
                             <tr>
                                 <td>{{ $line->item?->item_code }} — {{ $line->item?->item_name }}</td>
                                 <td>{{ $line->item?->unit?->short_name }}</td>
+                                <td>{{ $line->color?->name ?? '—' }}</td>
+                                <td>{{ $line->size?->name ?? '—' }}</td>
                                 <td class="text-end">{{ inv_qty($line->quantity) }}</td>
                                 <td class="text-end">{{ inv_qty($line->received_qty) }}</td>
                                 <td class="text-end">
                                     <span class="badge p-1 text-white bg-{{ $remaining <= 0 ? 'success' : 'warning' }}">{{ inv_qty($remaining) }}</span>
                                 </td>
-                                <td class="text-end">{{ inv_qty($line->rate) }}</td>
-                                <td class="text-end">{{ inv_qty($line->amount) }}</td>
+                                <td class="text-end">{{ (float) $line->rate > 0 ? inv_qty($line->rate) : '—' }}</td>
                             </tr>
                         @endforeach
                     </tbody>
-                    <tfoot>
-                        <tr class="fw-bold"><td colspan="6" class="text-end">Total</td><td class="text-end">{{ inv_qty($purchaseOrder->total_amount) }}</td></tr>
-                    </tfoot>
                 </table>
             </div>
 
@@ -94,6 +94,9 @@
                                 <span class="text-muted">— Challan/Invoice No: {{ $grn->challan_invoice_no ?? '—' }}</span>
                             </div>
                             <div class="text-end">
+                                <span class="badge p-1 text-white bg-{{ ['pending' => 'warning', 'posted' => 'success', 'rejected' => 'danger', 'cancelled' => 'secondary'][$grn->status] ?? 'secondary' }}">
+                                    {{ $grn->status === 'pending' ? 'Pending Approval' : ucfirst($grn->status) }}
+                                </span>
                                 <span class="badge p-1 text-white bg-info">{{ $grn->receive_date?->format('d M Y') }}</span>
                             </div>
                         </div>

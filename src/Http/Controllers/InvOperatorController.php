@@ -26,7 +26,10 @@ class InvOperatorController extends Controller
             ->paginate(20)
             ->withQueryString();
 
-        return view('sfl-inventory::admin.operators.index', compact('operators') + $this->formOptions());
+        $trashedOperators = InvOperator::onlyTrashed()->latest('deleted_at')->get()
+            ->map(fn ($operator) => ['id' => $operator->id, 'title' => $operator->name, 'subtitle' => $operator->code, 'deleted_at' => $operator->deleted_at]);
+
+        return view('sfl-inventory::admin.operators.index', compact('operators', 'trashedOperators') + $this->formOptions());
     }
 
     public function store(InvOperatorRequest $request): RedirectResponse
@@ -52,6 +55,24 @@ class InvOperatorController extends Controller
         $operator->delete();
 
         return back()->with('success', 'Operator deleted successfully.');
+    }
+
+    public function restore(InvOperator $operator): RedirectResponse
+    {
+        $this->authorize('inv_operator.delete');
+
+        $operator->restore();
+
+        return back()->with('success', 'Operator restored successfully.');
+    }
+
+    public function forceDestroy(InvOperator $operator): RedirectResponse
+    {
+        $this->authorize('inv_operator.force_delete');
+
+        $operator->forceDelete();
+
+        return back()->with('success', 'Operator permanently deleted.');
     }
 
     private function formOptions(): array

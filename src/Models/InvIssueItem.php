@@ -15,7 +15,7 @@ class InvIssueItem extends Model
     protected $table = 'inv_issue_items';
 
     protected $fillable = [
-        'issue_id', 'requisition_item_id', 'item_id', 'issued_qty', 'department_received_qty',
+        'issue_id', 'requisition_item_id', 'item_id', 'color_id', 'size_id', 'issued_qty', 'department_received_qty',
         'unit_rate', 'amount', 'remarks',
     ];
 
@@ -39,5 +39,15 @@ class InvIssueItem extends Model
     public function item(): BelongsTo
     {
         return $this->belongsTo(InvItem::class, 'item_id');
+    }
+
+    public function color(): BelongsTo
+    {
+        return $this->belongsTo(InvColor::class, 'color_id');
+    }
+
+    public function size(): BelongsTo
+    {
+        return $this->belongsTo(InvSize::class, 'size_id');
     }
 }

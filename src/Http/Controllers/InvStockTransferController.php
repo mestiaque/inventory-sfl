@@ -9,7 +9,9 @@ use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 use ME\SflInventory\Http\Requests\InvStockTransferReceiveRequest;
 use ME\SflInventory\Http\Requests\InvStockTransferRequest;
+use ME\SflInventory\Models\InvColor;
 use ME\SflInventory\Models\InvItem;
+use ME\SflInventory\Models\InvSize;
 use ME\SflInventory\Models\InvStockTransaction;
 use ME\SflInventory\Models\InvStockTransfer;
 use ME\SflInventory\Models\InvStore;
@@ -43,7 +45,10 @@ class InvStockTransferController extends Controller
 
         $stores = InvStore::active()->orderBy('name')->get();
 
-        return view('sfl-inventory::admin.transfers.index', compact('transfers', 'stores'));
+        $trashedTransfers = InvStockTransfer::onlyTrashed()->with(['fromStore', 'toStore'])->latest('deleted_at')->get()
+            ->map(fn ($transfer) => ['id' => $transfer->id, 'title' => $transfer->transfer_no, 'subtitle' => ($transfer->fromStore?->name ?? '—') . ' → ' . ($transfer->toStore?->name ?? '—'), 'deleted_at' => $transfer->deleted_at]);
+
+        return view('sfl-inventory::admin.transfers.index', compact('transfers', 'stores', 'trashedTransfers'));
     }
 
     public function create(): View
@@ -57,7 +62,7 @@ class InvStockTransferController extends Controller
     {
         $this->authorize('inv_transfer.view');
 
-        $transfer->load(['fromStore', 'toStore', 'items.item.unit', 'requester', 'approver', 'receiver']);
+        $transfer->load(['fromStore', 'toStore', 'items.item.unit', 'items.color', 'items.size', 'requester', 'approver', 'receiver']);
 
         return view('sfl-inventory::admin.transfers.show', ['transfer' => $transfer]);
     }
@@ -73,7 +78,7 @@ class InvStockTransferController extends Controller
 
         abort_if($transfer->status !== 'pending', 403, 'Only pending transfer requests can be edited.');
 
-        $transfer->load('items');
+        $transfer->load('items.item', 'items.color', 'items.size');
 
         return view('sfl-inventory::admin.transfers.edit', ['transfer' => $transfer] + $this->formOptions());
     }
@@ -94,7 +99,10 @@ class InvStockTransferController extends Controller
 
             $transfer->items()->delete();
             foreach ($data['items'] as $line) {
-                $transfer->items()->create(['item_id' => $line['item_id'], 'quantity' => $line['quantity']]);
+                [$colorId, $sizeId] = InvItem::find($line['item_id'])?->resolvedVariant($line['color_id'] ?? null, $line['size_id'] ?? null)
+                    ?? [$line['color_id'] ?? null, $line['size_id'] ?? null];
+
+                $transfer->items()->create(['item_id' => $line['item_id'], 'color_id' => $colorId, 'size_id' => $sizeId, 'quantity' => $line['quantity']]);
             }
         });
 
@@ -123,7 +131,7 @@ class InvStockTransferController extends Controller
             if ($transfer->status === 'received') {
                 foreach ($transfer->items as $line) {
                     if ($line->received_qty > 0) {
-                        $this->assertReversible($line->item_id, $transfer->to_store_id, $line->received_qty, $line->item?->item_name);
+                        $this->assertReversible($line->item_id, $transfer->to_store_id, $line->received_qty, $line->item?->item_name, $line->color_id, $line->size_id);
                     }
                 }
             }
@@ -141,6 +149,8 @@ class InvStockTransferController extends Controller
                     $dispatchRate = InvStockTransaction::where('reference_type', 'inv_stock_transfer')
                         ->where('reference_id', $transfer->id)
                         ->where('item_id', $line->item_id)
+                        ->where('color_id', $line->color_id)
+                        ->where('size_id', $line->size_id)
                         ->where('store_id', $transfer->from_store_id)
                         ->where('transaction_type', 'transfer')
                         ->where('qty_out', '>', 0)
@@ -148,6 +158,8 @@ class InvStockTransferController extends Controller
 
                     $this->stock->post([
                         'item_id'          => $line->item_id,
+                        'color_id'         => $line->color_id,
+                        'size_id'          => $line->size_id,
                         'store_id'         => $transfer->from_store_id,
                         'transaction_date' => now()->toDateString(),
                         'transaction_type' => 'transfer_reversal',
@@ -166,6 +178,8 @@ class InvStockTransferController extends Controller
                     if ($line->received_qty > 0) {
                         $this->stock->post([
                             'item_id'          => $line->item_id,
+                            'color_id'         => $line->color_id,
+                            'size_id'          => $line->size_id,
                             'store_id'         => $transfer->to_store_id,
                             'transaction_date' => now()->toDateString(),
                             'transaction_type' => 'transfer_reversal',
@@ -185,9 +199,36 @@ class InvStockTransferController extends Controller
         return redirect()->route('inventory.transfers.index')->with('success', "Transfer {$transfer->transfer_no} deleted and stock reversed.");
     }
 
-    private function assertReversible(int $itemId, int $storeId, float $qty, ?string $itemName): void
+    public function restore(InvStockTransfer $transfer): RedirectResponse
     {
-        $available = $this->stock->currentStock($itemId, $storeId);
+        $this->authorize('inv_transfer.delete');
+
+        $transfer->restore();
+
+        return back()->with('success', 'Transfer restored successfully.');
+    }
+
+    /**
+     * Stock was already reversed when the transfer was soft-deleted, so this
+     * just removes the record — its line items are deleted first since this
+     * database's declared FK cascades aren't reliably enforced (see
+     * InvItemController::forceDestroy).
+     */
+    public function forceDestroy(InvStockTransfer $transfer): RedirectResponse
+    {
+        $this->authorize('inv_transfer.force_delete');
+
+        DB::transaction(function () use ($transfer) {
+            DB::table('inv_stock_transfer_items')->where('transfer_id', $transfer->id)->delete();
+            $transfer->forceDelete();
+        });
+
+        return back()->with('success', 'Transfer permanently deleted.');
+    }
+
+    private function assertReversible(int $itemId, int $storeId, float $qty, ?string $itemName, ?int $colorId = null, ?int $sizeId = null): void
+    {
+        $available = $this->stock->currentStock($itemId, $storeId, $colorId, $sizeId);
         if ($available < $qty) {
             throw ValidationException::withMessages([
                 'items' => 'Cannot delete this transfer: "' . ($itemName ?? "item #{$itemId}") . '" only has ' . inv_qty($available) . ' left in that store, but this transfer moved ' . inv_qty($qty) . ' — some has already been used elsewhere. Post a Stock Adjustment instead.',
@@ -211,7 +252,10 @@ class InvStockTransferController extends Controller
             ]);
 
             foreach ($data['items'] as $line) {
-                $transfer->items()->create(['item_id' => $line['item_id'], 'quantity' => $line['quantity']]);
+                [$colorId, $sizeId] = InvItem::find($line['item_id'])?->resolvedVariant($line['color_id'] ?? null, $line['size_id'] ?? null)
+                    ?? [$line['color_id'] ?? null, $line['size_id'] ?? null];
+
+                $transfer->items()->create(['item_id' => $line['item_id'], 'color_id' => $colorId, 'size_id' => $sizeId, 'quantity' => $line['quantity']]);
             }
 
             return $transfer;
@@ -235,6 +279,8 @@ class InvStockTransferController extends Controller
             foreach ($transfer->items as $line) {
                 $this->stock->post([
                     'item_id'          => $line->item_id,
+                    'color_id'         => $line->color_id,
+                    'size_id'          => $line->size_id,
                     'store_id'         => $transfer->from_store_id,
                     'transaction_date' => $transfer->transfer_date,
                     'transaction_type' => 'transfer',
@@ -269,7 +315,7 @@ class InvStockTransferController extends Controller
 
         abort_if($transfer->status !== 'in_transit', 403, 'Only in-transit transfers can be received.');
 
-        $transfer->load('items.item');
+        $transfer->load('items.item', 'items.color', 'items.size');
 
         return view('sfl-inventory::admin.transfers.receive', compact('transfer'));
     }
@@ -289,9 +335,15 @@ class InvStockTransferController extends Controller
                     // Same qty_in-defaults-to-rate-0 trap as the dispatch
                     // reversal above — carry over the source store's average
                     // cost at dispatch time instead of losing it to 0.
+                    // Scoped to this item's exact variant too, so a transfer
+                    // carrying several colors/sizes of the same item each
+                    // gets its own variant's dispatch rate, not the first
+                    // matching row for the item overall.
                     $dispatchRate = InvStockTransaction::where('reference_type', 'inv_stock_transfer')
                         ->where('reference_id', $transfer->id)
                         ->where('item_id', $item->item_id)
+                        ->where('color_id', $item->color_id)
+                        ->where('size_id', $item->size_id)
                         ->where('store_id', $transfer->from_store_id)
                         ->where('transaction_type', 'transfer')
                         ->where('qty_out', '>', 0)
@@ -299,6 +351,8 @@ class InvStockTransferController extends Controller
 
                     $this->stock->post([
                         'item_id'          => $item->item_id,
+                        'color_id'         => $item->color_id,
+                        'size_id'          => $item->size_id,
                         'store_id'         => $transfer->to_store_id,
                         'transaction_date' => now()->toDateString(),
                         'transaction_type' => 'transfer',
@@ -323,6 +377,8 @@ class InvStockTransferController extends Controller
         return [
             'stores' => InvStore::active()->orderBy('name')->get(),
             'items'  => InvItem::active()->orderBy('item_name')->get(),
+            'colors' => InvColor::active()->orderBy('name')->get(),
+            'sizes'  => InvSize::active()->ordered()->get(),
         ];
     }
 }

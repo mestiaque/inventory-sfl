@@ -12,9 +12,16 @@
     <div class="card">
         <div class="card-header d-flex justify-content-between align-items-center">
             <h5 class="mb-0">Store Order</h5>
-            @can('inv_purchase_order.add')
-                <a href="{{ route('inventory.purchase-orders.create') }}" class="btn btn-primary btn-sm"><i class="fa-solid fa-plus"></i> Add Store Order</a>
-            @endcan
+            <div>
+                @can('inv_purchase_order.delete')
+                    <button type="button" class="btn btn-outline-secondary btn-sm" data-toggle="modal" data-target="#poTrashModal">
+                        <i class="fa-solid fa-trash"></i> Trash ({{ $trashedPurchaseOrders->count() }})
+                    </button>
+                @endcan
+                @can('inv_purchase_requisition.list')
+                    <a href="{{ route('inventory.purchase-requisitions.index') }}" class="btn btn-primary btn-sm"><i class="fa-solid fa-plus"></i> Create from Purchase Requisition</a>
+                @endcan
+            </div>
         </div>
         <div class="card-body">
             <form method="GET" class="row g-2 mb-3">
@@ -62,7 +69,7 @@
             <div class="table-responsive">
                 <table class="table table-bordered table-striped align-middle">
                     <thead>
-                        <tr><th>#</th><th>Store Order No</th><th>Supplier</th><th>Order Date</th><th>Expected Date</th><th>Items</th><th>Total</th><th>Status</th><th>Created Date</th><th>Created By</th><th class="text-end">Actions</th></tr>
+                        <tr><th>#</th><th>Store Order No</th><th>Supplier</th><th>Order Date</th><th>Expected Date</th><th>Items</th><th>Total (at order)</th><th>Status</th><th>Created Date</th><th>Created By</th><th class="text-end">Actions</th></tr>
                     </thead>
                     <tbody>
                         @forelse($purchaseOrders as $po)
@@ -125,5 +132,14 @@
 </div>
 
 @include('sfl-inventory::admin.partials.delete-confirm-modal', ['modalId' => 'deletePoModal', 'label' => 'store order'])
+@include('sfl-inventory::admin.partials.trash-modal', [
+    'modalId' => 'poTrashModal',
+    'label' => 'Store Order',
+    'rows' => $trashedPurchaseOrders,
+    'restoreRoute' => 'inventory.purchase-orders.restore',
+    'forceRoute' => 'inventory.purchase-orders.force-destroy',
+    'canRestore' => auth()->user()->can('inv_purchase_order.delete'),
+    'canForce' => auth()->user()->can('inv_purchase_order.force_delete'),
+])
 @include('sfl-inventory::admin.partials.select2-init')
 @endsection

@@ -23,7 +23,7 @@ class InvStockTransaction extends Model
     protected $table = 'inv_stock_transactions';
 
     protected $fillable = [
-        'item_id', 'store_id', 'transaction_date', 'transaction_type', 'qty_in', 'qty_out',
+        'item_id', 'color_id', 'size_id', 'store_id', 'transaction_date', 'transaction_type', 'qty_in', 'qty_out',
         'rate', 'value', 'reference_type', 'reference_id', 'department_id', 'remarks', 'created_by',
     ];
 
@@ -38,6 +38,16 @@ class InvStockTransaction extends Model
     public function item(): BelongsTo
     {
         return $this->belongsTo(InvItem::class, 'item_id');
+    }
+
+    public function color(): BelongsTo
+    {
+        return $this->belongsTo(InvColor::class, 'color_id');
+    }
+
+    public function size(): BelongsTo
+    {
+        return $this->belongsTo(InvSize::class, 'size_id');
     }
 
     public function store(): BelongsTo

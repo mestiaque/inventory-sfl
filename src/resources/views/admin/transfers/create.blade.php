@@ -53,14 +53,30 @@
                 </div>
                 <div class="table-responsive">
                     <table class="table table-bordered table-sm align-middle">
-                        <thead><tr><th style="min-width:220px">Item</th><th style="width:160px">Quantity</th><th style="width:40px"></th></tr></thead>
+                        <thead><tr><th style="min-width:220px">Item</th><th style="width:130px">Color</th><th style="width:130px">Size</th><th style="width:160px">Quantity</th><th style="width:40px"></th></tr></thead>
                         <tbody id="trfRowsBody">
                             <tr>
                                 <td>
                                     <select name="items[0][item_id]" class="form-control inv-select2" required>
                                         <option value="">— Select —</option>
                                         @foreach($items as $item)
-                                            <option value="{{ $item->id }}" data-store="{{ $item->opening_store_id }}">{{ $item->item_code }} — {{ $item->item_name }}</option>
+                                            <option value="{{ $item->id }}" data-store="{{ $item->opening_store_id }}" data-color-id="{{ $item->color_id }}" data-size-id="{{ $item->size_id }}">{{ $item->item_code }} — {{ $item->item_name }}</option>
+                                        @endforeach
+                                    </select>
+                                </td>
+                                <td>
+                                    <select name="items[0][color_id]" class="form-control">
+                                        <option value="">— Select —</option>
+                                        @foreach($colors as $color)
+                                            <option value="{{ $color->id }}">{{ $color->name }}</option>
+                                        @endforeach
+                                    </select>
+                                </td>
+                                <td>
+                                    <select name="items[0][size_id]" class="form-control">
+                                        <option value="">— Select —</option>
+                                        @foreach($sizes as $size)
+                                            <option value="{{ $size->id }}">{{ $size->name }}</option>
                                         @endforeach
                                     </select>
                                 </td>
@@ -77,7 +93,23 @@
                             <select name="items[__INDEX__][item_id]" class="form-control inv-select2" required>
                                 <option value="">— Select —</option>
                                 @foreach($items as $item)
-                                    <option value="{{ $item->id }}" data-store="{{ $item->opening_store_id }}">{{ $item->item_code }} — {{ $item->item_name }}</option>
+                                    <option value="{{ $item->id }}" data-store="{{ $item->opening_store_id }}" data-color-id="{{ $item->color_id }}" data-size-id="{{ $item->size_id }}">{{ $item->item_code }} — {{ $item->item_name }}</option>
+                                @endforeach
+                            </select>
+                        </td>
+                        <td>
+                            <select name="items[__INDEX__][color_id]" class="form-control">
+                                <option value="">— Select —</option>
+                                @foreach($colors as $color)
+                                    <option value="{{ $color->id }}">{{ $color->name }}</option>
+                                @endforeach
+                            </select>
+                        </td>
+                        <td>
+                            <select name="items[__INDEX__][size_id]" class="form-control">
+                                <option value="">— Select —</option>
+                                @foreach($sizes as $size)
+                                    <option value="{{ $size->id }}">{{ $size->name }}</option>
                                 @endforeach
                             </select>
                         </td>

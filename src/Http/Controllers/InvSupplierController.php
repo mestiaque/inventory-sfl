@@ -24,7 +24,10 @@ class InvSupplierController extends Controller
             ->paginate(20)
             ->withQueryString();
 
-        return view('sfl-inventory::admin.suppliers.index', compact('suppliers'));
+        $trashedSuppliers = InvSupplier::onlyTrashed()->latest('deleted_at')->get()
+            ->map(fn ($supplier) => ['id' => $supplier->id, 'title' => $supplier->name, 'subtitle' => $supplier->code, 'deleted_at' => $supplier->deleted_at]);
+
+        return view('sfl-inventory::admin.suppliers.index', compact('suppliers', 'trashedSuppliers'));
     }
 
     public function store(InvSupplierRequest $request): RedirectResponse
@@ -54,5 +57,23 @@ class InvSupplierController extends Controller
         $supplier->delete();
 
         return back()->with('success', 'Supplier deleted successfully.');
+    }
+
+    public function restore(InvSupplier $supplier): RedirectResponse
+    {
+        $this->authorize('inv_supplier.delete');
+
+        $supplier->restore();
+
+        return back()->with('success', 'Supplier restored successfully.');
+    }
+
+    public function forceDestroy(InvSupplier $supplier): RedirectResponse
+    {
+        $this->authorize('inv_supplier.force_delete');
+
+        $supplier->forceDelete();
+
+        return back()->with('success', 'Supplier permanently deleted.');
     }
 }

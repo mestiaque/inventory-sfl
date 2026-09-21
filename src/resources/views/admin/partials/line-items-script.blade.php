@@ -36,6 +36,44 @@
             unitField.value = option?.getAttribute('data-unit') || '';
         }
 
+        // An item option carrying data-color-id/data-size-id already has a
+        // single fixed variant of its own (set on the Item Master) — that
+        // row's color/size picker is hidden and disabled (so nothing is
+        // submitted for it; the server falls back to the item's own fixed
+        // value). An item with no fixed color/size is "generic" — multiple
+        // variants of it can exist in stock, so the picker is shown and
+        // required.
+        function toggleRowVariantPickers(row) {
+            const itemSelect = row.querySelector('select[name$="[item_id]"]');
+            const colorSelect = row.querySelector('select[name$="[color_id]"]');
+            const sizeSelect = row.querySelector('select[name$="[size_id]"]');
+            if (!itemSelect || (!colorSelect && !sizeSelect)) {
+                return;
+            }
+            const option = itemSelect.options[itemSelect.selectedIndex];
+            const hasItem = !!itemSelect.value;
+            const fixedColor = option?.getAttribute('data-color-id') || '';
+            const fixedSize = option?.getAttribute('data-size-id') || '';
+
+            [[colorSelect, fixedColor], [sizeSelect, fixedSize]].forEach(function (pair) {
+                const select = pair[0];
+                const fixedValue = pair[1];
+                if (!select) {
+                    return;
+                }
+                const isFixed = hasItem && !!fixedValue;
+                select.style.display = isFixed ? 'none' : '';
+                select.disabled = isFixed;
+                select.required = hasItem && !isFixed;
+                if (isFixed) {
+                    select.value = '';
+                }
+                if ($(select).hasClass('select2-hidden-accessible')) {
+                    $(select).trigger('change.select2');
+                }
+            });
+        }
+
         // The document-level store field may be a live select, or locked to
         // a single store (disabled select + hidden input carrying the real
         // value, e.g. the one Finished Goods store) — read whichever
@@ -94,8 +132,8 @@
             });
             const itemSelect = row.querySelector('select[name$="[item_id]"]');
             if (itemSelect) {
-                itemSelect.addEventListener('change', function () { syncRowUnit(row); });
-                $(itemSelect).on('change', function () { syncRowUnit(row); });
+                itemSelect.addEventListener('change', function () { syncRowUnit(row); toggleRowVariantPickers(row); });
+                $(itemSelect).on('change', function () { syncRowUnit(row); toggleRowVariantPickers(row); });
             }
             const removeBtn = row.querySelector('[data-line-items-remove]');
             removeBtn?.addEventListener('click', function () {
@@ -106,6 +144,7 @@
             invSelect2Init(row);
             syncRowUnit(row);
             filterRowItemsByStore(row);
+            toggleRowVariantPickers(row);
         }
 
         const storeSelect = document.querySelector('select[name="store_id"], select[name="from_store_id"]');

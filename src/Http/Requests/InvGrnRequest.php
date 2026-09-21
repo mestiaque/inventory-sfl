@@ -4,9 +4,13 @@ namespace ME\SflInventory\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\Validator;
+use ME\SflInventory\Http\Requests\Concerns\ValidatesLineItemVariants;
 
 class InvGrnRequest extends FormRequest
 {
+    use ValidatesLineItemVariants;
+
     public function authorize(): bool
     {
         $ability = $this->route('grn') ? 'inv_grn.edit' : 'inv_grn.add';
@@ -18,6 +22,7 @@ class InvGrnRequest extends FormRequest
     {
         return [
             'purchase_order_id'             => [
+                'required_if:source_type,purchase',
                 'nullable',
                 'integer',
                 Rule::exists('inv_purchase_orders', 'id')->where(fn ($q) => $q->whereIn('status', ['approved', 'received'])),
@@ -35,6 +40,8 @@ class InvGrnRequest extends FormRequest
             'items'                         => ['required', 'array', 'min:1'],
             'items.*.purchase_order_item_id' => ['nullable', 'integer', 'exists:inv_purchase_order_items,id'],
             'items.*.item_id'               => ['required', 'integer', 'exists:inv_items,id'],
+            'items.*.color_id'              => ['nullable', 'integer', 'exists:inv_colors,id'],
+            'items.*.size_id'               => ['nullable', 'integer', 'exists:inv_sizes,id'],
             'items.*.ordered_qty'           => ['nullable', 'numeric', 'min:0'],
             'items.*.received_qty'          => ['required', 'numeric', 'min:0.0001'],
             'items.*.rejected_qty'          => ['nullable', 'numeric', 'min:0'],
@@ -48,7 +55,13 @@ class InvGrnRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'purchase_order_id.exists' => 'This purchase order has not been approved yet, so a challan cannot be received against it.',
+            'purchase_order_id.required_if' => 'Select a Store Order — a purchase challan cannot be received without one.',
+            'purchase_order_id.exists'       => 'This purchase order has not been approved yet, so a challan cannot be received against it.',
         ];
+    }
+
+    public function withValidator(Validator $validator): void
+    {
+        $validator->after(fn (Validator $v) => $this->validateLineItemVariants($v, $this->input('items', [])));
     }
 }

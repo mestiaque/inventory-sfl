@@ -12,9 +12,16 @@
     <div class="card">
         <div class="card-header d-flex justify-content-between align-items-center">
             <h5 class="mb-0">Production Consumption</h5>
-            @can('inv_production.add')
-                <a href="{{ route('inventory.production-consumptions.create') }}" class="btn btn-primary btn-sm"><i class="fa-solid fa-plus"></i> Add Consumption</a>
-            @endcan
+            <div>
+                @can('inv_production.delete')
+                    <button type="button" class="btn btn-outline-secondary btn-sm" data-toggle="modal" data-target="#consumptionTrashModal">
+                        <i class="fa-solid fa-trash"></i> Trash ({{ $trashedConsumptions->count() }})
+                    </button>
+                @endcan
+                @can('inv_production.add')
+                    <a href="{{ route('inventory.production-consumptions.create') }}" class="btn btn-primary btn-sm"><i class="fa-solid fa-plus"></i> Add Consumption</a>
+                @endcan
+            </div>
         </div>
         <div class="card-body">
             <form method="GET" class="row g-2 mb-3">
@@ -143,5 +150,14 @@
 @endforeach
 
 @include('sfl-inventory::admin.partials.delete-confirm-modal', ['modalId' => 'deleteConsModal', 'label' => 'consumption record'])
+@include('sfl-inventory::admin.partials.trash-modal', [
+    'modalId' => 'consumptionTrashModal',
+    'label' => 'Consumption',
+    'rows' => $trashedConsumptions,
+    'restoreRoute' => 'inventory.production-consumptions.restore',
+    'forceRoute' => 'inventory.production-consumptions.force-destroy',
+    'canRestore' => auth()->user()->can('inv_production.delete'),
+    'canForce' => auth()->user()->can('inv_production.force_delete'),
+])
 @include('sfl-inventory::admin.partials.select2-init')
 @endsection

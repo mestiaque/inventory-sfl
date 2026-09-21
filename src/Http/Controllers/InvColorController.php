@@ -21,7 +21,10 @@ class InvColorController extends Controller
             ->paginate(20)
             ->withQueryString();
 
-        return view('sfl-inventory::admin.colors.index', compact('colors'));
+        $trashedColors = InvColor::onlyTrashed()->latest('deleted_at')->get()
+            ->map(fn ($color) => ['id' => $color->id, 'title' => $color->name, 'subtitle' => $color->hex_code, 'deleted_at' => $color->deleted_at]);
+
+        return view('sfl-inventory::admin.colors.index', compact('colors', 'trashedColors'));
     }
 
     public function store(InvColorRequest $request): RedirectResponse
@@ -51,5 +54,23 @@ class InvColorController extends Controller
         $color->delete();
 
         return back()->with('success', 'Color deleted successfully.');
+    }
+
+    public function restore(InvColor $color): RedirectResponse
+    {
+        $this->authorize('inv_color.delete');
+
+        $color->restore();
+
+        return back()->with('success', 'Color restored successfully.');
+    }
+
+    public function forceDestroy(InvColor $color): RedirectResponse
+    {
+        $this->authorize('inv_color.force_delete');
+
+        $color->forceDelete();
+
+        return back()->with('success', 'Color permanently deleted.');
     }
 }

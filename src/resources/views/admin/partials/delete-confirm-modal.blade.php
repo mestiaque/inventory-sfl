@@ -10,7 +10,7 @@
                     <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
                 </div>
                 <div class="modal-body">
-                    <p class="mb-0">Are you sure you want to delete this {{ $label }}? This action cannot be undone.</p>
+                    <p class="mb-0">Are you sure you want to delete this {{ $label }}? It will be moved to Trash and can be restored later.</p>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-light" data-dismiss="modal">Cancel</button>

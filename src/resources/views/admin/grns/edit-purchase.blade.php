@@ -15,7 +15,11 @@
             <a href="{{ route('inventory.grns.show', $grn) }}" class="btn btn-light btn-sm"><i class="fa-solid fa-arrow-left"></i> Back</a>
         </div>
         <div class="card-body">
-            <div class="alert alert-warning">Editing a posted GRN reverses its original stock entries and re-posts the corrected quantities. This is blocked if any of this GRN's stock has already been issued or used elsewhere.</div>
+            @if($grn->status === 'pending')
+                <div class="alert alert-info">This challan is still pending Receive Approval — no stock has posted yet, so changes here just update the pending record.</div>
+            @else
+                <div class="alert alert-warning">Editing a posted GRN reverses its original stock entries and re-posts the corrected quantities. This is blocked if any of this GRN's stock has already been issued or used elsewhere.</div>
+            @endif
 
             <form method="POST" action="{{ route('inventory.grns.update', $grn) }}">
                 @csrf @method('PUT')
@@ -72,9 +76,9 @@
                     <div class="table-responsive">
                         <table class="table table-bordered table-sm align-middle">
                             <thead>
-                                <tr><th style="min-width:220px">Item</th><th>Due Qty</th><th>Received Qty</th><th>Expiry Date</th></tr>
+                                <tr><th style="min-width:220px">Item</th><th>Color</th><th>Size</th><th>Due Qty</th><th style="width:150px">Received Qty</th><th style="width:140px">Rate</th><th style="width:140px">Amount</th><th>Expiry Date</th></tr>
                             </thead>
-                            <tbody>
+                            <tbody id="grnRowsBody">
                                 @foreach($grn->items as $index => $grnItem)
                                     @php
                                         $poItem = $grnItem->purchaseOrderItem;
@@ -86,11 +90,14 @@
                                             <input type="hidden" name="items[{{ $index }}][item_id]" value="{{ $grnItem->item_id }}">
                                             <input type="hidden" name="items[{{ $index }}][purchase_order_item_id]" value="{{ $grnItem->purchase_order_item_id }}">
                                             <input type="hidden" name="items[{{ $index }}][ordered_qty]" value="{{ $due }}">
-                                            <input type="hidden" name="items[{{ $index }}][rate]" value="{{ $grnItem->rate }}">
                                             <input type="hidden" name="items[{{ $index }}][rejected_qty]" value="{{ $grnItem->rejected_qty }}">
                                         </td>
+                                        <td>{{ $grnItem->color?->name ?? '—' }}</td>
+                                        <td>{{ $grnItem->size?->name ?? '—' }}</td>
                                         <td>{{ inv_qty($due) }}</td>
-                                        <td><input type="number" step="0.0001" min="0.0001" max="{{ $due }}" name="items[{{ $index }}][received_qty]" class="form-control" value="{{ old('items.' . $index . '.received_qty', $grnItem->received_qty) }}" required></td>
+                                        <td><input type="number" step="0.0001" min="0.0001" max="{{ $due }}" name="items[{{ $index }}][received_qty]" class="form-control" data-role="qty" value="{{ old('items.' . $index . '.received_qty', $grnItem->received_qty) }}" required></td>
+                                        <td><input type="number" step="0.01" min="0" name="items[{{ $index }}][rate]" class="form-control" data-role="rate" value="{{ old('items.' . $index . '.rate', $grnItem->rate) }}" required></td>
+                                        <td><input type="text" class="form-control" data-role="amount" disabled></td>
                                         <td><input type="date" name="items[{{ $index }}][expiry_date]" class="form-control" value="{{ old('items.' . $index . '.expiry_date', optional($grnItem->expiry_date)->format('Y-m-d')) }}"></td>
                                     </tr>
                                 @endforeach
@@ -101,21 +108,37 @@
                     <div class="table-responsive">
                         <table class="table table-bordered table-sm align-middle">
                             <thead>
-                                <tr><th style="min-width:220px">Item</th><th style="width:90px">Unit</th><th>Received Qty</th><th>Rejected Qty</th><th>Rate</th><th>Lot No</th><th>Batch No</th><th>Expiry Date</th><th>Amount</th><th></th></tr>
+                                <tr><th style="min-width:220px">Item</th><th style="width:90px">Unit</th><th style="width:120px">Color</th><th style="width:120px">Size</th><th>Received Qty</th><th>Rejected Qty</th><th>Rate</th><th>Lot No</th><th>Batch No</th><th>Expiry Date</th><th>Amount</th><th></th></tr>
                             </thead>
                             <tbody id="grnRowsBody">
-                                @foreach(old('items', $grn->items->map(fn ($i) => ['item_id' => $i->item_id, 'received_qty' => (float) $i->received_qty, 'rejected_qty' => (float) $i->rejected_qty, 'rate' => (float) $i->rate, 'lot_no' => $i->lot_no, 'batch_no' => $i->batch_no, 'expiry_date' => optional($i->expiry_date)->format('Y-m-d')])->all()) as $index => $line)
+                                @foreach(old('items', $grn->items->map(fn ($i) => ['item_id' => $i->item_id, 'color_id' => $i->color_id, 'size_id' => $i->size_id, 'received_qty' => (float) $i->received_qty, 'rejected_qty' => (float) $i->rejected_qty, 'rate' => (float) $i->rate, 'lot_no' => $i->lot_no, 'batch_no' => $i->batch_no, 'expiry_date' => optional($i->expiry_date)->format('Y-m-d')])->all()) as $index => $line)
                                     @php $selectedItem = $items->firstWhere('id', (int) ($line['item_id'] ?? null)); @endphp
                                     <tr>
                                         <td>
                                             <select name="items[{{ $index }}][item_id]" class="form-control inv-select2" required>
                                                 <option value="">— Select —</option>
                                                 @foreach($items as $item)
-                                                    <option value="{{ $item->id }}" data-unit="{{ $item->unit?->short_name }}" data-store="{{ $item->opening_store_id }}" @selected(($line['item_id'] ?? null) == $item->id)>{{ $item->item_code }} — {{ $item->item_name }}</option>
+                                                    <option value="{{ $item->id }}" data-unit="{{ $item->unit?->short_name }}" data-store="{{ $item->opening_store_id }}" data-color-id="{{ $item->color_id }}" data-size-id="{{ $item->size_id }}" @selected(($line['item_id'] ?? null) == $item->id)>{{ $item->item_code }} — {{ $item->item_name }}</option>
                                                 @endforeach
                                             </select>
                                         </td>
                                         <td><input type="text" class="form-control" data-role="unit" value="{{ $selectedItem?->unit?->short_name }}" disabled></td>
+                                        <td>
+                                            <select name="items[{{ $index }}][color_id]" class="form-control">
+                                                <option value="">— Select —</option>
+                                                @foreach($colors as $color)
+                                                    <option value="{{ $color->id }}" @selected(($line['color_id'] ?? null) == $color->id)>{{ $color->name }}</option>
+                                                @endforeach
+                                            </select>
+                                        </td>
+                                        <td>
+                                            <select name="items[{{ $index }}][size_id]" class="form-control">
+                                                <option value="">— Select —</option>
+                                                @foreach($sizes as $size)
+                                                    <option value="{{ $size->id }}" @selected(($line['size_id'] ?? null) == $size->id)>{{ $size->name }}</option>
+                                                @endforeach
+                                            </select>
+                                        </td>
                                         <td><input type="number" step="0.0001" min="0.0001" name="items[{{ $index }}][received_qty]" class="form-control" data-role="qty" value="{{ $line['received_qty'] ?? '' }}" required></td>
                                         <td><input type="number" step="0.0001" min="0" name="items[{{ $index }}][rejected_qty]" class="form-control" value="{{ $line['rejected_qty'] ?? 0 }}"></td>
                                         <td><input type="number" step="0.01" min="0" name="items[{{ $index }}][rate]" class="form-control" data-role="rate" value="{{ $line['rate'] ?? '' }}" required></td>
@@ -136,11 +159,27 @@
                                 <select name="items[__INDEX__][item_id]" class="form-control inv-select2" required>
                                     <option value="">— Select —</option>
                                     @foreach($items as $item)
-                                        <option value="{{ $item->id }}" data-unit="{{ $item->unit?->short_name }}" data-store="{{ $item->opening_store_id }}">{{ $item->item_code }} — {{ $item->item_name }}</option>
+                                        <option value="{{ $item->id }}" data-unit="{{ $item->unit?->short_name }}" data-store="{{ $item->opening_store_id }}" data-color-id="{{ $item->color_id }}" data-size-id="{{ $item->size_id }}">{{ $item->item_code }} — {{ $item->item_name }}</option>
                                     @endforeach
                                 </select>
                             </td>
                             <td><input type="text" class="form-control" data-role="unit" disabled></td>
+                            <td>
+                                <select name="items[__INDEX__][color_id]" class="form-control">
+                                    <option value="">— Select —</option>
+                                    @foreach($colors as $color)
+                                        <option value="{{ $color->id }}">{{ $color->name }}</option>
+                                    @endforeach
+                                </select>
+                            </td>
+                            <td>
+                                <select name="items[__INDEX__][size_id]" class="form-control">
+                                    <option value="">— Select —</option>
+                                    @foreach($sizes as $size)
+                                        <option value="{{ $size->id }}">{{ $size->name }}</option>
+                                    @endforeach
+                                </select>
+                            </td>
                             <td><input type="number" step="0.0001" min="0.0001" name="items[__INDEX__][received_qty]" class="form-control" data-role="qty" required></td>
                             <td><input type="number" step="0.0001" min="0" name="items[__INDEX__][rejected_qty]" class="form-control" value="0"></td>
                             <td><input type="number" step="0.01" min="0" name="items[__INDEX__][rate]" class="form-control" data-role="rate" required></td>
@@ -153,7 +192,7 @@
                     </template>
                 @endif
 
-                <button type="submit" class="btn btn-primary mt-3">Save Changes &amp; Re-post Stock</button>
+                <button type="submit" class="btn btn-primary mt-3">{{ $grn->status === 'pending' ? 'Save Changes' : 'Save Changes & Re-post Stock' }}</button>
                 <a href="{{ route('inventory.grns.show', $grn) }}" class="btn btn-light mt-3">Cancel</a>
             </form>
         </div>

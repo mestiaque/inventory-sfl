@@ -23,7 +23,10 @@ class InvBuyerController extends Controller
             ->paginate(20)
             ->withQueryString();
 
-        return view('sfl-inventory::admin.buyers.index', compact('buyers'));
+        $trashedBuyers = InvBuyer::onlyTrashed()->latest('deleted_at')->get()
+            ->map(fn ($buyer) => ['id' => $buyer->id, 'title' => $buyer->name, 'subtitle' => $buyer->code, 'deleted_at' => $buyer->deleted_at]);
+
+        return view('sfl-inventory::admin.buyers.index', compact('buyers', 'trashedBuyers'));
     }
 
     public function store(InvBuyerRequest $request): RedirectResponse
@@ -53,5 +56,23 @@ class InvBuyerController extends Controller
         $buyer->delete();
 
         return back()->with('success', 'Buyer deleted successfully.');
+    }
+
+    public function restore(InvBuyer $buyer): RedirectResponse
+    {
+        $this->authorize('inv_buyer.delete');
+
+        $buyer->restore();
+
+        return back()->with('success', 'Buyer restored successfully.');
+    }
+
+    public function forceDestroy(InvBuyer $buyer): RedirectResponse
+    {
+        $this->authorize('inv_buyer.force_delete');
+
+        $buyer->forceDelete();
+
+        return back()->with('success', 'Buyer permanently deleted.');
     }
 }

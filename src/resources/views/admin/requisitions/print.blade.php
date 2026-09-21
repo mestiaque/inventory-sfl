@@ -73,8 +73,8 @@
                 <td>{{ $loop->iteration }}</td>
                 <td class="text-start">{{ $line->item?->item_name }}</td>
                 <td>{{ $requisition->style ?? $requisition->order_ref }}</td>
-                <td>{{ $line->item?->color?->name }}</td>
-                <td>{{ $line->item?->size?->name }}</td>
+                <td>{{ $line->color?->name ?? $line->item?->color?->name }}</td>
+                <td>{{ $line->size?->name ?? $line->item?->size?->name }}</td>
                 <td>{{ inv_qty($line->requested_qty) }}</td>
                 <td>{{ inv_qty($line->issued_qty) }}</td>
                 <td>{{ $line->remarks }}</td>

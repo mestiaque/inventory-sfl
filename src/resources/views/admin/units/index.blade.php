@@ -12,11 +12,18 @@
     <div class="card">
         <div class="card-header d-flex justify-content-between align-items-center">
             <h5 class="mb-0">Units</h5>
-            @can('inv_unit.add')
-                <button type="button" class="btn btn-primary btn-sm" data-toggle="modal" data-target="#createUnitModal">
-                    <i class="fa-solid fa-plus"></i> Add Unit
-                </button>
-            @endcan
+            <div>
+                @can('inv_unit.delete')
+                    <button type="button" class="btn btn-outline-secondary btn-sm" data-toggle="modal" data-target="#unitTrashModal">
+                        <i class="fa-solid fa-trash"></i> Trash ({{ $trashedUnits->count() }})
+                    </button>
+                @endcan
+                @can('inv_unit.add')
+                    <button type="button" class="btn btn-primary btn-sm" data-toggle="modal" data-target="#createUnitModal">
+                        <i class="fa-solid fa-plus"></i> Add Unit
+                    </button>
+                @endcan
+            </div>
         </div>
         <div class="card-body">
             <form method="GET" class="row g-2 mb-3">
@@ -166,5 +173,14 @@
 @endcan
 
 @include('sfl-inventory::admin.partials.delete-confirm-modal', ['modalId' => 'deleteUnitModal', 'label' => 'unit'])
+@include('sfl-inventory::admin.partials.trash-modal', [
+    'modalId' => 'unitTrashModal',
+    'label' => 'Unit',
+    'rows' => $trashedUnits,
+    'restoreRoute' => 'inventory.units.restore',
+    'forceRoute' => 'inventory.units.force-destroy',
+    'canRestore' => auth()->user()->can('inv_unit.delete'),
+    'canForce' => auth()->user()->can('inv_unit.force_delete'),
+])
 @include('sfl-inventory::admin.partials.select2-init')
 @endsection

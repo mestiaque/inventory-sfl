@@ -11,10 +11,12 @@ use Illuminate\View\View;
 use ME\SflInventory\Http\Requests\InvRequisitionApprovalRequest;
 use ME\SflInventory\Http\Requests\InvRequisitionRequest;
 use ME\SflInventory\Models\InvBuyer;
+use ME\SflInventory\Models\InvColor;
 use ME\SflInventory\Models\InvDepartment;
 use ME\SflInventory\Models\InvItem;
 use ME\SflInventory\Models\InvRequisition;
 use ME\SflInventory\Models\InvRequisitionItem;
+use ME\SflInventory\Models\InvSize;
 use ME\SflInventory\Models\InvStore;
 use ME\SflInventory\Services\InvOperatorScopeService;
 
@@ -29,7 +31,7 @@ class InvRequisitionController extends Controller
         $this->authorize('inv_requisition.list');
 
         $requisitions = InvRequisition::query()
-            ->with(['department', 'store', 'buyer', 'requester', 'approver', 'items.item.unit'])
+            ->with(['department', 'store', 'buyer', 'requester', 'approver', 'items.item.unit', 'items.color', 'items.size'])
             ->when($request->filled('search'), fn ($q) => $q->where('requisition_no', 'like', '%' . $request->search . '%'))
             ->when($request->filled('department_id'), fn ($q) => $q->where('department_id', $request->department_id))
             ->when($request->filled('buyer_id'), fn ($q) => $q->where('buyer_id', $request->buyer_id))
@@ -46,7 +48,10 @@ class InvRequisitionController extends Controller
         $buyers = InvBuyer::active()->orderBy('name')->get();
         $items = InvItem::active()->orderBy('item_name')->get();
 
-        return view('sfl-inventory::admin.requisitions.index', compact('requisitions', 'departments', 'buyers', 'items'));
+        $trashedRequisitions = InvRequisition::onlyTrashed()->latest('deleted_at')->get()
+            ->map(fn ($requisition) => ['id' => $requisition->id, 'title' => $requisition->requisition_no, 'subtitle' => null, 'deleted_at' => $requisition->deleted_at]);
+
+        return view('sfl-inventory::admin.requisitions.index', compact('requisitions', 'departments', 'buyers', 'items', 'trashedRequisitions'));
     }
 
     public function create(): View
@@ -81,8 +86,13 @@ class InvRequisitionController extends Controller
             ]);
 
             foreach ($data['items'] as $line) {
+                [$colorId, $sizeId] = InvItem::find($line['item_id'])?->resolvedVariant($line['color_id'] ?? null, $line['size_id'] ?? null)
+                    ?? [$line['color_id'] ?? null, $line['size_id'] ?? null];
+
                 $requisition->items()->create([
                     'item_id'       => $line['item_id'],
+                    'color_id'      => $colorId,
+                    'size_id'       => $sizeId,
                     'requested_qty' => $line['requested_qty'],
                     ...($autoApprove ? ['approved_qty' => $line['requested_qty']] : []),
                 ]);
@@ -114,7 +124,7 @@ class InvRequisitionController extends Controller
 
         abort_if($requisition->status !== 'pending', 403, 'Only pending requisitions can be edited.');
 
-        $requisition->load('items');
+        $requisition->load('items.item', 'items.color', 'items.size');
 
         return view('sfl-inventory::admin.requisitions.edit', ['requisition' => $requisition] + $this->formOptions());
     }
@@ -140,8 +150,13 @@ class InvRequisitionController extends Controller
 
             $requisition->items()->delete();
             foreach ($data['items'] as $line) {
+                [$colorId, $sizeId] = InvItem::find($line['item_id'])?->resolvedVariant($line['color_id'] ?? null, $line['size_id'] ?? null)
+                    ?? [$line['color_id'] ?? null, $line['size_id'] ?? null];
+
                 $requisition->items()->create([
                     'item_id'       => $line['item_id'],
+                    'color_id'      => $colorId,
+                    'size_id'       => $sizeId,
                     'requested_qty' => $line['requested_qty'],
                 ]);
             }
@@ -156,7 +171,7 @@ class InvRequisitionController extends Controller
 
         abort_if($requisition->status !== 'pending', 403, 'Only pending requisitions can be approved or rejected.');
 
-        $requisition->load('items.item', 'buyer');
+        $requisition->load('items.item', 'items.color', 'items.size', 'buyer');
 
         return view('sfl-inventory::admin.requisitions.approve', compact('requisition'));
     }
@@ -205,7 +220,7 @@ class InvRequisitionController extends Controller
     {
         $this->authorize('inv_requisition.print');
 
-        $requisition->load(['items.item.color', 'items.item.size', 'department', 'buyer', 'requester', 'receiver', 'approver']);
+        $requisition->load(['items.item.color', 'items.item.size', 'items.color', 'items.size', 'department', 'buyer', 'requester', 'receiver', 'approver']);
 
         $departments = InvDepartment::active()->orderBy('name')->get();
 
@@ -223,6 +238,15 @@ class InvRequisitionController extends Controller
         $requisition->delete();
 
         return back()->with('success', 'Requisition deleted successfully.');
+    }
+
+    public function restore(InvRequisition $requisition): RedirectResponse
+    {
+        $this->authorize('inv_requisition.delete');
+
+        $requisition->restore();
+
+        return back()->with('success', 'Requisition restored successfully.');
     }
 
     /**
@@ -281,6 +305,8 @@ class InvRequisitionController extends Controller
             'stores'      => InvStore::active()->whereIn('type', ['raw_material', 'accessories'])->orderBy('name')->get(),
             'items'       => InvItem::active()->with('unit')->orderBy('item_name')->get(),
             'buyers'      => InvBuyer::active()->orderBy('name')->get(),
+            'colors'      => InvColor::active()->orderBy('name')->get(),
+            'sizes'       => InvSize::active()->ordered()->get(),
             'employees'   => $employees,
         ];
     }

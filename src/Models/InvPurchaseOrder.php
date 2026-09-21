@@ -20,7 +20,7 @@ class InvPurchaseOrder extends Model
     protected $table = 'inv_purchase_orders';
 
     protected $fillable = [
-        'po_number', 'supplier_id', 'order_date', 'expected_date', 'status', 'total_amount',
+        'po_number', 'purchase_requisition_id', 'supplier_id', 'order_date', 'expected_date', 'status', 'total_amount',
         'remarks', 'approved_by', 'approved_at', 'created_by',
     ];
 
@@ -34,6 +34,11 @@ class InvPurchaseOrder extends Model
     public function supplier(): BelongsTo
     {
         return $this->belongsTo(InvSupplier::class, 'supplier_id');
+    }
+
+    public function purchaseRequisition(): BelongsTo
+    {
+        return $this->belongsTo(InvPurchaseRequisition::class, 'purchase_requisition_id');
     }
 
     public function items(): HasMany

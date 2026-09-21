@@ -12,9 +12,16 @@
     <div class="card">
         <div class="card-header d-flex justify-content-between align-items-center">
             <h5 class="mb-0">Stock Adjustment</h5>
-            @can('inv_adjustment.add')
-                <a href="{{ route('inventory.adjustments.create') }}" class="btn btn-primary btn-sm"><i class="fa-solid fa-plus"></i> New Adjustment</a>
-            @endcan
+            <div>
+                @can('inv_adjustment.delete')
+                    <button type="button" class="btn btn-outline-secondary btn-sm" data-toggle="modal" data-target="#adjustmentTrashModal">
+                        <i class="fa-solid fa-trash"></i> Trash ({{ $trashedAdjustments->count() }})
+                    </button>
+                @endcan
+                @can('inv_adjustment.add')
+                    <a href="{{ route('inventory.adjustments.create') }}" class="btn btn-primary btn-sm"><i class="fa-solid fa-plus"></i> New Adjustment</a>
+                @endcan
+            </div>
         </div>
         <div class="card-body">
             <form method="GET" class="row g-2 mb-3">
@@ -110,5 +117,14 @@
     </div>
 </div>
 @include('sfl-inventory::admin.partials.delete-confirm-modal', ['modalId' => 'deleteAdjustmentModal', 'label' => 'adjustment'])
+@include('sfl-inventory::admin.partials.trash-modal', [
+    'modalId' => 'adjustmentTrashModal',
+    'label' => 'Adjustment',
+    'rows' => $trashedAdjustments,
+    'restoreRoute' => 'inventory.adjustments.restore',
+    'forceRoute' => 'inventory.adjustments.force-destroy',
+    'canRestore' => auth()->user()->can('inv_adjustment.delete'),
+    'canForce' => auth()->user()->can('inv_adjustment.force_delete'),
+])
 @include('sfl-inventory::admin.partials.select2-init')
 @endsection

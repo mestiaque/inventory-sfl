@@ -73,6 +73,8 @@
             <th>Item Name</th>
             <th>Category</th>
             <th>Description</th>
+            <th>Color</th>
+            <th>Size</th>
             <th>UOM</th>
             <th>Qty</th>
         </tr>
@@ -85,12 +87,14 @@
                 <td class="text-start">{{ $line->item?->item_name }}</td>
                 <td>{{ $line->item?->category?->name }}</td>
                 <td>{{ $line->item?->specification ?? '---' }}</td>
+                <td>{{ $line->color?->name ?? $line->item?->color?->name ?? '---' }}</td>
+                <td>{{ $line->size?->name ?? $line->item?->size?->name ?? '---' }}</td>
                 <td>{{ $line->item?->unit?->short_name }}</td>
                 <td>{{ inv_qty($line->issued_qty) }}</td>
             </tr>
         @endforeach
         <tr class="total-row">
-            <td colspan="6" class="text-start">Total :</td>
+            <td colspan="8" class="text-start">Total :</td>
             <td>{{ inv_qty($issue->items->sum('issued_qty')) }}</td>
         </tr>
     </tbody>

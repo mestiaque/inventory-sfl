@@ -12,11 +12,18 @@
     <div class="card">
         <div class="card-header d-flex justify-content-between align-items-center">
             <h5 class="mb-0">Departments</h5>
-            @can('inv_department.add')
-                <button type="button" class="btn btn-primary btn-sm" data-toggle="modal" data-target="#createDepartmentModal">
-                    <i class="fa-solid fa-plus"></i> Add Department
-                </button>
-            @endcan
+            <div>
+                @can('inv_department.delete')
+                    <button type="button" class="btn btn-outline-secondary btn-sm" data-toggle="modal" data-target="#departmentTrashModal">
+                        <i class="fa-solid fa-trash"></i> Trash ({{ $trashedDepartments->count() }})
+                    </button>
+                @endcan
+                @can('inv_department.add')
+                    <button type="button" class="btn btn-primary btn-sm" data-toggle="modal" data-target="#createDepartmentModal">
+                        <i class="fa-solid fa-plus"></i> Add Department
+                    </button>
+                @endcan
+            </div>
         </div>
         <div class="card-body">
             <form method="GET" class="row g-2 mb-3">
@@ -67,11 +74,6 @@
                                     @can('inv_department.delete')
                                         <button type="button" class="btn btn-sm btn-outline-danger" data-toggle="modal" data-target="#deleteDepartmentModal" data-action="{{ route('inventory.departments.destroy', $department) }}">
                                             <i class="fa-solid fa-trash"></i>
-                                        </button>
-                                    @endcan
-                                    @can('inv_department.force_delete')
-                                        <button type="button" class="btn btn-sm btn-outline-danger d-none" title="Force Delete (removes department reference from all records too)" data-toggle="modal" data-target="#forceDeleteDepartmentModal" data-action="{{ route('inventory.departments.force-destroy', $department) }}" data-dept-name="{{ $department->name }} ({{ $department->code }})">
-                                            <i class="fa-solid fa-triangle-exclamation"></i>
                                         </button>
                                     @endcan
                                 </td>
@@ -160,38 +162,16 @@
 @endcan
 
 @include('sfl-inventory::admin.partials.delete-confirm-modal', ['modalId' => 'deleteDepartmentModal', 'label' => 'department'])
-
-<div class="modal fade" id="forceDeleteDepartmentModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <form method="POST" id="forceDeleteDepartmentModalForm">
-                @csrf
-                @method('DELETE')
-                <div class="modal-header">
-                    <h5 class="modal-title text-danger"><i class="fa-solid fa-triangle-exclamation"></i> Force Delete Department</h5>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                </div>
-                <div class="modal-body">
-                    <p class="mb-1">Permanently delete <strong id="forceDeleteDeptName"></strong>?</p>
-                    <p class="text-danger mb-0">This is blocked if the department is used on any real Requisition, Issue, or Production Consumption document. If clear, it permanently removes the department and clears its reference from the stock ledger, broken needle entries, machines, and items (those records themselves are kept).</p>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-light" data-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-danger">Force Delete</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-@push('js')
-<script>
-    $('#forceDeleteDepartmentModal').on('show.bs.modal', function (event) {
-        const trigger = $(event.relatedTarget);
-        $('#forceDeleteDepartmentModalForm').attr('action', trigger.data('action'));
-        $('#forceDeleteDeptName').text(trigger.data('dept-name'));
-    });
-</script>
-@endpush
+@include('sfl-inventory::admin.partials.trash-modal', [
+    'modalId' => 'departmentTrashModal',
+    'label' => 'Department',
+    'rows' => $trashedDepartments,
+    'restoreRoute' => 'inventory.departments.restore',
+    'forceRoute' => 'inventory.departments.force-destroy',
+    'canRestore' => auth()->user()->can('inv_department.delete'),
+    'canForce' => auth()->user()->can('inv_department.force_delete'),
+    'forceWarning' => 'Blocked if this department is used on any real Requisition, Issue, or Production Consumption document. If clear, it permanently removes the department and clears its reference from the stock ledger, broken needle entries, machines, and items (those records themselves are kept).',
+])
 
 @include('sfl-inventory::admin.partials.select2-init')
 @endsection

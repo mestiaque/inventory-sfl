@@ -12,11 +12,18 @@
     <div class="card">
         <div class="card-header d-flex justify-content-between align-items-center">
             <h5 class="mb-0">Sizes</h5>
-            @can('inv_size.add')
-                <button type="button" class="btn btn-primary btn-sm" data-toggle="modal" data-target="#createSizeModal">
-                    <i class="fa-solid fa-plus"></i> Add Size
-                </button>
-            @endcan
+            <div>
+                @can('inv_size.delete')
+                    <button type="button" class="btn btn-outline-secondary btn-sm" data-toggle="modal" data-target="#sizeTrashModal">
+                        <i class="fa-solid fa-trash"></i> Trash ({{ $trashedSizes->count() }})
+                    </button>
+                @endcan
+                @can('inv_size.add')
+                    <button type="button" class="btn btn-primary btn-sm" data-toggle="modal" data-target="#createSizeModal">
+                        <i class="fa-solid fa-plus"></i> Add Size
+                    </button>
+                @endcan
+            </div>
         </div>
         <div class="card-body">
             <form method="GET" class="row g-2 mb-3">
@@ -177,5 +184,14 @@
 @endcan
 
 @include('sfl-inventory::admin.partials.delete-confirm-modal', ['modalId' => 'deleteSizeModal', 'label' => 'size'])
+@include('sfl-inventory::admin.partials.trash-modal', [
+    'modalId' => 'sizeTrashModal',
+    'label' => 'Size',
+    'rows' => $trashedSizes,
+    'restoreRoute' => 'inventory.sizes.restore',
+    'forceRoute' => 'inventory.sizes.force-destroy',
+    'canRestore' => auth()->user()->can('inv_size.delete'),
+    'canForce' => auth()->user()->can('inv_size.force_delete'),
+])
 @include('sfl-inventory::admin.partials.select2-init')
 @endsection

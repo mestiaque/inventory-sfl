@@ -12,11 +12,18 @@
     <div class="card">
         <div class="card-header d-flex justify-content-between align-items-center">
             <h5 class="mb-0">Operators / Store Incharge</h5>
-            @can('inv_operator.add')
-                <button type="button" class="btn btn-primary btn-sm" data-toggle="modal" data-target="#createOperatorModal">
-                    <i class="fa-solid fa-plus"></i> Add Operator
-                </button>
-            @endcan
+            <div>
+                @can('inv_operator.delete')
+                    <button type="button" class="btn btn-outline-secondary btn-sm" data-toggle="modal" data-target="#operatorTrashModal">
+                        <i class="fa-solid fa-trash"></i> Trash ({{ $trashedOperators->count() }})
+                    </button>
+                @endcan
+                @can('inv_operator.add')
+                    <button type="button" class="btn btn-primary btn-sm" data-toggle="modal" data-target="#createOperatorModal">
+                        <i class="fa-solid fa-plus"></i> Add Operator
+                    </button>
+                @endcan
+            </div>
         </div>
         <div class="card-body">
             <div class="alert alert-info">
@@ -194,6 +201,15 @@
 @endcan
 
 @include('sfl-inventory::admin.partials.delete-confirm-modal', ['modalId' => 'deleteOperatorModal', 'label' => 'operator'])
+@include('sfl-inventory::admin.partials.trash-modal', [
+    'modalId' => 'operatorTrashModal',
+    'label' => 'Operator',
+    'rows' => $trashedOperators,
+    'restoreRoute' => 'inventory.operators.restore',
+    'forceRoute' => 'inventory.operators.force-destroy',
+    'canRestore' => auth()->user()->can('inv_operator.delete'),
+    'canForce' => auth()->user()->can('inv_operator.force_delete'),
+])
 @include('sfl-inventory::admin.partials.select2-init')
 @push('js')
 <script>

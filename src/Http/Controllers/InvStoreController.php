@@ -23,7 +23,10 @@ class InvStoreController extends Controller
             ->paginate(20)
             ->withQueryString();
 
-        return view('sfl-inventory::admin.stores.index', compact('stores'));
+        $trashedStores = InvStore::onlyTrashed()->latest('deleted_at')->get()
+            ->map(fn ($store) => ['id' => $store->id, 'title' => $store->name . ' (' . $store->code . ')', 'subtitle' => null, 'deleted_at' => $store->deleted_at]);
+
+        return view('sfl-inventory::admin.stores.index', compact('stores', 'trashedStores'));
     }
 
     public function store(InvStoreRequest $request): RedirectResponse
@@ -53,5 +56,23 @@ class InvStoreController extends Controller
         $store->delete();
 
         return back()->with('success', 'Store deleted successfully.');
+    }
+
+    public function restore(InvStore $store): RedirectResponse
+    {
+        $this->authorize('inv_store.delete');
+
+        $store->restore();
+
+        return back()->with('success', 'Store restored successfully.');
+    }
+
+    public function forceDestroy(InvStore $store): RedirectResponse
+    {
+        $this->authorize('inv_store.force_delete');
+
+        $store->forceDelete();
+
+        return back()->with('success', 'Store permanently deleted.');
     }
 }

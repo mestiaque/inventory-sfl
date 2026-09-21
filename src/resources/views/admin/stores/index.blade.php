@@ -12,11 +12,18 @@
     <div class="card">
         <div class="card-header d-flex justify-content-between align-items-center">
             <h5 class="mb-0">Stores</h5>
-            @can('inv_store.add')
-                <button type="button" class="btn btn-primary btn-sm" data-toggle="modal" data-target="#createStoreModal">
-                    <i class="fa-solid fa-plus"></i> Add Store
-                </button>
-            @endcan
+            <div>
+                @can('inv_store.delete')
+                    <button type="button" class="btn btn-outline-secondary btn-sm" data-toggle="modal" data-target="#storeTrashModal">
+                        <i class="fa-solid fa-trash"></i> Trash ({{ $trashedStores->count() }})
+                    </button>
+                @endcan
+                @can('inv_store.add')
+                    <button type="button" class="btn btn-primary btn-sm" data-toggle="modal" data-target="#createStoreModal">
+                        <i class="fa-solid fa-plus"></i> Add Store
+                    </button>
+                @endcan
+            </div>
         </div>
         <div class="card-body">
             <form method="GET" class="row g-2 mb-3">
@@ -172,5 +179,14 @@
 @endcan
 
 @include('sfl-inventory::admin.partials.delete-confirm-modal', ['modalId' => 'deleteStoreModal', 'label' => 'store'])
+@include('sfl-inventory::admin.partials.trash-modal', [
+    'modalId' => 'storeTrashModal',
+    'label' => 'Store',
+    'rows' => $trashedStores,
+    'restoreRoute' => 'inventory.stores.restore',
+    'forceRoute' => 'inventory.stores.force-destroy',
+    'canRestore' => auth()->user()->can('inv_store.delete'),
+    'canForce' => auth()->user()->can('inv_store.force_delete'),
+])
 @include('sfl-inventory::admin.partials.select2-init')
 @endsection

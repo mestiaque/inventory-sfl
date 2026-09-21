@@ -20,11 +20,13 @@ class InvGrn extends Model
 
     protected $fillable = [
         'grn_number', 'purchase_order_id', 'source_type', 'store_id', 'supplier_id', 'buyer_id', 'style', 'order_ref',
-        'challan_invoice_no', 'receive_date', 'status', 'total_amount', 'remarks', 'created_by', 'received_by',
+        'challan_invoice_no', 'receive_date', 'status', 'approved_by', 'approved_at', 'approval_remarks',
+        'total_amount', 'remarks', 'created_by', 'received_by',
     ];
 
     protected $casts = [
         'receive_date' => 'date',
+        'approved_at'  => 'datetime',
         'total_amount' => 'decimal:2',
     ];
 
@@ -56,6 +58,11 @@ class InvGrn extends Model
     public function creator(): BelongsTo
     {
         return $this->belongsTo(User::class, 'created_by');
+    }
+
+    public function approver(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'approved_by');
     }
 
     /**

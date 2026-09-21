@@ -16,6 +16,11 @@
                 <a href="{{ route('inventory.broken-needles.daily-report') }}" class="btn btn-outline-warning btn-sm"><i class="fa-solid fa-file-lines"></i> Daily Needle Supply Report</a>
                 <a href="{{ route('inventory.broken-needles.report') }}" class="btn btn-outline-info btn-sm"><i class="fa-solid fa-chart-column"></i> Monthly Report</a>
                 <a href="{{ route('inventory.broken-needles.machine-report') }}" class="btn btn-outline-info btn-sm"><i class="fa-solid fa-industry"></i> Machine Report</a>
+                @can('inv_broken_needle.delete')
+                    <button type="button" class="btn btn-outline-secondary btn-sm" data-toggle="modal" data-target="#brokenNeedleTrashModal">
+                        <i class="fa-solid fa-trash"></i> Trash ({{ $trashedEntries->count() }})
+                    </button>
+                @endcan
                 @can('inv_broken_needle.add')
                     <button type="button" class="btn btn-primary btn-sm" data-toggle="modal" data-target="#createBrokenNeedleModal">
                         <i class="fa-solid fa-plus"></i> Add Entry
@@ -107,11 +112,6 @@
                                             <i class="fa-solid fa-trash"></i>
                                         </button>
                                     @endcan
-                                    @can('inv_broken_needle.force_delete')
-                                        <button type="button" class="btn btn-sm btn-outline-danger d-none" title="Force Delete (permanent)" data-toggle="modal" data-target="#forceDeleteBrokenNeedleModal" data-action="{{ route('inventory.broken-needles.force-destroy', $entry) }}">
-                                            <i class="fa-solid fa-triangle-exclamation"></i>
-                                        </button>
-                                    @endcan
                                 </td>
                             </tr>
 
@@ -173,35 +173,15 @@
 @endcan
 
 @include('sfl-inventory::admin.partials.delete-confirm-modal', ['modalId' => 'deleteBrokenNeedleModal', 'label' => 'entry'])
-
-<div class="modal fade" id="forceDeleteBrokenNeedleModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <form method="POST" id="forceDeleteBrokenNeedleModalForm">
-                @csrf
-                @method('DELETE')
-                <div class="modal-header">
-                    <h5 class="modal-title text-danger"><i class="fa-solid fa-triangle-exclamation"></i> Force Delete Entry</h5>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                </div>
-                <div class="modal-body">
-                    <p class="text-danger mb-0">Permanently delete this broken needle entry? This cannot be undone (unlike the regular delete, which can be recovered).</p>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-light" data-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-danger">Force Delete</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-@push('js')
-<script>
-    $('#forceDeleteBrokenNeedleModal').on('show.bs.modal', function (event) {
-        $('#forceDeleteBrokenNeedleModalForm').attr('action', $(event.relatedTarget).data('action'));
-    });
-</script>
-@endpush
+@include('sfl-inventory::admin.partials.trash-modal', [
+    'modalId' => 'brokenNeedleTrashModal',
+    'label' => 'Broken Needle Entry',
+    'rows' => $trashedEntries,
+    'restoreRoute' => 'inventory.broken-needles.restore',
+    'forceRoute' => 'inventory.broken-needles.force-destroy',
+    'canRestore' => auth()->user()->can('inv_broken_needle.delete'),
+    'canForce' => auth()->user()->can('inv_broken_needle.force_delete'),
+])
 @include('sfl-inventory::admin.partials.select2-init')
 @endsection
 

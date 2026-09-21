@@ -12,9 +12,16 @@
     <div class="card">
         <div class="card-header d-flex justify-content-between align-items-center">
             <h5 class="mb-0">Goods Receive Note (GRN)</h5>
-            @can('inv_grn.add')
-                <a href="{{ route('inventory.grns.create') }}" class="btn btn-primary btn-sm"><i class="fa-solid fa-plus"></i> Add GRN</a>
-            @endcan
+            <div>
+                @can('inv_grn.delete')
+                    <button type="button" class="btn btn-outline-secondary btn-sm" data-toggle="modal" data-target="#grnTrashModal">
+                        <i class="fa-solid fa-trash"></i> Trash ({{ $trashedGrns->count() }})
+                    </button>
+                @endcan
+                @can('inv_grn.add')
+                    <a href="{{ route('inventory.grns.create') }}" class="btn btn-primary btn-sm"><i class="fa-solid fa-plus"></i> Add GRN</a>
+                @endcan
+            </div>
         </div>
         <div class="card-body">
             <form method="GET" class="row g-2 mb-3">
@@ -42,6 +49,14 @@
                         <option value="">All Sources</option>
                         <option value="purchase" @selected(request('source_type') === 'purchase')>Purchase</option>
                         <option value="buyer_supplied" @selected(request('source_type') === 'buyer_supplied')>Buyer Supplied</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <select name="status" class="form-control inv-select2">
+                        <option value="">All Status</option>
+                        @foreach(['pending' => 'Pending Approval', 'posted' => 'Posted', 'rejected' => 'Rejected', 'cancelled' => 'Cancelled'] as $value => $label)
+                            <option value="{{ $value }}" @selected(request('status') === $value)>{{ $label }}</option>
+                        @endforeach
                     </select>
                 </div>
                 <div class="col-md-2">
@@ -96,13 +111,24 @@
                                 <td>{{ $grn->receive_date?->format('d M Y') }}</td>
                                 <td>{{ $grn->items_count }}</td>
                                 <td>{{ inv_qty($grn->total_amount) }}</td>
-                                <td><span class="badge p-1 text-white bg-success">{{ ucfirst($grn->status) }}</span></td>
+                                <td>
+                                    <span class="badge p-1 text-white bg-{{ ['pending' => 'warning', 'posted' => 'success', 'rejected' => 'danger', 'cancelled' => 'secondary'][$grn->status] ?? 'secondary' }}">
+                                        {{ $grn->status === 'pending' ? 'Pending Approval' : ucfirst($grn->status) }}
+                                    </span>
+                                </td>
                                 <td>{{ $grn->created_at?->format('d M Y, h:i A') }}</td>
                                 <td>{{ $grn->creator?->name ?? '—' }}</td>
                                 <td class="text-end">
                                     <a href="{{ route('inventory.grns.show', $grn) }}" class="btn btn-sm btn-outline-secondary"><i class="fa-solid fa-eye"></i></a>
+                                    @can('inv_grn.approve')
+                                        @if($grn->source_type === 'purchase' && $grn->status === 'pending')
+                                            <a href="{{ route('inventory.grns.approval-form', $grn) }}" class="btn btn-sm btn-outline-success" title="Receive Approval"><i class="fa-solid fa-check"></i></a>
+                                        @endif
+                                    @endcan
                                     @can('inv_grn.edit')
-                                        <a href="{{ route('inventory.grns.edit', $grn) }}" class="btn btn-sm btn-outline-primary"><i class="fa-solid fa-pen"></i></a>
+                                        @if($grn->status !== 'rejected')
+                                            <a href="{{ route('inventory.grns.edit', $grn) }}" class="btn btn-sm btn-outline-primary"><i class="fa-solid fa-pen"></i></a>
+                                        @endif
                                     @endcan
                                     @can('inv_grn.delete')
                                         <button type="button" class="btn btn-sm btn-outline-danger" data-toggle="modal" data-target="#deleteGrnModal" data-action="{{ route('inventory.grns.destroy', $grn) }}">
@@ -123,5 +149,14 @@
     </div>
 </div>
 @include('sfl-inventory::admin.partials.delete-confirm-modal', ['modalId' => 'deleteGrnModal', 'label' => 'GRN'])
+@include('sfl-inventory::admin.partials.trash-modal', [
+    'modalId' => 'grnTrashModal',
+    'label' => 'GRN',
+    'rows' => $trashedGrns,
+    'restoreRoute' => 'inventory.grns.restore',
+    'forceRoute' => 'inventory.grns.force-destroy',
+    'canRestore' => auth()->user()->can('inv_grn.delete'),
+    'canForce' => auth()->user()->can('inv_grn.force_delete'),
+])
 @include('sfl-inventory::admin.partials.select2-init')
 @endsection

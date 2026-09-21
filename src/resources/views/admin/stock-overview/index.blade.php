@@ -40,6 +40,22 @@
                     </select>
                 </div>
                 <div class="col-md-2">
+                    <select name="color_id" class="form-control inv-select2">
+                        <option value="">All Colors</option>
+                        @foreach($allColors as $color)
+                            <option value="{{ $color->id }}" @selected(request('color_id') == $color->id)>{{ $color->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <select name="size_id" class="form-control inv-select2">
+                        <option value="">All Sizes</option>
+                        @foreach($allSizes as $size)
+                            <option value="{{ $size->id }}" @selected(request('size_id') == $size->id)>{{ $size->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="col-md-2">
                     <button type="submit" class="btn btn-secondary w-100">Filter</button>
                 </div>
                 <div class="col-md-2">
@@ -50,14 +66,16 @@
             <div class="table-responsive">
                 <table class="table table-bordered table-striped table-sm align-middle">
                     <thead>
-                        <tr><th>Item</th><th>Category</th><th>Store</th><th class="text-end">Current Stock</th><th class="text-end">Reserved</th><th class="text-end">Available</th><th class="text-end">Value</th></tr>
+                        <tr><th>Item</th><th>Category</th><th>Color</th><th>Size</th><th>Store</th><th class="text-end">Current Stock</th><th class="text-end">Reserved</th><th class="text-end">Available</th><th class="text-end">Value</th></tr>
                     </thead>
                     <tbody>
                         @forelse($rows as $row)
-                            @php $item = $items->get($row->item_id); $store = $stores->get($row->store_id); @endphp
+                            @php $item = $items->get($row->item_id); $store = $stores->get($row->store_id); $color = $colors->get($row->color_id); $size = $sizes->get($row->size_id); @endphp
                             <tr>
                                 <td>{{ $item?->item_code }} — {{ $item?->item_name }}</td>
                                 <td>{{ $item?->category?->name }}</td>
+                                <td>{{ $color?->name ?? '—' }}</td>
+                                <td>{{ $size?->name ?? '—' }}</td>
                                 <td>{{ $store?->name }}</td>
                                 <td class="text-end">{{ inv_qty($row->current) }} {{ $item?->unit?->short_name }}</td>
                                 <td class="text-end">{{ inv_qty($row->reserved) }}</td>
@@ -65,13 +83,13 @@
                                 <td class="text-end">{{ inv_qty($row->value) }}</td>
                             </tr>
                         @empty
-                            <tr><td colspan="7" class="text-center text-muted">No stock records found.</td></tr>
+                            <tr><td colspan="9" class="text-center text-muted">No stock records found.</td></tr>
                         @endforelse
                     </tbody>
                     @if($rows->isNotEmpty())
                         <tfoot>
                             <tr class="fw-bold">
-                                <td colspan="6" class="text-end">Total Stock Value</td>
+                                <td colspan="8" class="text-end">Total Stock Value</td>
                                 <td class="text-end">{{ inv_qty($rows->sum('value')) }}</td>
                             </tr>
                         </tfoot>

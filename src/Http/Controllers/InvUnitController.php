@@ -21,7 +21,10 @@ class InvUnitController extends Controller
             ->paginate(20)
             ->withQueryString();
 
-        return view('sfl-inventory::admin.units.index', compact('units'));
+        $trashedUnits = InvUnit::onlyTrashed()->latest('deleted_at')->get()
+            ->map(fn ($unit) => ['id' => $unit->id, 'title' => $unit->name . ' (' . $unit->short_name . ')', 'subtitle' => null, 'deleted_at' => $unit->deleted_at]);
+
+        return view('sfl-inventory::admin.units.index', compact('units', 'trashedUnits'));
     }
 
     public function store(InvUnitRequest $request): RedirectResponse
@@ -51,5 +54,23 @@ class InvUnitController extends Controller
         $unit->delete();
 
         return back()->with('success', 'Unit deleted successfully.');
+    }
+
+    public function restore(InvUnit $unit): RedirectResponse
+    {
+        $this->authorize('inv_unit.delete');
+
+        $unit->restore();
+
+        return back()->with('success', 'Unit restored successfully.');
+    }
+
+    public function forceDestroy(InvUnit $unit): RedirectResponse
+    {
+        $this->authorize('inv_unit.force_delete');
+
+        $unit->forceDelete();
+
+        return back()->with('success', 'Unit permanently deleted.');
     }
 }

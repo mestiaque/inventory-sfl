@@ -12,11 +12,18 @@
     <div class="card">
         <div class="card-header d-flex justify-content-between align-items-center">
             <h5 class="mb-0">Suppliers</h5>
-            @can('inv_supplier.add')
-                <button type="button" class="btn btn-primary btn-sm" data-toggle="modal" data-target="#createSupplierModal">
-                    <i class="fa-solid fa-plus"></i> Add Supplier
-                </button>
-            @endcan
+            <div>
+                @can('inv_supplier.delete')
+                    <button type="button" class="btn btn-outline-secondary btn-sm" data-toggle="modal" data-target="#supplierTrashModal">
+                        <i class="fa-solid fa-trash"></i> Trash ({{ $trashedSuppliers->count() }})
+                    </button>
+                @endcan
+                @can('inv_supplier.add')
+                    <button type="button" class="btn btn-primary btn-sm" data-toggle="modal" data-target="#createSupplierModal">
+                        <i class="fa-solid fa-plus"></i> Add Supplier
+                    </button>
+                @endcan
+            </div>
         </div>
         <div class="card-body">
             <form method="GET" class="row g-2 mb-3">
@@ -165,5 +172,14 @@
 @endcan
 
 @include('sfl-inventory::admin.partials.delete-confirm-modal', ['modalId' => 'deleteSupplierModal', 'label' => 'supplier'])
+@include('sfl-inventory::admin.partials.trash-modal', [
+    'modalId' => 'supplierTrashModal',
+    'label' => 'Supplier',
+    'rows' => $trashedSuppliers,
+    'restoreRoute' => 'inventory.suppliers.restore',
+    'forceRoute' => 'inventory.suppliers.force-destroy',
+    'canRestore' => auth()->user()->can('inv_supplier.delete'),
+    'canForce' => auth()->user()->can('inv_supplier.force_delete'),
+])
 @include('sfl-inventory::admin.partials.select2-init')
 @endsection

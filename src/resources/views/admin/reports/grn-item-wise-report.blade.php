@@ -52,6 +52,22 @@
                             @endforeach
                         </select>
                     </div>
+                    <div class="col-md-2">
+                        <select name="color_id" class="form-control inv-select2">
+                            <option value="">All Colors</option>
+                            @foreach($colors as $color)
+                                <option value="{{ $color->id }}" @selected(request('color_id') == $color->id)>{{ $color->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <select name="size_id" class="form-control inv-select2">
+                            <option value="">All Sizes</option>
+                            @foreach($sizes as $size)
+                                <option value="{{ $size->id }}" @selected(request('size_id') == $size->id)>{{ $size->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
                     <div class="col-md-2"><input type="date" name="date_from" class="form-control" value="{{ request('date_from') }}" placeholder="Receive From"></div>
                     <div class="col-md-2"><input type="date" name="date_to" class="form-control" value="{{ request('date_to') }}" placeholder="Receive To"></div>
                     <div class="col-md-1"><button type="submit" class="btn btn-secondary w-100">Filter</button></div>
@@ -62,7 +78,7 @@
                 <table class="table table-bordered table-striped table-sm align-middle">
                     <thead>
                         <tr>
-                            <th>GRN No</th><th>PO No</th><th>Item Code</th><th>Item Name</th><th>Store</th>
+                            <th>GRN No</th><th>PO No</th><th>Item Code</th><th>Item Name</th><th>Color</th><th>Size</th><th>Store</th>
                             <th>Supplier / Buyer</th><th class="text-end">Qty</th><th>Unit</th><th class="text-end">Rate</th><th class="text-end">Amount</th>
                             <th>Receive Date</th><th>Created Date</th><th>Created By</th>
                         </tr>
@@ -74,6 +90,8 @@
                                 <td>{{ $line->grn?->purchaseOrder?->po_number ?? '—' }}</td>
                                 <td>{{ $line->item?->item_code }}</td>
                                 <td>{{ $line->item?->item_name }}</td>
+                                <td>{{ $line->color?->name ?? '—' }}</td>
+                                <td>{{ $line->size?->name ?? '—' }}</td>
                                 <td>{{ $line->grn?->store?->name }}</td>
                                 <td>{{ $line->grn?->source_type === 'buyer_supplied' ? $line->grn?->buyer?->name : $line->grn?->supplier?->name }}</td>
                                 <td class="text-end">{{ inv_qty($line->received_qty) }}</td>
@@ -85,12 +103,12 @@
                                 <td>{{ $line->grn?->creator?->name ?? '—' }}</td>
                             </tr>
                         @empty
-                            <tr><td colspan="13" class="text-center text-muted">No goods receive lines found.</td></tr>
+                            <tr><td colspan="15" class="text-center text-muted">No goods receive lines found.</td></tr>
                         @endforelse
                     </tbody>
                     @if($lines->isNotEmpty())
                         <tfoot>
-                            <tr class="fw-bold"><td colspan="9" class="text-end">Total</td><td class="text-end">{{ inv_qty($lines->sum('amount')) }}</td><td colspan="3"></td></tr>
+                            <tr class="fw-bold"><td colspan="11" class="text-end">Total</td><td class="text-end">{{ inv_qty($lines->sum('amount')) }}</td><td colspan="3"></td></tr>
                         </tfoot>
                     @endif
                 </table>

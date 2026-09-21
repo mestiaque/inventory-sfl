@@ -12,9 +12,16 @@
     <div class="card">
         <div class="card-header d-flex justify-content-between align-items-center">
             <h5 class="mb-0">Store Requisitions</h5>
-            @can('inv_requisition.add')
-                <a href="{{ route('inventory.requisitions.create') }}" class="btn btn-primary btn-sm"><i class="fa-solid fa-plus"></i> Add Requisition</a>
-            @endcan
+            <div>
+                @can('inv_requisition.delete')
+                    <button type="button" class="btn btn-outline-secondary btn-sm" data-toggle="modal" data-target="#requisitionTrashModal">
+                        <i class="fa-solid fa-trash"></i> Trash ({{ $trashedRequisitions->count() }})
+                    </button>
+                @endcan
+                @can('inv_requisition.add')
+                    <a href="{{ route('inventory.requisitions.create') }}" class="btn btn-primary btn-sm"><i class="fa-solid fa-plus"></i> Add Requisition</a>
+                @endcan
+            </div>
         </div>
         <div class="card-body">
             <form method="GET" class="row g-2 mb-3">
@@ -114,11 +121,6 @@
                                     @can('inv_requisition.print')
                                         <a href="{{ route('inventory.requisitions.print', $requisition) }}" target="_blank" class="btn btn-sm btn-outline-secondary"><i class="fa-solid fa-print"></i></a>
                                     @endcan
-                                    @can('inv_requisition.force_delete')
-                                        <button type="button" class="btn btn-sm btn-outline-danger d-none" title="Force Delete" data-toggle="modal" data-target="#forceDeleteReqModal" data-action="{{ route('inventory.requisitions.force-destroy', $requisition) }}" data-req-name="{{ $requisition->requisition_no }}">
-                                            <i class="fa-solid fa-triangle-exclamation"></i>
-                                        </button>
-                                    @endcan
                                 </td>
                             </tr>
                         @empty
@@ -171,7 +173,7 @@
                         <table class="table table-bordered table-sm align-middle mb-0">
                             <thead>
                                 <tr>
-                                    <th>#</th><th>Item</th><th>Unit</th>
+                                    <th>#</th><th>Item</th><th>Unit</th><th>Color</th><th>Size</th>
                                     <th class="text-end">Requested</th>
                                     <th class="text-end">Approved</th>
                                     <th class="text-end">Issued</th>
@@ -183,6 +185,8 @@
                                         <td>{{ $loop->iteration }}</td>
                                         <td>{{ $line->item?->item_code }} — {{ $line->item?->item_name }}</td>
                                         <td>{{ $line->item?->unit?->short_name ?? '—' }}</td>
+                                        <td>{{ $line->color?->name ?? '—' }}</td>
+                                        <td>{{ $line->size?->name ?? '—' }}</td>
                                         <td class="text-end">{{ inv_qty($line->requested_qty) }}</td>
                                         <td class="text-end">{{ $line->approved_qty !== null ? inv_qty($line->approved_qty) : '—' }}</td>
                                         <td class="text-end">{{ inv_qty($line->issued_qty) }}</td>
@@ -204,38 +208,16 @@
 @endforeach
 
 @include('sfl-inventory::admin.partials.delete-confirm-modal', ['modalId' => 'deleteReqModal', 'label' => 'requisition'])
-
-<div class="modal fade" id="forceDeleteReqModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <form method="POST" id="forceDeleteReqModalForm">
-                @csrf
-                @method('DELETE')
-                <div class="modal-header">
-                    <h5 class="modal-title text-danger"><i class="fa-solid fa-triangle-exclamation"></i> Force Delete Requisition</h5>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                </div>
-                <div class="modal-body">
-                    <p class="mb-1">Permanently delete <strong id="forceDeleteReqName"></strong>?</p>
-                    <p class="text-danger mb-0">This works regardless of status. If any real Issue was made against this requisition, that Issue is kept — it just loses its link back to this requisition.</p>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-light" data-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-danger">Force Delete</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-@push('js')
-<script>
-    $('#forceDeleteReqModal').on('show.bs.modal', function (event) {
-        const trigger = $(event.relatedTarget);
-        $('#forceDeleteReqModalForm').attr('action', trigger.data('action'));
-        $('#forceDeleteReqName').text(trigger.data('req-name'));
-    });
-</script>
-@endpush
+@include('sfl-inventory::admin.partials.trash-modal', [
+    'modalId' => 'requisitionTrashModal',
+    'label' => 'Requisition',
+    'rows' => $trashedRequisitions,
+    'restoreRoute' => 'inventory.requisitions.restore',
+    'forceRoute' => 'inventory.requisitions.force-destroy',
+    'canRestore' => auth()->user()->can('inv_requisition.delete'),
+    'canForce' => auth()->user()->can('inv_requisition.force_delete'),
+    'forceWarning' => 'This works regardless of status. If any real Issue was made against this requisition, that Issue is kept — it just loses its link back to this requisition.',
+])
 
 @include('sfl-inventory::admin.partials.select2-init')
 @endsection

@@ -12,9 +12,16 @@
     <div class="card">
         <div class="card-header d-flex justify-content-between align-items-center">
             <h5 class="mb-0">Internal Stock Transfer</h5>
-            @can('inv_transfer.add')
-                <a href="{{ route('inventory.transfers.create') }}" class="btn btn-primary btn-sm"><i class="fa-solid fa-plus"></i> Request Transfer</a>
-            @endcan
+            <div>
+                @can('inv_transfer.delete')
+                    <button type="button" class="btn btn-outline-secondary btn-sm" data-toggle="modal" data-target="#transferTrashModal">
+                        <i class="fa-solid fa-trash"></i> Trash ({{ $trashedTransfers->count() }})
+                    </button>
+                @endcan
+                @can('inv_transfer.add')
+                    <a href="{{ route('inventory.transfers.create') }}" class="btn btn-primary btn-sm"><i class="fa-solid fa-plus"></i> Request Transfer</a>
+                @endcan
+            </div>
         </div>
         <div class="card-body">
             <form method="GET" class="row g-2 mb-3">
@@ -117,5 +124,14 @@
     </div>
 </div>
 @include('sfl-inventory::admin.partials.delete-confirm-modal', ['modalId' => 'deleteTransferModal', 'label' => 'transfer'])
+@include('sfl-inventory::admin.partials.trash-modal', [
+    'modalId' => 'transferTrashModal',
+    'label' => 'Transfer',
+    'rows' => $trashedTransfers,
+    'restoreRoute' => 'inventory.transfers.restore',
+    'forceRoute' => 'inventory.transfers.force-destroy',
+    'canRestore' => auth()->user()->can('inv_transfer.delete'),
+    'canForce' => auth()->user()->can('inv_transfer.force_delete'),
+])
 @include('sfl-inventory::admin.partials.select2-init')
 @endsection

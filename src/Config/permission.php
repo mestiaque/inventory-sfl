@@ -23,31 +23,31 @@ return [
         ],
         'inv_store' => [
             'label' => 'Stores',
-            'permissions' => $crud,
+            'permissions' => $crud + ['force_delete' => 'Force Delete'],
         ],
         'inv_item_category' => [
             'label' => 'Item Categories',
-            'permissions' => $crud,
+            'permissions' => $crud + ['force_delete' => 'Force Delete'],
         ],
         'inv_unit' => [
             'label' => 'Units',
-            'permissions' => $crud,
+            'permissions' => $crud + ['force_delete' => 'Force Delete'],
         ],
         'inv_brand' => [
             'label' => 'Brands',
-            'permissions' => $crud,
+            'permissions' => $crud + ['force_delete' => 'Force Delete'],
         ],
         'inv_color' => [
             'label' => 'Colors',
-            'permissions' => $crud,
+            'permissions' => $crud + ['force_delete' => 'Force Delete'],
         ],
         'inv_size' => [
             'label' => 'Sizes',
-            'permissions' => $crud,
+            'permissions' => $crud + ['force_delete' => 'Force Delete'],
         ],
         'inv_operator' => [
             'label' => 'Operators / Store Incharge',
-            'permissions' => $crud,
+            'permissions' => $crud + ['force_delete' => 'Force Delete'],
         ],
         'inv_item' => [
             'label' => 'Item Master',
@@ -55,11 +55,11 @@ return [
         ],
         'inv_supplier' => [
             'label' => 'Suppliers',
-            'permissions' => $crud,
+            'permissions' => $crud + ['force_delete' => 'Force Delete'],
         ],
         'inv_buyer' => [
             'label' => 'Buyers',
-            'permissions' => $crud,
+            'permissions' => $crud + ['force_delete' => 'Force Delete'],
         ],
         'inv_department' => [
             'label' => 'Departments',
@@ -67,15 +67,19 @@ return [
         ],
         'inv_machine' => [
             'label' => 'Machines',
-            'permissions' => $crud,
+            'permissions' => $crud + ['force_delete' => 'Force Delete'],
+        ],
+        'inv_purchase_requisition' => [
+            'label' => 'Purchase Requisition',
+            'permissions' => $crud + ['approve' => 'Approve', 'reject' => 'Reject', 'force_delete' => 'Force Delete'],
         ],
         'inv_purchase_order' => [
             'label' => 'Store Order',
-            'permissions' => $crud + ['approve' => 'Approve', 'print' => 'Print', 'export' => 'Export'],
+            'permissions' => $crud + ['approve' => 'Approve', 'print' => 'Print', 'export' => 'Export', 'force_delete' => 'Force Delete'],
         ],
         'inv_grn' => [
             'label' => 'Goods Receive Note (GRN)',
-            'permissions' => $crud + ['print' => 'Print', 'export' => 'Export'],
+            'permissions' => $crud + ['approve' => 'Approve', 'reject' => 'Reject', 'print' => 'Print', 'export' => 'Export', 'force_delete' => 'Force Delete'],
         ],
         'inv_stock_overview' => [
             'label' => 'Main Store Inventory',
@@ -91,11 +95,11 @@ return [
         ],
         'inv_transfer' => [
             'label' => 'Internal Stock Transfer',
-            'permissions' => $crud + ['approve' => 'Approve', 'receive' => 'Receive', 'print' => 'Print', 'export' => 'Export'],
+            'permissions' => $crud + ['approve' => 'Approve', 'receive' => 'Receive', 'print' => 'Print', 'export' => 'Export', 'force_delete' => 'Force Delete'],
         ],
         'inv_production' => [
             'label' => 'Production Consumption',
-            'permissions' => $crud + ['export' => 'Export'],
+            'permissions' => $crud + ['export' => 'Export', 'force_delete' => 'Force Delete'],
         ],
         'inv_fg_receive' => [
             'label' => 'Finished Goods Receive',
@@ -111,7 +115,7 @@ return [
         ],
         'inv_adjustment' => [
             'label' => 'Stock Adjustment',
-            'permissions' => $crud + ['approve' => 'Approve', 'export' => 'Export'],
+            'permissions' => $crud + ['approve' => 'Approve', 'export' => 'Export', 'force_delete' => 'Force Delete'],
         ],
         'inv_stock_ledger' => [
             'label' => 'Stock Ledger',

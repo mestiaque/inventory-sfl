@@ -21,7 +21,10 @@ class InvBrandController extends Controller
             ->paginate(20)
             ->withQueryString();
 
-        return view('sfl-inventory::admin.brands.index', compact('brands'));
+        $trashedBrands = InvBrand::onlyTrashed()->latest('deleted_at')->get()
+            ->map(fn ($brand) => ['id' => $brand->id, 'title' => $brand->name, 'subtitle' => null, 'deleted_at' => $brand->deleted_at]);
+
+        return view('sfl-inventory::admin.brands.index', compact('brands', 'trashedBrands'));
     }
 
     public function store(InvBrandRequest $request): RedirectResponse
@@ -51,5 +54,23 @@ class InvBrandController extends Controller
         $brand->delete();
 
         return back()->with('success', 'Brand deleted successfully.');
+    }
+
+    public function restore(InvBrand $brand): RedirectResponse
+    {
+        $this->authorize('inv_brand.delete');
+
+        $brand->restore();
+
+        return back()->with('success', 'Brand restored successfully.');
+    }
+
+    public function forceDestroy(InvBrand $brand): RedirectResponse
+    {
+        $this->authorize('inv_brand.force_delete');
+
+        $brand->forceDelete();
+
+        return back()->with('success', 'Brand permanently deleted.');
     }
 }

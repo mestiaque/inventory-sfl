@@ -47,7 +47,10 @@ class InvItemController extends Controller
         $stores = InvStore::active()->orderBy('name')->get();
         $buyers = InvBuyer::active()->orderBy('name')->get();
 
-        return view('sfl-inventory::admin.items.index', compact('items', 'categories', 'departments', 'suppliers', 'units', 'stores', 'buyers'));
+        $trashedItems = InvItem::onlyTrashed()->latest('deleted_at')->get()
+            ->map(fn ($item) => ['id' => $item->id, 'title' => $item->item_code . ' — ' . $item->item_name, 'subtitle' => null, 'deleted_at' => $item->deleted_at]);
+
+        return view('sfl-inventory::admin.items.index', compact('items', 'categories', 'departments', 'suppliers', 'units', 'stores', 'buyers', 'trashedItems'));
     }
 
     public function create(): View
@@ -91,6 +94,15 @@ class InvItemController extends Controller
         $item->delete();
 
         return back()->with('success', 'Item deleted successfully.');
+    }
+
+    public function restore(InvItem $item): RedirectResponse
+    {
+        $this->authorize('inv_item.delete');
+
+        $item->restore();
+
+        return back()->with('success', 'Item restored successfully.');
     }
 
     /**

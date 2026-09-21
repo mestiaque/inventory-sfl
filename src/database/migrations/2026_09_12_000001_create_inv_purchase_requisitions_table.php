@@ -1,0 +1,32 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    public function up(): void
+    {
+        Schema::create('inv_purchase_requisitions', function (Blueprint $table) {
+            $table->id();
+            $table->string('requisition_no')->unique();
+            $table->date('requisition_date');
+            $table->foreignId('department_id')->nullable()->constrained('inv_departments')->nullOnDelete();
+            $table->foreignId('requested_by')->nullable()->constrained('users')->nullOnDelete();
+            $table->enum('status', ['pending', 'approved', 'rejected', 'converted', 'partially_converted'])->default('pending');
+            $table->foreignId('approved_by')->nullable()->constrained('users')->nullOnDelete();
+            $table->timestamp('approved_at')->nullable();
+            $table->text('approval_remarks')->nullable();
+            $table->text('remarks')->nullable();
+            $table->foreignId('created_by')->nullable()->constrained('users')->nullOnDelete();
+            $table->timestamps();
+            $table->softDeletes();
+        });
+    }
+
+    public function down(): void
+    {
+        Schema::dropIfExists('inv_purchase_requisitions');
+    }
+};

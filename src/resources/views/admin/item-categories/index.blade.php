@@ -12,11 +12,18 @@
     <div class="card">
         <div class="card-header d-flex justify-content-between align-items-center">
             <h5 class="mb-0">Item Categories</h5>
-            @can('inv_item_category.add')
-                <button type="button" class="btn btn-primary btn-sm" data-toggle="modal" data-target="#createCategoryModal">
-                    <i class="fa-solid fa-plus"></i> Add Category
-                </button>
-            @endcan
+            <div>
+                @can('inv_item_category.delete')
+                    <button type="button" class="btn btn-outline-secondary btn-sm" data-toggle="modal" data-target="#categoryTrashModal">
+                        <i class="fa-solid fa-trash"></i> Trash ({{ $trashedCategories->count() }})
+                    </button>
+                @endcan
+                @can('inv_item_category.add')
+                    <button type="button" class="btn btn-primary btn-sm" data-toggle="modal" data-target="#createCategoryModal">
+                        <i class="fa-solid fa-plus"></i> Add Category
+                    </button>
+                @endcan
+            </div>
         </div>
         <div class="card-body">
             <form method="GET" class="row g-2 mb-3">
@@ -177,5 +184,14 @@
 @endcan
 
 @include('sfl-inventory::admin.partials.delete-confirm-modal', ['modalId' => 'deleteCategoryModal', 'label' => 'category'])
+@include('sfl-inventory::admin.partials.trash-modal', [
+    'modalId' => 'categoryTrashModal',
+    'label' => 'Item Category',
+    'rows' => $trashedCategories,
+    'restoreRoute' => 'inventory.item-categories.restore',
+    'forceRoute' => 'inventory.item-categories.force-destroy',
+    'canRestore' => auth()->user()->can('inv_item_category.delete'),
+    'canForce' => auth()->user()->can('inv_item_category.force_delete'),
+])
 @include('sfl-inventory::admin.partials.select2-init')
 @endsection

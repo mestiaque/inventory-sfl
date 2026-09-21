@@ -37,7 +37,10 @@ class InvProductionConsumptionController extends Controller
         $departments = InvDepartment::active()->orderBy('name')->get();
         $stores = InvStore::active()->orderBy('name')->get();
 
-        return view('sfl-inventory::admin.production-consumptions.index', compact('consumptions', 'departments', 'stores'));
+        $trashedConsumptions = InvProductionConsumption::onlyTrashed()->with('department')->latest('deleted_at')->get()
+            ->map(fn ($consumption) => ['id' => $consumption->id, 'title' => $consumption->consumption_no, 'subtitle' => $consumption->department?->name, 'deleted_at' => $consumption->deleted_at]);
+
+        return view('sfl-inventory::admin.production-consumptions.index', compact('consumptions', 'departments', 'stores', 'trashedConsumptions'));
     }
 
     public function create(): View
@@ -146,6 +149,33 @@ class InvProductionConsumptionController extends Controller
         });
 
         return redirect()->route('inventory.production-consumptions.index')->with('success', "Consumption {$production_consumption->consumption_no} deleted and stock reversed.");
+    }
+
+    public function restore(InvProductionConsumption $production_consumption): RedirectResponse
+    {
+        $this->authorize('inv_production.delete');
+
+        $production_consumption->restore();
+
+        return back()->with('success', 'Consumption restored successfully.');
+    }
+
+    /**
+     * Stock was already reversed when the consumption was soft-deleted, so
+     * this just removes the record — its line items are deleted first since
+     * this database's declared FK cascades aren't reliably enforced (see
+     * InvItemController::forceDestroy).
+     */
+    public function forceDestroy(InvProductionConsumption $production_consumption): RedirectResponse
+    {
+        $this->authorize('inv_production.force_delete');
+
+        DB::transaction(function () use ($production_consumption) {
+            DB::table('inv_production_consumption_items')->where('consumption_id', $production_consumption->id)->delete();
+            $production_consumption->forceDelete();
+        });
+
+        return back()->with('success', 'Consumption permanently deleted.');
     }
 
     private function formOptions(): array

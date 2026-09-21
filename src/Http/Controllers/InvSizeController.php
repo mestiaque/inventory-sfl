@@ -21,7 +21,10 @@ class InvSizeController extends Controller
             ->paginate(20)
             ->withQueryString();
 
-        return view('sfl-inventory::admin.sizes.index', compact('sizes'));
+        $trashedSizes = InvSize::onlyTrashed()->latest('deleted_at')->get()
+            ->map(fn ($size) => ['id' => $size->id, 'title' => $size->name, 'subtitle' => null, 'deleted_at' => $size->deleted_at]);
+
+        return view('sfl-inventory::admin.sizes.index', compact('sizes', 'trashedSizes'));
     }
 
     public function store(InvSizeRequest $request): RedirectResponse
@@ -51,5 +54,23 @@ class InvSizeController extends Controller
         $size->delete();
 
         return back()->with('success', 'Size deleted successfully.');
+    }
+
+    public function restore(InvSize $size): RedirectResponse
+    {
+        $this->authorize('inv_size.delete');
+
+        $size->restore();
+
+        return back()->with('success', 'Size restored successfully.');
+    }
+
+    public function forceDestroy(InvSize $size): RedirectResponse
+    {
+        $this->authorize('inv_size.force_delete');
+
+        $size->forceDelete();
+
+        return back()->with('success', 'Size permanently deleted.');
     }
 }

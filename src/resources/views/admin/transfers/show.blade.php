@@ -57,13 +57,15 @@
             <div class="table-responsive">
                 <table class="table table-bordered table-sm align-middle">
                     <thead>
-                        <tr><th>Item</th><th>Unit</th><th class="text-end">Quantity</th><th class="text-end">Received Qty</th></tr>
+                        <tr><th>Item</th><th>Unit</th><th>Color</th><th>Size</th><th class="text-end">Quantity</th><th class="text-end">Received Qty</th></tr>
                     </thead>
                     <tbody>
                         @foreach($transfer->items as $item)
                             <tr>
                                 <td>{{ $item->item?->item_code }} — {{ $item->item?->item_name }}</td>
                                 <td>{{ $item->item?->unit?->short_name }}</td>
+                                <td>{{ $item->color?->name ?? '—' }}</td>
+                                <td>{{ $item->size?->name ?? '—' }}</td>
                                 <td class="text-end">{{ inv_qty($item->quantity) }}</td>
                                 <td class="text-end">{{ inv_qty($item->received_qty) }}</td>
                             </tr>

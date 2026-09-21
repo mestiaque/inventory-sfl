@@ -63,6 +63,19 @@ class InvItem extends Model
         return $this->belongsTo(InvSize::class, 'size_id');
     }
 
+    /**
+     * Resolves the color/size a transaction line should actually be tagged
+     * with: if this item already has its own fixed color_id/size_id, that
+     * always wins (the line's picker is hidden/disabled client-side for
+     * exactly this reason, so nothing is submitted for it) — otherwise the
+     * explicitly picked value is used. Keeps every transaction controller
+     * consistent instead of each re-deriving this itself.
+     */
+    public function resolvedVariant(?int $colorId, ?int $sizeId): array
+    {
+        return [$this->color_id ?? $colorId, $this->size_id ?? $sizeId];
+    }
+
     public function openingStore(): BelongsTo
     {
         return $this->belongsTo(InvStore::class, 'opening_store_id');

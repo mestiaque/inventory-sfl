@@ -12,11 +12,18 @@
     <div class="card">
         <div class="card-header d-flex justify-content-between align-items-center">
             <h5 class="mb-0">Item Master</h5>
-            @can('inv_item.add')
-                <a href="{{ route('inventory.items.create') }}" class="btn btn-primary btn-sm">
-                    <i class="fa-solid fa-plus"></i> Add Item
-                </a>
-            @endcan
+            <div>
+                @can('inv_item.delete')
+                    <button type="button" class="btn btn-outline-secondary btn-sm" data-toggle="modal" data-target="#itemTrashModal">
+                        <i class="fa-solid fa-trash"></i> Trash ({{ $trashedItems->count() }})
+                    </button>
+                @endcan
+                @can('inv_item.add')
+                    <a href="{{ route('inventory.items.create') }}" class="btn btn-primary btn-sm">
+                        <i class="fa-solid fa-plus"></i> Add Item
+                    </a>
+                @endcan
+            </div>
         </div>
         <div class="card-body">
             <form method="GET" class="row g-2 mb-3">
@@ -157,11 +164,6 @@
                                             <i class="fa-solid fa-trash"></i>
                                         </button>
                                     @endcan
-                                    @can('inv_item.force_delete')
-                                        <button type="button" class="btn btn-sm btn-outline-danger d-none" title="Force Delete (wipes stock history too)" data-toggle="modal" data-target="#forceDeleteItemModal" data-action="{{ route('inventory.items.force-destroy', $item) }}" data-item-name="{{ $item->item_code }} — {{ $item->item_name }}">
-                                            <i class="fa-solid fa-triangle-exclamation"></i>
-                                        </button>
-                                    @endcan
                                 </td>
                             </tr>
 
@@ -224,38 +226,16 @@
 </div>
 
 @include('sfl-inventory::admin.partials.delete-confirm-modal', ['modalId' => 'deleteItemModal', 'label' => 'item'])
-
-<div class="modal fade" id="forceDeleteItemModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <form method="POST" id="forceDeleteItemModalForm">
-                @csrf
-                @method('DELETE')
-                <div class="modal-header">
-                    <h5 class="modal-title text-danger"><i class="fa-solid fa-triangle-exclamation"></i> Force Delete Item</h5>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                </div>
-                <div class="modal-body">
-                    <p class="mb-1">Permanently delete <strong id="forceDeleteItemName"></strong>?</p>
-                    <p class="text-danger mb-0">This wipes the item's entire stock ledger (all stock transactions) and removes the item itself — it cannot be undone. If this item is used on any real GRN, Store Order, Requisition, Issue, etc., the delete will be blocked instead.</p>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-light" data-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-danger">Force Delete</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-@push('js')
-<script>
-    $('#forceDeleteItemModal').on('show.bs.modal', function (event) {
-        const trigger = $(event.relatedTarget);
-        $('#forceDeleteItemModalForm').attr('action', trigger.data('action'));
-        $('#forceDeleteItemName').text(trigger.data('item-name'));
-    });
-</script>
-@endpush
+@include('sfl-inventory::admin.partials.trash-modal', [
+    'modalId' => 'itemTrashModal',
+    'label' => 'Item',
+    'rows' => $trashedItems,
+    'restoreRoute' => 'inventory.items.restore',
+    'forceRoute' => 'inventory.items.force-destroy',
+    'canRestore' => auth()->user()->can('inv_item.delete'),
+    'canForce' => auth()->user()->can('inv_item.force_delete'),
+    'forceWarning' => 'This wipes the item\'s entire stock ledger (all stock transactions) and removes the item itself — it cannot be undone.',
+])
 
 @can('inv_barcode.use')
     @push('js')

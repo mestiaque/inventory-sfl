@@ -26,7 +26,10 @@ class InvDepartmentController extends Controller
 
         $stores = InvStore::active()->orderBy('name')->get();
 
-        return view('sfl-inventory::admin.departments.index', compact('departments', 'stores'));
+        $trashedDepartments = InvDepartment::onlyTrashed()->latest('deleted_at')->get()
+            ->map(fn ($department) => ['id' => $department->id, 'title' => $department->name, 'subtitle' => $department->code, 'deleted_at' => $department->deleted_at]);
+
+        return view('sfl-inventory::admin.departments.index', compact('departments', 'stores', 'trashedDepartments'));
     }
 
     public function store(InvDepartmentRequest $request): RedirectResponse
@@ -56,6 +59,15 @@ class InvDepartmentController extends Controller
         $department->delete();
 
         return back()->with('success', 'Department deleted successfully.');
+    }
+
+    public function restore(InvDepartment $department): RedirectResponse
+    {
+        $this->authorize('inv_department.delete');
+
+        $department->restore();
+
+        return back()->with('success', 'Department restored successfully.');
     }
 
     /**

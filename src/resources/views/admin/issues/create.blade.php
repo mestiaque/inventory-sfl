@@ -98,11 +98,11 @@
                 </div>
                 <div class="table-responsive">
                     <table class="table table-bordered table-sm align-middle">
-                        <thead><tr><th style="min-width:220px">Item</th><th style="width:140px">Remaining Approved</th><th style="width:160px">Issue Qty</th><th style="width:40px"></th></tr></thead>
+                        <thead><tr><th style="min-width:220px">Item</th><th>Color</th><th>Size</th><th style="width:140px">Remaining Approved</th><th style="width:160px">Issue Qty</th><th style="width:40px"></th></tr></thead>
                         <tbody id="issRowsBody">
                             @php
                                 $lines = old('items', $requisition
-                                    ? $requisition->items->map(fn ($i) => ['requisition_item_id' => $i->id, 'item_id' => $i->item_id, 'remaining' => $i->approved_qty - $i->issued_qty])->all()
+                                    ? $requisition->items->map(fn ($i) => ['requisition_item_id' => $i->id, 'item_id' => $i->item_id, 'color' => $i->color?->name, 'size' => $i->size?->name, 'remaining' => $i->approved_qty - $i->issued_qty])->all()
                                     : [[]]);
                             @endphp
                             @foreach($lines as $index => $line)
@@ -119,6 +119,8 @@
                                             <input type="hidden" name="items[{{ $index }}][requisition_item_id]" value="{{ $line['requisition_item_id'] }}">
                                         @endif
                                     </td>
+                                    <td>{{ $line['color'] ?? '—' }}</td>
+                                    <td>{{ $line['size'] ?? '—' }}</td>
                                     <td>{{ $line['remaining'] ?? '—' }}</td>
                                     <td><input type="number" step="0.0001" min="0.0001" name="items[{{ $index }}][issued_qty]" class="form-control" value="{{ $line['remaining'] ?? '' }}" required></td>
                                     <td><button type="button" class="btn btn-sm btn-outline-danger" data-line-items-remove><i class="fa-solid fa-xmark"></i></button></td>
@@ -138,6 +140,8 @@
                                 @endforeach
                             </select>
                         </td>
+                        <td>—</td>
+                        <td>—</td>
                         <td>—</td>
                         <td><input type="number" step="0.0001" min="0.0001" name="items[__INDEX__][issued_qty]" class="form-control" required></td>
                         <td><button type="button" class="btn btn-sm btn-outline-danger" data-line-items-remove><i class="fa-solid fa-xmark"></i></button></td>

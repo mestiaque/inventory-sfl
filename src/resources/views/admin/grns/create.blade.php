@@ -17,12 +17,12 @@
         <div class="card-body">
             <div class="row g-3">
                 <div class="col-md-6">
-                    <a href="{{ route('inventory.grns.create-purchase') }}" class="text-decoration-none">
+                    <a href="{{ route('inventory.purchase-orders.index', ['status' => 'approved']) }}" class="text-decoration-none">
                         <div class="card h-100 border-primary">
                             <div class="card-body text-center py-5">
                                 <i class="fa-solid fa-file-invoice fa-2x text-primary mb-3"></i>
                                 <h6 class="mb-1">Purchase Challan</h6>
-                                <p class="text-muted mb-0" style="font-size:13px;">Receive against an approved Store Order from a Supplier.</p>
+                                <p class="text-muted mb-0" style="font-size:13px;">Pick an approved Store Order and click "Receive" against it — direct receiving without a Store Order isn't allowed.</p>
                             </div>
                         </div>
                     </a>

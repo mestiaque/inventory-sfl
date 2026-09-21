@@ -37,6 +37,10 @@ class SflInventoryServiceProvider extends ServiceProvider
             $this->mergeConfigFrom(__DIR__ . '/Config/config.php', 'sfl-inventory');
         }
 
+        if (file_exists(__DIR__ . '/Config/mail.php')) {
+            $this->mergeConfigFrom(__DIR__ . '/Config/mail.php', 'sfl-inventory-mail');
+        }
+
         $this->app->singleton(DocumentNumberService::class);
         $this->app->singleton(StockService::class);
         $this->app->singleton(InvOperatorScopeService::class);
@@ -81,6 +85,7 @@ class SflInventoryServiceProvider extends ServiceProvider
         // list entries for models that ship in later build batches.
         Relation::morphMap([
             'inv_item'                   => Models\InvItem::class,
+            'inv_purchase_requisition'   => Models\InvPurchaseRequisition::class,
             'inv_purchase_order'         => Models\InvPurchaseOrder::class,
             'inv_grn'                    => Models\InvGrn::class,
             'inv_requisition'            => Models\InvRequisition::class,
@@ -97,6 +102,7 @@ class SflInventoryServiceProvider extends ServiceProvider
     private function registerObservers(): void
     {
         Models\InvItem::observe(Observers\InvItemObserver::class);
+        Models\InvPurchaseRequisition::observe(Observers\InvPurchaseRequisitionObserver::class);
         Models\InvPurchaseOrder::observe(Observers\InvPurchaseOrderObserver::class);
         Models\InvGrn::observe(Observers\InvGrnObserver::class);
         Models\InvRequisition::observe(Observers\InvRequisitionObserver::class);

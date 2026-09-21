@@ -25,7 +25,10 @@ class InvItemCategoryController extends Controller
 
         $parents = InvItemCategory::active()->parents()->orderBy('name')->get();
 
-        return view('sfl-inventory::admin.item-categories.index', compact('categories', 'parents'));
+        $trashedCategories = InvItemCategory::onlyTrashed()->latest('deleted_at')->get()
+            ->map(fn ($category) => ['id' => $category->id, 'title' => $category->name, 'subtitle' => $category->code, 'deleted_at' => $category->deleted_at]);
+
+        return view('sfl-inventory::admin.item-categories.index', compact('categories', 'parents', 'trashedCategories'));
     }
 
     public function store(InvItemCategoryRequest $request): RedirectResponse
@@ -55,5 +58,23 @@ class InvItemCategoryController extends Controller
         $item_category->delete();
 
         return back()->with('success', 'Item category deleted successfully.');
+    }
+
+    public function restore(InvItemCategory $item_category): RedirectResponse
+    {
+        $this->authorize('inv_item_category.delete');
+
+        $item_category->restore();
+
+        return back()->with('success', 'Item category restored successfully.');
+    }
+
+    public function forceDestroy(InvItemCategory $item_category): RedirectResponse
+    {
+        $this->authorize('inv_item_category.force_delete');
+
+        $item_category->forceDelete();
+
+        return back()->with('success', 'Item category permanently deleted.');
     }
 }

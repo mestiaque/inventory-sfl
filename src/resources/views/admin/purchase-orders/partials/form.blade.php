@@ -48,7 +48,7 @@
                     </td>
                     <td><input type="text" class="form-control" data-role="unit" value="{{ $selectedItem?->unit?->short_name }}" disabled></td>
                     <td><input type="number" step="0.0001" min="0.0001" name="items[{{ $index }}][quantity]" class="form-control" data-role="qty" value="{{ $line['quantity'] ?? '' }}" required></td>
-                    <td><input type="number" step="0.01" min="0" name="items[{{ $index }}][rate]" class="form-control" data-role="rate" value="{{ $line['rate'] ?? '' }}" required></td>
+                    <td><input type="number" step="0.01" min="0" name="items[{{ $index }}][rate]" class="form-control" data-role="rate" value="{{ $line['rate'] ?? '' }}" placeholder="Priced at receive"></td>
                     <td><input type="text" class="form-control" data-role="amount" value="{{ $line['amount'] ?? '' }}" disabled></td>
                     <td><button type="button" class="btn btn-sm btn-outline-danger" data-line-items-remove><i class="fa-solid fa-xmark"></i></button></td>
                 </tr>
@@ -69,7 +69,7 @@
         </td>
         <td><input type="text" class="form-control" data-role="unit" disabled></td>
         <td><input type="number" step="0.0001" min="0.0001" name="items[__INDEX__][quantity]" class="form-control" data-role="qty" required></td>
-        <td><input type="number" step="0.01" min="0" name="items[__INDEX__][rate]" class="form-control" data-role="rate" required></td>
+        <td><input type="number" step="0.01" min="0" name="items[__INDEX__][rate]" class="form-control" data-role="rate" placeholder="Priced at receive"></td>
         <td><input type="text" class="form-control" data-role="amount" disabled></td>
         <td><button type="button" class="btn btn-sm btn-outline-danger" data-line-items-remove><i class="fa-solid fa-xmark"></i></button></td>
     </tr>

@@ -62,7 +62,7 @@ class InvIssueController extends Controller
     {
         $this->authorize('inv_issue.add');
 
-        $requisition = InvRequisition::with(['items.item', 'buyer'])
+        $requisition = InvRequisition::with(['items.item', 'items.color', 'items.size', 'buyer'])
             ->whereIn('status', ['approved', 'partially_issued'])
             ->find($request->requisition_id);
 
@@ -119,9 +119,19 @@ class InvIssueController extends Controller
             ]);
 
             foreach ($data['items'] as $line) {
+                // Color/Size are never re-picked on the Issue — a
+                // requisition-linked line inherits its requested variant
+                // exactly, so what's issued can never drift from what was
+                // actually requested/approved.
+                $requisitionItem = ! empty($line['requisition_item_id'])
+                    ? InvRequisitionItem::find($line['requisition_item_id'])
+                    : null;
+
                 $issue->items()->create([
                     'requisition_item_id'      => $line['requisition_item_id'] ?? null,
                     'item_id'                  => $line['item_id'],
+                    'color_id'                 => $requisitionItem?->color_id,
+                    'size_id'                  => $requisitionItem?->size_id,
                     'issued_qty'               => $line['issued_qty'],
                     'unit_rate'                => $line['unit_rate'] ?? 0,
                     'amount'                   => 0,
@@ -132,9 +142,7 @@ class InvIssueController extends Controller
                 // approval — so a second challan against the same requisition
                 // line immediately sees the reduced "remaining" balance and
                 // can't be raised for material another challan already claims.
-                if (! empty($line['requisition_item_id'])) {
-                    InvRequisitionItem::find($line['requisition_item_id'])?->increment('issued_qty', $line['issued_qty']);
-                }
+                $requisitionItem?->increment('issued_qty', $line['issued_qty']);
             }
 
             $issue->requisition?->refreshIssueStatus();
@@ -237,6 +245,8 @@ class InvIssueController extends Controller
         foreach ($issue->items as $issueItem) {
             $outTxn = $this->stock->post([
                 'item_id'          => $issueItem->item_id,
+                'color_id'         => $issueItem->color_id,
+                'size_id'          => $issueItem->size_id,
                 'store_id'         => $issue->store_id,
                 'transaction_date' => $issue->issue_date,
                 'transaction_type' => 'issue',
@@ -262,6 +272,8 @@ class InvIssueController extends Controller
             if ($issue->to_store_id) {
                 $this->stock->post([
                     'item_id'          => $issueItem->item_id,
+                    'color_id'         => $issueItem->color_id,
+                    'size_id'          => $issueItem->size_id,
                     'store_id'         => $issue->to_store_id,
                     'transaction_date' => $issue->issue_date,
                     'transaction_type' => 'issue',
@@ -281,7 +293,7 @@ class InvIssueController extends Controller
     {
         $this->authorize('inv_issue.print');
 
-        $issue->load(['items.item.category', 'items.item.unit', 'store', 'toStore', 'department', 'buyer', 'issuer', 'authorizer', 'approver', 'departmentReceiver', 'requisition.receiver']);
+        $issue->load(['items.item.category', 'items.item.unit', 'items.color', 'items.size', 'store', 'toStore', 'department', 'buyer', 'issuer', 'authorizer', 'approver', 'departmentReceiver', 'requisition.receiver']);
 
         return view('sfl-inventory::admin.issues.print', compact('issue'));
     }
@@ -292,7 +304,7 @@ class InvIssueController extends Controller
 
         abort_if($issue->status !== 'approved', 403, 'Only approved (stock-posted) challans can be receipt-confirmed.');
 
-        $issue->load('items.item');
+        $issue->load('items.item', 'items.color', 'items.size');
 
         return view('sfl-inventory::admin.issues.receive', compact('issue'));
     }

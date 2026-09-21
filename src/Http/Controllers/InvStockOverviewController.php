@@ -5,8 +5,10 @@ namespace ME\SflInventory\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
+use ME\SflInventory\Models\InvColor;
 use ME\SflInventory\Models\InvItem;
 use ME\SflInventory\Models\InvItemCategory;
+use ME\SflInventory\Models\InvSize;
 use ME\SflInventory\Models\InvStore;
 use ME\SflInventory\Services\StockService;
 
@@ -31,24 +33,28 @@ class InvStockOverviewController extends Controller
             : null;
 
         $combos = DB::table('inv_stock_transactions')
-            ->select('item_id', 'store_id')
+            ->select('item_id', 'color_id', 'size_id', 'store_id')
             ->when($request->filled('store_id'), fn ($q) => $q->where('store_id', $request->store_id))
             ->when($request->filled('item_id'), fn ($q) => $q->where('item_id', $request->item_id))
+            ->when($request->filled('color_id'), fn ($q) => $q->where('color_id', $request->color_id))
+            ->when($request->filled('size_id'), fn ($q) => $q->where('size_id', $request->size_id))
             ->when($itemIdsInCategory !== null, fn ($q) => $q->whereIn('item_id', $itemIdsInCategory))
-            ->groupBy('item_id', 'store_id')
+            ->groupBy('item_id', 'color_id', 'size_id', 'store_id')
             ->get();
 
         $rows = $combos->map(function ($combo) {
-            $current = $this->stock->currentStock($combo->item_id, $combo->store_id);
-            $reserved = $this->stock->reservedStock($combo->item_id, $combo->store_id);
+            $current = $this->stock->currentStock($combo->item_id, $combo->store_id, $combo->color_id, $combo->size_id);
+            $reserved = $this->stock->reservedStock($combo->item_id, $combo->store_id, $combo->color_id, $combo->size_id);
 
             return (object) [
                 'item_id'   => $combo->item_id,
+                'color_id'  => $combo->color_id,
+                'size_id'   => $combo->size_id,
                 'store_id'  => $combo->store_id,
                 'current'   => $current,
                 'reserved'  => $reserved,
                 'available' => $current - $reserved,
-                'value'     => $this->stock->stockValue($combo->item_id, $combo->store_id),
+                'value'     => $this->stock->stockValue($combo->item_id, $combo->store_id, $combo->color_id, $combo->size_id),
             ];
         })->filter(fn ($row) => $row->current != 0 || $row->reserved != 0)
             ->sortByDesc('value')
@@ -56,12 +62,16 @@ class InvStockOverviewController extends Controller
 
         $items = InvItem::whereIn('id', $rows->pluck('item_id')->unique())->with('category', 'unit')->get()->keyBy('id');
         $stores = InvStore::whereIn('id', $rows->pluck('store_id')->unique())->get()->keyBy('id');
+        $colors = InvColor::whereIn('id', $rows->pluck('color_id')->filter()->unique())->get()->keyBy('id');
+        $sizes = InvSize::whereIn('id', $rows->pluck('size_id')->filter()->unique())->get()->keyBy('id');
 
         $categories = InvItemCategory::active()->orderBy('name')->get();
         $allStores = InvStore::active()->orderBy('name')->get();
         $allItems = InvItem::active()->orderBy('item_name')->get();
+        $allColors = InvColor::active()->orderBy('name')->get();
+        $allSizes = InvSize::active()->ordered()->get();
 
-        return view('sfl-inventory::admin.stock-overview.index', compact('rows', 'items', 'stores', 'categories', 'allStores', 'allItems'));
+        return view('sfl-inventory::admin.stock-overview.index', compact('rows', 'items', 'stores', 'colors', 'sizes', 'categories', 'allStores', 'allItems', 'allColors', 'allSizes'));
     }
 
     /**

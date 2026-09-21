@@ -21,11 +21,13 @@
                 @csrf
                 <div class="table-responsive">
                     <table class="table table-bordered table-sm align-middle">
-                        <thead><tr><th>Item</th><th>Sent Qty</th><th style="width:180px">Received Qty</th></tr></thead>
+                        <thead><tr><th>Item</th><th>Color</th><th>Size</th><th>Sent Qty</th><th style="width:180px">Received Qty</th></tr></thead>
                         <tbody>
                             @foreach($transfer->items as $item)
                                 <tr>
                                     <td>{{ $item->item?->item_code }} — {{ $item->item?->item_name }}</td>
+                                    <td>{{ $item->color?->name ?? '—' }}</td>
+                                    <td>{{ $item->size?->name ?? '—' }}</td>
                                     <td>{{ $item->quantity }}</td>
                                     <td>
                                         <input type="hidden" name="items[{{ $loop->index }}][id]" value="{{ $item->id }}">

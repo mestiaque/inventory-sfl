@@ -4,9 +4,9 @@ namespace ME\SflInventory\Approvals;
 
 use App\Approvals\BaseApprovalHandler;
 use App\Models\Approval;
-use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
+use ME\SflInventory\Approvals\Concerns\ResolvesConfiguredRecipients;
 use ME\SflInventory\Models\InvRequisition;
 use ME\SflInventory\Models\InvRequisitionItem;
 
@@ -17,21 +17,19 @@ use ME\SflInventory\Models\InvRequisitionItem;
  * quantity, reject-with-remarks — see InvRequisitionController::approvalForm/
  * approval). That page remains the primary way to act on a request; this
  * handler only covers:
- *   - who gets emailed when a requisition is submitted (recipients)
+ *   - who gets emailed when a requisition is submitted (recipients) — see
+ *     src/Config/mail.php to override who that is
  *   - what happens if someone uses the central Approvals list's quick
  *     Approve/Reject buttons instead (onApproved/onRejected) — a full-quantity
  *     approve, since the central button has no per-line quantity input.
  */
 class InvRequisitionApprovalHandler extends BaseApprovalHandler
 {
+    use ResolvesConfiguredRecipients;
+
     public function recipients(?Model $approvable, Approval $approval): array
     {
-        return User::all()
-            ->filter(fn (User $user) => $user->hasPermission('inv_requisition.approve'))
-            ->pluck('email')
-            ->filter()
-            ->values()
-            ->all();
+        return $this->resolveRecipients('inventory.requisition', 'inv_requisition.approve');
     }
 
     public function onApproved(Approval $approval): void

@@ -14,7 +14,7 @@ class InvPurchaseOrderItem extends Model
 
     protected $table = 'inv_purchase_order_items';
 
-    protected $fillable = ['purchase_order_id', 'item_id', 'quantity', 'rate', 'amount', 'received_qty', 'remarks'];
+    protected $fillable = ['purchase_order_id', 'item_id', 'color_id', 'size_id', 'quantity', 'rate', 'amount', 'received_qty', 'remarks'];
 
     protected $casts = [
         'quantity'     => 'decimal:4',
@@ -31,5 +31,15 @@ class InvPurchaseOrderItem extends Model
     public function item(): BelongsTo
     {
         return $this->belongsTo(InvItem::class, 'item_id');
+    }
+
+    public function color(): BelongsTo
+    {
+        return $this->belongsTo(InvColor::class, 'color_id');
+    }
+
+    public function size(): BelongsTo
+    {
+        return $this->belongsTo(InvSize::class, 'size_id');
     }
 }

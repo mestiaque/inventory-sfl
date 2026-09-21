@@ -29,7 +29,10 @@ class InvMachineController extends Controller
 
         $departments = InvDepartment::active()->orderBy('name')->get();
 
-        return view('sfl-inventory::admin.machines.index', compact('machines', 'departments'));
+        $trashedMachines = InvMachine::onlyTrashed()->latest('deleted_at')->get()
+            ->map(fn ($machine) => ['id' => $machine->id, 'title' => $machine->name, 'subtitle' => $machine->code, 'deleted_at' => $machine->deleted_at]);
+
+        return view('sfl-inventory::admin.machines.index', compact('machines', 'departments', 'trashedMachines'));
     }
 
     public function store(InvMachineRequest $request): RedirectResponse
@@ -59,5 +62,23 @@ class InvMachineController extends Controller
         $machine->delete();
 
         return back()->with('success', 'Machine deleted successfully.');
+    }
+
+    public function restore(InvMachine $machine): RedirectResponse
+    {
+        $this->authorize('inv_machine.delete');
+
+        $machine->restore();
+
+        return back()->with('success', 'Machine restored successfully.');
+    }
+
+    public function forceDestroy(InvMachine $machine): RedirectResponse
+    {
+        $this->authorize('inv_machine.force_delete');
+
+        $machine->forceDelete();
+
+        return back()->with('success', 'Machine permanently deleted.');
     }
 }
