@@ -52,9 +52,11 @@ class InvPurchaseOrderController extends Controller
      * Direct/manual Purchase Order creation is disabled — every order must
      * be raised against an approved (or partially converted) Purchase
      * Requisition, mirroring how Issue requires an approved Requisition.
-     * Always requires a valid ?purchase_requisition_id=.
+     * No ?purchase_requisition_id= yet: stay on this same page and show a
+     * picker instead of bouncing to the Purchase Requisitions list — picking
+     * one just reloads this page with the id set.
      */
-    public function create(Request $request): View|RedirectResponse
+    public function create(Request $request): View
     {
         $this->authorize('inv_purchase_order.add');
 
@@ -62,14 +64,10 @@ class InvPurchaseOrderController extends Controller
             ->whereIn('status', ['approved', 'partially_converted'])
             ->find($request->purchase_requisition_id);
 
-        if (! $purchaseRequisition) {
-            return redirect()->route('inventory.purchase-requisitions.index')
-                ->with('error', 'Direct purchase order creation is disabled — select an approved purchase requisition and click "Create Purchase Order" against it.');
-        }
-
         return view('sfl-inventory::admin.purchase-orders.create', [
-            'purchaseRequisition' => $purchaseRequisition,
-            'suppliers'           => InvSupplier::active()->orderBy('name')->get(),
+            'purchaseRequisition'  => $purchaseRequisition,
+            'purchaseRequisitions' => $purchaseRequisition ? collect() : InvPurchaseRequisition::whereIn('status', ['approved', 'partially_converted'])->orderByDesc('id')->get(),
+            'suppliers'            => InvSupplier::active()->orderBy('name')->get(),
         ]);
     }
 

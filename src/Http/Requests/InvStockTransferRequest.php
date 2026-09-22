@@ -3,13 +3,9 @@
 namespace ME\SflInventory\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Validation\Validator;
-use ME\SflInventory\Http\Requests\Concerns\ValidatesLineItemVariants;
 
 class InvStockTransferRequest extends FormRequest
 {
-    use ValidatesLineItemVariants;
-
     public function authorize(): bool
     {
         $ability = $this->route('transfer') ? 'inv_transfer.edit' : 'inv_transfer.add';
@@ -30,10 +26,5 @@ class InvStockTransferRequest extends FormRequest
             'items.*.size_id'    => ['nullable', 'integer', 'exists:inv_sizes,id'],
             'items.*.quantity'   => ['required', 'numeric', 'min:0.0001'],
         ];
-    }
-
-    public function withValidator(Validator $validator): void
-    {
-        $validator->after(fn (Validator $v) => $this->validateLineItemVariants($v, $this->input('items', [])));
     }
 }

@@ -4,7 +4,9 @@ namespace ME\SflInventory\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\View\View;
+use ME\SflInventory\Models\InvColor;
 use ME\SflInventory\Models\InvItem;
+use ME\SflInventory\Models\InvSize;
 use ME\SflInventory\Models\InvStockTransaction;
 use ME\SflInventory\Models\InvStore;
 
@@ -15,8 +17,10 @@ class InvStockLedgerController extends Controller
         $this->authorize('inv_stock_ledger.view');
 
         $transactions = InvStockTransaction::query()
-            ->with(['item', 'store', 'department'])
+            ->with(['item', 'color', 'size', 'store', 'department'])
             ->when($request->filled('item_id'), fn ($q) => $q->where('item_id', $request->item_id))
+            ->when($request->filled('color_id'), fn ($q) => $q->where('color_id', $request->color_id))
+            ->when($request->filled('size_id'), fn ($q) => $q->where('size_id', $request->size_id))
             ->when($request->filled('store_id'), fn ($q) => $q->where('store_id', $request->store_id))
             ->when($request->filled('transaction_type'), fn ($q) => $q->where('transaction_type', $request->transaction_type))
             ->where('transaction_type', 'not like', '%\_reversal')
@@ -28,9 +32,11 @@ class InvStockLedgerController extends Controller
             ->withQueryString();
 
         $items = InvItem::orderBy('item_name')->get();
+        $colors = InvColor::active()->orderBy('name')->get();
+        $sizes = InvSize::active()->ordered()->get();
         $stores = InvStore::orderBy('name')->get();
         $types = ['opening', 'grn', 'issue', 'transfer', 'production_consumption', 'finished_goods', 'gate_pass', 'shipment', 'adjustment'];
 
-        return view('sfl-inventory::admin.stock-ledger.index', compact('transactions', 'items', 'stores', 'types'));
+        return view('sfl-inventory::admin.stock-ledger.index', compact('transactions', 'items', 'colors', 'sizes', 'stores', 'types'));
     }
 }

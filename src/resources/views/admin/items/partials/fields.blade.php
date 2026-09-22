@@ -67,6 +67,13 @@
             @endforeach
         </select>
     </div>
+    {{--
+        Color/Size are no longer set on the Item Master — an item is generic
+        by default now, and its actual color/size is picked per transaction
+        line at Goods Receive (and inherited everywhere downstream from
+        there). Commented out, not removed, so this is easy to bring back;
+        the item_id, color_id and size_id columns/fields underneath are
+        untouched.
     <div class="col-md-3 mb-3">
         <label class="form-label">Color</label>
         <select name="color_id" class="form-control inv-select2">
@@ -85,6 +92,7 @@
             @endforeach
         </select>
     </div>
+    --}}
 
     <div class="col-md-4 mb-3">
         <label class="form-label">Low Stock Alert Qty</label>

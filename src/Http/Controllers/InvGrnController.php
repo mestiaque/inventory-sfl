@@ -79,9 +79,11 @@ class InvGrnController extends Controller
      * purchase challan must be raised against an approved/received Store
      * Order, mirroring how Store Order creation requires an approved
      * Purchase Requisition and Issue requires an approved Requisition.
-     * Always requires a valid ?purchase_order_id=.
+     * No ?purchase_order_id= yet: stay on this same page and show a picker
+     * instead of bouncing to the Store Order list — picking one just
+     * reloads this page with the id set.
      */
-    public function createPurchase(Request $request): View|RedirectResponse
+    public function createPurchase(Request $request): View
     {
         $this->authorize('inv_grn.add');
 
@@ -89,13 +91,9 @@ class InvGrnController extends Controller
             ->selectableForGrn()
             ->find($request->purchase_order_id);
 
-        if (! $purchaseOrder) {
-            return redirect()->route('inventory.purchase-orders.index')
-                ->with('error', 'Direct purchase receiving is disabled — select an approved Store Order and click "Receive (New Challan / GRN)" against it.');
-        }
-
         return view('sfl-inventory::admin.grns.create-purchase', [
-            'purchaseOrder' => $purchaseOrder,
+            'purchaseOrder'  => $purchaseOrder,
+            'purchaseOrders' => $purchaseOrder ? collect() : InvPurchaseOrder::with('supplier')->selectableForGrn()->orderByDesc('id')->get(),
         ] + $this->formOptions());
     }
 
@@ -458,6 +456,22 @@ class InvGrnController extends Controller
             $item = $poItemVariant?->item ?? InvItem::find($line['item_id']);
             $colorId = $poItemVariant?->color_id ?? $item?->color_id ?? $line['color_id'] ?? null;
             $sizeId = $poItemVariant?->size_id ?? $item?->size_id ?? $line['size_id'] ?? null;
+
+            // Server-side over-receive guard — the form's max="{{ $due }}"
+            // is only a UI hint, never trust it alone. By the time this
+            // runs, any prior claim this same GRN held on the line has
+            // already been released (see update()'s branches above), so
+            // $poItemVariant->received_qty here already excludes it —
+            // comparing against it directly is correct for both create and
+            // edit.
+            if ($poItemVariant) {
+                $due = (float) $poItemVariant->quantity - (float) $poItemVariant->received_qty;
+                if ((float) $line['received_qty'] > $due + 0.0001) {
+                    throw ValidationException::withMessages([
+                        'items' => "Cannot receive " . inv_qty($line['received_qty']) . ' of "' . ($item?->item_name ?? "item #{$line['item_id']}") . '" — only ' . inv_qty($due) . ' is still due on this Store Order line.',
+                    ]);
+                }
+            }
 
             $grnItem = $grn->items()->create([
                 'purchase_order_item_id' => $line['purchase_order_item_id'] ?? null,

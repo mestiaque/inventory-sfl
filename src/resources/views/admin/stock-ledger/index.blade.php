@@ -24,6 +24,22 @@
                     </select>
                 </div>
                 <div class="col-md-2">
+                    <select name="color_id" class="form-control inv-select2">
+                        <option value="">All Colors</option>
+                        @foreach($colors as $color)
+                            <option value="{{ $color->id }}" @selected(request('color_id') == $color->id)>{{ $color->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <select name="size_id" class="form-control inv-select2">
+                        <option value="">All Sizes</option>
+                        @foreach($sizes as $size)
+                            <option value="{{ $size->id }}" @selected(request('size_id') == $size->id)>{{ $size->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="col-md-2">
                     <select name="store_id" class="form-control inv-select2">
                         <option value="">All Stores</option>
                         @foreach($stores as $store)
@@ -56,13 +72,15 @@
             <div class="table-responsive">
                 <table class="table table-bordered table-striped table-sm align-middle">
                     <thead>
-                        <tr><th>Date</th><th>Item</th><th>Store</th><th>Type</th><th class="text-end">Qty In</th><th class="text-end">Qty Out</th><th class="text-end">Rate</th><th class="text-end">Value</th><th>Remarks</th></tr>
+                        <tr><th>Date</th><th>Item</th><th>Color</th><th>Size</th><th>Store</th><th>Type</th><th class="text-end">Qty In</th><th class="text-end">Qty Out</th><th class="text-end">Rate</th><th class="text-end">Value</th><th>Remarks</th></tr>
                     </thead>
                     <tbody>
                         @forelse($transactions as $txn)
                             <tr>
                                 <td>{{ $txn->transaction_date?->format('d M Y') }}</td>
                                 <td>{{ $txn->item?->item_code }} — {{ $txn->item?->item_name }}</td>
+                                <td>{{ $txn->color?->name ?? '—' }}</td>
+                                <td>{{ $txn->size?->name ?? '—' }}</td>
                                 <td>{{ $txn->store?->name }}</td>
                                 <td>{{ ucwords(str_replace('_', ' ', $txn->transaction_type)) }}</td>
                                 <td class="text-end text-success">{{ $txn->qty_in > 0 ? inv_qty($txn->qty_in) : '' }}</td>
@@ -72,7 +90,7 @@
                                 <td>{{ $txn->remarks }}</td>
                             </tr>
                         @empty
-                            <tr><td colspan="9" class="text-center text-muted">No ledger entries found.</td></tr>
+                            <tr><td colspan="11" class="text-center text-muted">No ledger entries found.</td></tr>
                         @endforelse
                     </tbody>
                 </table>

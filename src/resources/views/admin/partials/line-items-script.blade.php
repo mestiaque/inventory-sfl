@@ -36,13 +36,12 @@
             unitField.value = option?.getAttribute('data-unit') || '';
         }
 
-        // An item option carrying data-color-id/data-size-id already has a
-        // single fixed variant of its own (set on the Item Master) — that
-        // row's color/size picker is hidden and disabled (so nothing is
-        // submitted for it; the server falls back to the item's own fixed
-        // value). An item with no fixed color/size is "generic" — multiple
-        // variants of it can exist in stock, so the picker is shown and
-        // required.
+        // Color/Size are never required — an item option carrying
+        // data-color-id/data-size-id (a rare legacy item that still has a
+        // fixed variant set from before the Item Master's own Color/Size
+        // fields were retired) hides and disables that row's picker, since
+        // nothing needs picking for it; every other item just leaves the
+        // picker as a plain optional select.
         function toggleRowVariantPickers(row) {
             const itemSelect = row.querySelector('select[name$="[item_id]"]');
             const colorSelect = row.querySelector('select[name$="[color_id]"]');
@@ -64,7 +63,7 @@
                 const isFixed = hasItem && !!fixedValue;
                 select.style.display = isFixed ? 'none' : '';
                 select.disabled = isFixed;
-                select.required = hasItem && !isFixed;
+                select.required = false;
                 if (isFixed) {
                     select.value = '';
                 }

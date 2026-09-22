@@ -5,6 +5,7 @@ namespace ME\SflInventory\Http\Controllers;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 use ME\SflInventory\Http\Requests\InvIssueReceiveRequest;
 use ME\SflInventory\Http\Requests\InvIssueRequest;
@@ -127,6 +128,32 @@ class InvIssueController extends Controller
                     ? InvRequisitionItem::find($line['requisition_item_id'])
                     : null;
 
+                $itemName = ($requisitionItem?->item ?? InvItem::find($line['item_id']))?->item_name ?? "item #{$line['item_id']}";
+
+                // Server-side over-issue guard — the form's max="{{ $due }}"
+                // is only a UI hint, never trust it alone. Committed claims
+                // on the requisition line (issued_qty) already exclude
+                // anything this challan itself hasn't claimed yet, since
+                // that only happens below, after this check.
+                if ($requisitionItem) {
+                    $remaining = (float) $requisitionItem->approved_qty - (float) $requisitionItem->issued_qty;
+                    if ((float) $line['issued_qty'] > $remaining + 0.0001) {
+                        throw ValidationException::withMessages([
+                            'items' => "Cannot issue " . inv_qty($line['issued_qty']) . " of \"{$itemName}\" — only " . inv_qty($remaining) . ' remains approved on this requisition line.',
+                        ]);
+                    }
+                }
+
+                // A requisition can approve more than the store actually
+                // holds (stock may have moved since approval) — never let
+                // an issue claim more than is physically there right now.
+                $available = $this->stock->currentStock($line['item_id'], $data['store_id'], $requisitionItem?->color_id, $requisitionItem?->size_id);
+                if ((float) $line['issued_qty'] > $available + 0.0001) {
+                    throw ValidationException::withMessages([
+                        'items' => "Cannot issue " . inv_qty($line['issued_qty']) . " of \"{$itemName}\" — only " . inv_qty($available) . ' is currently in stock at this store.',
+                    ]);
+                }
+
                 $issue->items()->create([
                     'requisition_item_id'      => $line['requisition_item_id'] ?? null,
                     'item_id'                  => $line['item_id'],
@@ -148,7 +175,7 @@ class InvIssueController extends Controller
             $issue->requisition?->refreshIssueStatus();
 
             if ($autoApprove) {
-                $issue->load('items');
+                $issue->load('items.item');
                 $this->postIssueStock($issue);
                 $issue->update(['status' => 'approved', 'approved_by' => auth()->id(), 'approved_at' => now()]);
             }
@@ -222,7 +249,7 @@ class InvIssueController extends Controller
         abort_if($issue->status !== 'authorized', 403, 'Only authorized challans can be approved.');
 
         DB::transaction(function () use ($issue) {
-            $issue->load('items');
+            $issue->load('items.item');
             $this->postIssueStock($issue);
 
             // requisition_item.issued_qty was already committed at store()
@@ -243,6 +270,19 @@ class InvIssueController extends Controller
     private function postIssueStock(InvIssue $issue): void
     {
         foreach ($issue->items as $issueItem) {
+            // Re-checked here, not just at store() time — stock can move
+            // (another issue, a transfer, an adjustment) in the time
+            // between a challan being prepared and actually approved, and
+            // this is the moment it truly leaves the store, so it's the
+            // last point this can be caught before the ledger goes negative.
+            $available = $this->stock->currentStock($issueItem->item_id, $issue->store_id, $issueItem->color_id, $issueItem->size_id);
+            if ((float) $issueItem->issued_qty > $available + 0.0001) {
+                $itemName = $issueItem->item?->item_name ?? "item #{$issueItem->item_id}";
+                throw ValidationException::withMessages([
+                    'items' => "Cannot approve this challan: \"{$itemName}\" only has " . inv_qty($available) . ' left in stock, but this challan claims ' . inv_qty($issueItem->issued_qty) . ' — stock has moved since this challan was prepared.',
+                ]);
+            }
+
             $outTxn = $this->stock->post([
                 'item_id'          => $issueItem->item_id,
                 'color_id'         => $issueItem->color_id,

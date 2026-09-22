@@ -187,8 +187,7 @@ Route::middleware($route['middleware'] ?? ['web', 'auth'])
             Route::get('department-consumption', [InvReportController::class, 'departmentWiseConsumption'])->name('department-consumption');
             Route::get('supplier-purchase', [InvReportController::class, 'supplierWisePurchase'])->name('supplier-purchase');
             Route::get('supplier-list', [InvReportController::class, 'supplierList'])->name('supplier-list');
-            Route::get('buyer-wise', [InvReportController::class, 'buyerWiseReport'])->name('buyer-wise');
-            Route::get('style-wise', [InvReportController::class, 'styleWiseReport'])->name('style-wise');
+            Route::get('buyer-style-wise', [InvReportController::class, 'buyerStyleWiseReport'])->name('buyer-style-wise');
             Route::get('grn', [InvReportController::class, 'grnReport'])->name('grn');
             Route::get('grn-item-wise', [InvReportController::class, 'grnItemWiseReport'])->name('grn-item-wise');
             Route::get('expiry-tracking', [InvReportController::class, 'expiryTracking'])->name('expiry-tracking');

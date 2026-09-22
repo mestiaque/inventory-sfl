@@ -61,7 +61,7 @@
             <div class="table-responsive">
                 <table class="table table-bordered table-striped align-middle">
                     <thead>
-                        <tr><th>#</th><th>Requisition No</th><th>Department</th><th>Date</th><th>Status</th><th class="text-end">Actions</th></tr>
+                        <tr><th>#</th><th>Requisition No</th><th>Department</th><th>Date</th><th>Requested By</th><th class="text-center">Items</th><th>Status</th><th class="text-end">Actions</th></tr>
                     </thead>
                     <tbody>
                         @forelse($purchaseRequisitions as $purchaseRequisition)
@@ -70,6 +70,8 @@
                                 <td>{{ $purchaseRequisition->requisition_no }}</td>
                                 <td>{{ $purchaseRequisition->department?->name ?? '—' }}</td>
                                 <td>{{ $purchaseRequisition->requisition_date?->format('d M Y') }}</td>
+                                <td>{{ $purchaseRequisition->requester?->name ?? '—' }}</td>
+                                <td class="text-center">{{ $purchaseRequisition->items->count() }}</td>
                                 <td>
                                     <span class="badge p-1 text-white bg-{{ ['pending' => 'secondary', 'approved' => 'info', 'rejected' => 'danger', 'converted' => 'success', 'partially_converted' => 'warning'][$purchaseRequisition->status] ?? 'secondary' }}">
                                         {{ ucwords(str_replace('_', ' ', $purchaseRequisition->status)) }}
@@ -100,7 +102,7 @@
                                 </td>
                             </tr>
                         @empty
-                            <tr><td colspan="6" class="text-center text-muted">No purchase requisitions found.</td></tr>
+                            <tr><td colspan="8" class="text-center text-muted">No purchase requisitions found.</td></tr>
                         @endforelse
                     </tbody>
                 </table>

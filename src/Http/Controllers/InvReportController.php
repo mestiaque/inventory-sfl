@@ -101,18 +101,26 @@ class InvReportController extends Controller
         // the item's real stock at that point in time. So the window
         // function runs unfiltered in this inner query, and the date-range
         // and reversal-row filters are applied only in the outer query.
+        // Partitioned by color_id/size_id too (in addition to item/store) so
+        // the running balance is correct per variant once an item has more
+        // than one — otherwise two different colors of the same generic
+        // item would wrongly share one running total.
         $withBalance = DB::table('inv_stock_transactions as t')
             ->join('inv_items as i', 'i.id', '=', 't.item_id')
             ->join('inv_stores as s', 's.id', '=', 't.store_id')
+            ->leftJoin('inv_colors as c', 'c.id', '=', 't.color_id')
+            ->leftJoin('inv_sizes as sz', 'sz.id', '=', 't.size_id')
             ->whereNull('i.deleted_at')
             ->whereNull('s.deleted_at')
             ->when($selectedItem, fn ($q) => $q->where('t.item_id', $selectedItem->id))
+            ->when($request->filled('color_id'), fn ($q) => $q->where('t.color_id', $request->color_id))
+            ->when($request->filled('size_id'), fn ($q) => $q->where('t.size_id', $request->size_id))
             ->selectRaw('
-                t.id, t.item_id, t.store_id, t.transaction_date, t.transaction_type,
+                t.id, t.item_id, t.store_id, t.color_id, t.size_id, t.transaction_date, t.transaction_type,
                 t.qty_in, t.qty_out, t.rate, t.value,
-                i.item_code, i.item_name, s.name as store_name,
+                i.item_code, i.item_name, s.name as store_name, c.name as color_name, sz.name as size_name,
                 SUM(CASE WHEN t.qty_in > 0 THEN t.qty_in ELSE -t.qty_out END)
-                    OVER (PARTITION BY t.item_id, t.store_id ORDER BY t.transaction_date, t.id) as running_balance
+                    OVER (PARTITION BY t.item_id, t.store_id, t.color_id, t.size_id ORDER BY t.transaction_date, t.id) as running_balance
             ');
 
         $transactions = DB::query()->fromSub($withBalance, 'x')
@@ -125,8 +133,10 @@ class InvReportController extends Controller
             ->withQueryString();
 
         $currentStock = $selectedItem ? $this->stock->currentStock($selectedItem->id) : null;
+        $colors = InvColor::active()->orderBy('name')->get();
+        $sizes = InvSize::active()->ordered()->get();
 
-        return view('sfl-inventory::admin.reports.item-history', compact('items', 'transactions', 'selectedItem', 'from', 'to', 'currentStock'));
+        return view('sfl-inventory::admin.reports.item-history', compact('items', 'transactions', 'selectedItem', 'from', 'to', 'currentStock', 'colors', 'sizes'));
     }
 
     /**
@@ -150,34 +160,42 @@ class InvReportController extends Controller
                 ->join('inv_purchase_orders as po', 'po.id', '=', 'poi.purchase_order_id')
                 ->leftJoin('users as u', 'u.id', '=', 'po.created_by')
                 ->leftJoin('inv_suppliers as sup', 'sup.id', '=', 'po.supplier_id')
+                ->leftJoin('inv_colors as c', 'c.id', '=', 'poi.color_id')
+                ->leftJoin('inv_sizes as sz', 'sz.id', '=', 'poi.size_id')
                 ->where('poi.item_id', $selectedItem->id)
                 ->whereNull('po.deleted_at')
-                ->selectRaw("'Purchase Order' as document_type, po.po_number as document_no, po.order_date as txn_date, poi.quantity as qty, u.name as person_name, sup.name as party_name, po.status as status");
+                ->selectRaw("'Purchase Order' as document_type, po.po_number as document_no, po.order_date as txn_date, poi.quantity as qty, c.name as color_name, sz.name as size_name, u.name as person_name, sup.name as party_name, po.status as status");
 
             $grns = DB::table('inv_grn_items as gi')
                 ->join('inv_grns as g', 'g.id', '=', 'gi.grn_id')
                 ->leftJoin('users as u', 'u.id', '=', 'g.created_by')
                 ->leftJoin('hr_employees as emp', 'emp.id', '=', 'g.received_by')
                 ->leftJoin('inv_stores as s', 's.id', '=', 'g.store_id')
+                ->leftJoin('inv_colors as c', 'c.id', '=', 'gi.color_id')
+                ->leftJoin('inv_sizes as sz', 'sz.id', '=', 'gi.size_id')
                 ->where('gi.item_id', $selectedItem->id)
                 ->whereNull('g.deleted_at')
-                ->selectRaw("'GRN' as document_type, g.grn_number as document_no, g.receive_date as txn_date, gi.received_qty as qty, COALESCE(emp.name, u.name) as person_name, s.name as party_name, g.status as status");
+                ->selectRaw("'GRN' as document_type, g.grn_number as document_no, g.receive_date as txn_date, gi.received_qty as qty, c.name as color_name, sz.name as size_name, COALESCE(emp.name, u.name) as person_name, s.name as party_name, g.status as status");
 
             $requisitions = DB::table('inv_requisition_items as ri')
                 ->join('inv_requisitions as r', 'r.id', '=', 'ri.requisition_id')
                 ->leftJoin('users as u', 'u.id', '=', 'r.requested_by')
                 ->leftJoin('inv_departments as d', 'd.id', '=', 'r.department_id')
+                ->leftJoin('inv_colors as c', 'c.id', '=', 'ri.color_id')
+                ->leftJoin('inv_sizes as sz', 'sz.id', '=', 'ri.size_id')
                 ->where('ri.item_id', $selectedItem->id)
                 ->whereNull('r.deleted_at')
-                ->selectRaw("'Requisition' as document_type, r.requisition_no as document_no, r.requisition_date as txn_date, ri.requested_qty as qty, u.name as person_name, d.name as party_name, r.status as status");
+                ->selectRaw("'Requisition' as document_type, r.requisition_no as document_no, r.requisition_date as txn_date, ri.requested_qty as qty, c.name as color_name, sz.name as size_name, u.name as person_name, d.name as party_name, r.status as status");
 
             $issues = DB::table('inv_issue_items as ii')
                 ->join('inv_issues as i', 'i.id', '=', 'ii.issue_id')
                 ->leftJoin('users as u', 'u.id', '=', 'i.issued_by')
                 ->leftJoin('inv_departments as d', 'd.id', '=', 'i.department_id')
+                ->leftJoin('inv_colors as c', 'c.id', '=', 'ii.color_id')
+                ->leftJoin('inv_sizes as sz', 'sz.id', '=', 'ii.size_id')
                 ->where('ii.item_id', $selectedItem->id)
                 ->whereNull('i.deleted_at')
-                ->selectRaw("'Issue' as document_type, i.issue_no as document_no, i.issue_date as txn_date, ii.issued_qty as qty, u.name as person_name, d.name as party_name, i.status as status");
+                ->selectRaw("'Issue' as document_type, i.issue_no as document_no, i.issue_date as txn_date, ii.issued_qty as qty, c.name as color_name, sz.name as size_name, u.name as person_name, d.name as party_name, i.status as status");
 
             $rows = $purchaseOrders
                 ->unionAll($grns)
@@ -276,198 +294,133 @@ class InvReportController extends Controller
     }
 
     /**
-     * How much of a buyer's material has come in (buyer-supplied GRN) versus
-     * gone out to production (Issue) — the two document types that already
-     * carry buyer_id. One line per received/issued item (not aggregated),
-     * same level of detail as grnItemWiseReport()/issueReport(), plus a
-     * per-buyer totals summary above each detail table.
+     * Merged Buyer + Style report — one grouped table, sorted Style ->
+     * Buyer -> Item, with the Style/Buyer cells rowspan-merged across
+     * consecutive rows that share the same value (see rowSpans() below).
+     * One row per received "lot" (a GRN line — keeps Lot/Batch/Expiry
+     * traceability), plus Issue/Delivery Qty and Balance columns computed
+     * per (buyer, style, item) across all receipts and *approved* issues
+     * for that exact combination (a pending/authorized-but-not-yet-approved
+     * challan is only a claim — stock hasn't actually left yet, see
+     * InvIssueController::postIssueStock() — so it's excluded here or
+     * Balance would look like real stock had gone negative when nothing
+     * has physically moved). Deliberately NOT scoped to date_from/date_to,
+     * so Balance always reflects true remaining stock, never a misleading
+     * partial-period number just because the lot list is date-filtered.
+     * Filtering by style alone, buyer alone, item alone, or any
+     * combination all narrow the same single query.
      */
-    public function buyerWiseReport(Request $request): View
+    public function buyerStyleWiseReport(Request $request): View
     {
         $this->authorize('inv_report.view');
 
-        $receivedSummary = DB::table('inv_grn_items as gi')
-            ->join('inv_grns as g', 'g.id', '=', 'gi.grn_id')
-            ->join('inv_buyers as b', 'b.id', '=', 'g.buyer_id')
-            ->where('g.source_type', 'buyer_supplied')
-            ->whereNull('g.deleted_at')
-            ->whereNull('b.deleted_at')
-            ->when($request->filled('buyer_id'), fn ($q) => $q->where('g.buyer_id', $request->buyer_id))
-            ->when($request->filled('date_from'), fn ($q) => $q->whereDate('g.receive_date', '>=', $request->date_from))
-            ->when($request->filled('date_to'), fn ($q) => $q->whereDate('g.receive_date', '<=', $request->date_to))
-            ->groupBy('b.id', 'b.name')
-            ->select(
-                'b.name as buyer_name',
-                DB::raw('GROUP_CONCAT(DISTINCT NULLIF(g.style, \'\') SEPARATOR \', \') as styles'),
-                DB::raw('COUNT(DISTINCT g.id) as grn_count'),
-                DB::raw('COUNT(DISTINCT gi.item_id) as item_count'),
-                DB::raw('MIN(g.receive_date) as first_receive_date'),
-                DB::raw('MAX(g.receive_date) as last_receive_date'),
-                DB::raw('SUM(gi.received_qty) as total_qty'),
-                DB::raw('SUM(gi.rejected_qty) as total_rejected_qty'),
-                DB::raw('SUM(gi.amount) as total_amount')
-            )
-            ->orderByDesc('total_amount')
-            ->get();
-
-        $issuedSummary = DB::table('inv_issue_items as ii')
-            ->join('inv_issues as i', 'i.id', '=', 'ii.issue_id')
-            ->join('inv_buyers as b', 'b.id', '=', 'i.buyer_id')
-            ->whereNull('i.deleted_at')
-            ->whereNull('b.deleted_at')
-            ->when($request->filled('buyer_id'), fn ($q) => $q->where('i.buyer_id', $request->buyer_id))
-            ->when($request->filled('date_from'), fn ($q) => $q->whereDate('i.issue_date', '>=', $request->date_from))
-            ->when($request->filled('date_to'), fn ($q) => $q->whereDate('i.issue_date', '<=', $request->date_to))
-            ->groupBy('b.id', 'b.name')
-            ->select(
-                'b.name as buyer_name',
-                DB::raw('GROUP_CONCAT(DISTINCT NULLIF(i.style, \'\') SEPARATOR \', \') as styles'),
-                DB::raw('COUNT(DISTINCT i.id) as issue_count'),
-                DB::raw('COUNT(DISTINCT ii.item_id) as item_count'),
-                DB::raw('MIN(i.issue_date) as first_issue_date'),
-                DB::raw('MAX(i.issue_date) as last_issue_date'),
-                DB::raw('SUM(ii.issued_qty) as total_qty'),
-                DB::raw('SUM(ii.amount) as total_amount')
-            )
-            ->orderByDesc('total_amount')
-            ->get();
-
-        $received = InvGrnItem::query()
+        $lines = InvGrnItem::query()
             ->select('inv_grn_items.*')
             ->join('inv_grns', 'inv_grns.id', '=', 'inv_grn_items.grn_id')
-            ->where('inv_grns.source_type', 'buyer_supplied')
-            ->whereNotNull('inv_grns.buyer_id')
             ->whereNull('inv_grns.deleted_at')
-            ->with(['item.unit', 'color', 'size', 'grn.store', 'grn.buyer', 'grn.receiver', 'grn.creator'])
+            ->where($this->buyerStyleContextClause('inv_grns'))
+            ->with(['item.unit', 'color', 'size', 'grn.buyer'])
             ->when($request->filled('buyer_id'), fn ($q) => $q->where('inv_grns.buyer_id', $request->buyer_id))
+            ->when($request->filled('style'), fn ($q) => $q->where('inv_grns.style', 'like', '%' . $request->style . '%'))
             ->when($request->filled('item_id'), fn ($q) => $q->where('inv_grn_items.item_id', $request->item_id))
             ->when($request->filled('date_from'), fn ($q) => $q->whereDate('inv_grns.receive_date', '>=', $request->date_from))
             ->when($request->filled('date_to'), fn ($q) => $q->whereDate('inv_grns.receive_date', '<=', $request->date_to))
-            ->orderByDesc('inv_grns.receive_date')
-            ->orderByDesc('inv_grn_items.id')
-            ->paginate($request->boolean('print') ? 100000 : 30, ['*'], 'received_page')
-            ->withQueryString();
+            ->orderByRaw("COALESCE(inv_grns.style, '')")
+            ->orderBy('inv_grns.buyer_id')
+            ->orderBy('inv_grn_items.item_id')
+            ->orderBy('inv_grns.receive_date')
+            ->orderBy('inv_grn_items.id')
+            ->get();
 
-        $issued = InvIssueItem::query()
-            ->select('inv_issue_items.*')
-            ->join('inv_issues', 'inv_issues.id', '=', 'inv_issue_items.issue_id')
-            ->whereNotNull('inv_issues.buyer_id')
-            ->whereNull('inv_issues.deleted_at')
-            ->with(['item.unit', 'color', 'size', 'issue.store', 'issue.buyer', 'issue.department', 'issue.issuer'])
-            ->when($request->filled('buyer_id'), fn ($q) => $q->where('inv_issues.buyer_id', $request->buyer_id))
-            ->when($request->filled('item_id'), fn ($q) => $q->where('inv_issue_items.item_id', $request->item_id))
-            ->when($request->filled('date_from'), fn ($q) => $q->whereDate('inv_issues.issue_date', '>=', $request->date_from))
-            ->when($request->filled('date_to'), fn ($q) => $q->whereDate('inv_issues.issue_date', '<=', $request->date_to))
-            ->orderByDesc('inv_issues.issue_date')
-            ->orderByDesc('inv_issue_items.id')
-            ->paginate($request->boolean('print') ? 100000 : 30, ['*'], 'issued_page')
-            ->withQueryString();
+        $receivedTotals = DB::table('inv_grn_items as gi')
+            ->join('inv_grns as g', 'g.id', '=', 'gi.grn_id')
+            ->whereNull('g.deleted_at')
+            ->where($this->buyerStyleContextClause('g'))
+            ->when($request->filled('buyer_id'), fn ($q) => $q->where('g.buyer_id', $request->buyer_id))
+            ->when($request->filled('style'), fn ($q) => $q->where('g.style', 'like', '%' . $request->style . '%'))
+            ->when($request->filled('item_id'), fn ($q) => $q->where('gi.item_id', $request->item_id))
+            ->groupBy('g.buyer_id', 'g.style', 'gi.item_id')
+            ->select('g.buyer_id', DB::raw("COALESCE(g.style, '') as style"), 'gi.item_id', DB::raw('SUM(gi.received_qty) as total_qty'))
+            ->get()
+            ->keyBy(fn ($row) => $row->buyer_id . '|' . $row->style . '|' . $row->item_id);
+
+        // Only 'approved' issues count — that's the moment stock actually
+        // leaves the store (see InvIssueController::postIssueStock()). A
+        // still-pending/authorized challan is just a claim, not a real
+        // movement yet, so counting it here would make Balance look like
+        // real stock had gone negative when physically nothing has moved.
+        $issuedTotals = DB::table('inv_issue_items as ii')
+            ->join('inv_issues as i', 'i.id', '=', 'ii.issue_id')
+            ->whereNull('i.deleted_at')
+            ->where('i.status', 'approved')
+            ->where($this->buyerStyleContextClause('i'))
+            ->when($request->filled('buyer_id'), fn ($q) => $q->where('i.buyer_id', $request->buyer_id))
+            ->when($request->filled('style'), fn ($q) => $q->where('i.style', 'like', '%' . $request->style . '%'))
+            ->when($request->filled('item_id'), fn ($q) => $q->where('ii.item_id', $request->item_id))
+            ->groupBy('i.buyer_id', 'i.style', 'ii.item_id')
+            ->select('i.buyer_id', DB::raw("COALESCE(i.style, '') as style"), 'ii.item_id', DB::raw('SUM(ii.issued_qty) as total_qty'))
+            ->get()
+            ->keyBy(fn ($row) => $row->buyer_id . '|' . $row->style . '|' . $row->item_id);
+
+        $rows = $lines->values();
+        foreach ($rows as $line) {
+            $key = ($line->grn->buyer_id ?? '') . '|' . ($line->grn->style ?? '') . '|' . $line->item_id;
+            $line->item_total_received = (float) ($receivedTotals[$key]->total_qty ?? 0);
+            $line->item_total_issued = (float) ($issuedTotals[$key]->total_qty ?? 0);
+            $line->item_balance = $line->item_total_received - $line->item_total_issued;
+        }
+
+        $styleSpans = $this->rowSpans($rows, fn ($line) => $line->grn->style ?? '');
+        $buyerSpans = $this->rowSpans($rows, fn ($line) => $line->grn->buyer_id ?? 0);
 
         $buyers = InvBuyer::active()->orderBy('name')->get();
         $items = InvItem::active()->orderBy('item_name')->get();
 
-        return view('sfl-inventory::admin.reports.buyer-wise', compact('receivedSummary', 'issuedSummary', 'received', 'issued', 'buyers', 'items'));
+        return view('sfl-inventory::admin.reports.buyer-style-wise', compact('rows', 'styleSpans', 'buyerSpans', 'buyers', 'items'));
     }
 
     /**
-     * Same shape as buyerWiseReport(), grouped/filtered by the free-text
-     * "style" field instead of a buyer — style is not a master table (see
-     * InvGrn/InvRequisition/InvIssue's plain string 'style' column), so
-     * both the summary and the detail rows key off that string directly.
+     * A row belongs to this report if its document carries a buyer, a
+     * style, or both — matches InvGrn/InvIssue's shared buyer_id/style
+     * columns (see the migration comment on
+     * add_buyer_context_to_inv_grns_table).
      */
-    public function styleWiseReport(Request $request): View
+    private function buyerStyleContextClause(string $table): \Closure
     {
-        $this->authorize('inv_report.view');
+        return function ($q) use ($table) {
+            $q->whereNotNull("{$table}.buyer_id")
+                ->orWhere(function ($q2) use ($table) {
+                    $q2->whereNotNull("{$table}.style")->where("{$table}.style", '!=', '');
+                });
+        };
+    }
 
-        $receivedSummary = DB::table('inv_grn_items as gi')
-            ->join('inv_grns as g', 'g.id', '=', 'gi.grn_id')
-            ->leftJoin('inv_buyers as b', 'b.id', '=', 'g.buyer_id')
-            ->whereNull('g.deleted_at')
-            ->whereNotNull('g.style')
-            ->where('g.style', '!=', '')
-            ->when($request->filled('buyer_id'), fn ($q) => $q->where('g.buyer_id', $request->buyer_id))
-            ->when($request->filled('style'), fn ($q) => $q->where('g.style', 'like', '%' . $request->style . '%'))
-            ->when($request->filled('date_from'), fn ($q) => $q->whereDate('g.receive_date', '>=', $request->date_from))
-            ->when($request->filled('date_to'), fn ($q) => $q->whereDate('g.receive_date', '<=', $request->date_to))
-            ->groupBy('g.style')
-            ->select(
-                'g.style',
-                DB::raw('GROUP_CONCAT(DISTINCT b.name SEPARATOR \', \') as buyer_names'),
-                DB::raw('GROUP_CONCAT(DISTINCT NULLIF(g.order_ref, \'\') SEPARATOR \', \') as order_refs'),
-                DB::raw('COUNT(DISTINCT g.id) as grn_count'),
-                DB::raw('COUNT(DISTINCT gi.item_id) as item_count'),
-                DB::raw('MIN(g.receive_date) as first_receive_date'),
-                DB::raw('MAX(g.receive_date) as last_receive_date'),
-                DB::raw('SUM(gi.received_qty) as total_qty'),
-                DB::raw('SUM(gi.rejected_qty) as total_rejected_qty'),
-                DB::raw('SUM(gi.amount) as total_amount')
-            )
-            ->orderByDesc('total_amount')
-            ->get();
+    /**
+     * For a presorted list, returns [index => rowspan]: the first row of a
+     * run of consecutive items sharing the same key gets the full span,
+     * every row after it gets 0 (render nothing there — it's covered by
+     * the rowspan above). Powers the Style/Buyer cell merging.
+     */
+    private function rowSpans($rows, callable $keyFn): array
+    {
+        $rows = $rows->values();
+        $count = $rows->count();
+        $spans = [];
+        $i = 0;
+        while ($i < $count) {
+            $key = $keyFn($rows[$i]);
+            $j = $i + 1;
+            while ($j < $count && $keyFn($rows[$j]) === $key) {
+                $j++;
+            }
+            $spans[$i] = $j - $i;
+            for ($k = $i + 1; $k < $j; $k++) {
+                $spans[$k] = 0;
+            }
+            $i = $j;
+        }
 
-        $issuedSummary = DB::table('inv_issue_items as ii')
-            ->join('inv_issues as i', 'i.id', '=', 'ii.issue_id')
-            ->leftJoin('inv_buyers as b', 'b.id', '=', 'i.buyer_id')
-            ->whereNull('i.deleted_at')
-            ->whereNotNull('i.style')
-            ->where('i.style', '!=', '')
-            ->when($request->filled('buyer_id'), fn ($q) => $q->where('i.buyer_id', $request->buyer_id))
-            ->when($request->filled('style'), fn ($q) => $q->where('i.style', 'like', '%' . $request->style . '%'))
-            ->when($request->filled('date_from'), fn ($q) => $q->whereDate('i.issue_date', '>=', $request->date_from))
-            ->when($request->filled('date_to'), fn ($q) => $q->whereDate('i.issue_date', '<=', $request->date_to))
-            ->groupBy('i.style')
-            ->select(
-                'i.style',
-                DB::raw('GROUP_CONCAT(DISTINCT b.name SEPARATOR \', \') as buyer_names'),
-                DB::raw('GROUP_CONCAT(DISTINCT NULLIF(i.order_ref, \'\') SEPARATOR \', \') as order_refs'),
-                DB::raw('COUNT(DISTINCT i.id) as issue_count'),
-                DB::raw('COUNT(DISTINCT ii.item_id) as item_count'),
-                DB::raw('MIN(i.issue_date) as first_issue_date'),
-                DB::raw('MAX(i.issue_date) as last_issue_date'),
-                DB::raw('SUM(ii.issued_qty) as total_qty'),
-                DB::raw('SUM(ii.amount) as total_amount')
-            )
-            ->orderByDesc('total_amount')
-            ->get();
-
-        $received = InvGrnItem::query()
-            ->select('inv_grn_items.*')
-            ->join('inv_grns', 'inv_grns.id', '=', 'inv_grn_items.grn_id')
-            ->whereNotNull('inv_grns.style')
-            ->where('inv_grns.style', '!=', '')
-            ->whereNull('inv_grns.deleted_at')
-            ->with(['item.unit', 'color', 'size', 'grn.store', 'grn.buyer', 'grn.supplier', 'grn.receiver', 'grn.creator'])
-            ->when($request->filled('style'), fn ($q) => $q->where('inv_grns.style', 'like', '%' . $request->style . '%'))
-            ->when($request->filled('buyer_id'), fn ($q) => $q->where('inv_grns.buyer_id', $request->buyer_id))
-            ->when($request->filled('item_id'), fn ($q) => $q->where('inv_grn_items.item_id', $request->item_id))
-            ->when($request->filled('date_from'), fn ($q) => $q->whereDate('inv_grns.receive_date', '>=', $request->date_from))
-            ->when($request->filled('date_to'), fn ($q) => $q->whereDate('inv_grns.receive_date', '<=', $request->date_to))
-            ->orderByDesc('inv_grns.receive_date')
-            ->orderByDesc('inv_grn_items.id')
-            ->paginate($request->boolean('print') ? 100000 : 30, ['*'], 'received_page')
-            ->withQueryString();
-
-        $issued = InvIssueItem::query()
-            ->select('inv_issue_items.*')
-            ->join('inv_issues', 'inv_issues.id', '=', 'inv_issue_items.issue_id')
-            ->whereNotNull('inv_issues.style')
-            ->where('inv_issues.style', '!=', '')
-            ->whereNull('inv_issues.deleted_at')
-            ->with(['item.unit', 'color', 'size', 'issue.store', 'issue.buyer', 'issue.department', 'issue.issuer'])
-            ->when($request->filled('style'), fn ($q) => $q->where('inv_issues.style', 'like', '%' . $request->style . '%'))
-            ->when($request->filled('buyer_id'), fn ($q) => $q->where('inv_issues.buyer_id', $request->buyer_id))
-            ->when($request->filled('item_id'), fn ($q) => $q->where('inv_issue_items.item_id', $request->item_id))
-            ->when($request->filled('date_from'), fn ($q) => $q->whereDate('inv_issues.issue_date', '>=', $request->date_from))
-            ->when($request->filled('date_to'), fn ($q) => $q->whereDate('inv_issues.issue_date', '<=', $request->date_to))
-            ->orderByDesc('inv_issues.issue_date')
-            ->orderByDesc('inv_issue_items.id')
-            ->paginate($request->boolean('print') ? 100000 : 30, ['*'], 'issued_page')
-            ->withQueryString();
-
-        $buyers = InvBuyer::active()->orderBy('name')->get();
-        $items = InvItem::active()->orderBy('item_name')->get();
-
-        return view('sfl-inventory::admin.reports.style-wise', compact('receivedSummary', 'issuedSummary', 'received', 'issued', 'buyers', 'items'));
+        return $spans;
     }
 
     public function grnReport(Request $request): View
@@ -573,8 +526,17 @@ class InvReportController extends Controller
         $this->authorize('inv_report.view');
 
         $issues = InvIssue::query()
-            ->with(['store', 'department'])
+            ->with(['store', 'department', 'buyer'])
+            // Issue Qty = what actually left the store (issued_qty); Delivery
+            // Qty = what the receiving department has confirmed getting
+            // (department_received_qty) — these can differ until the
+            // department confirms receipt (see InvIssueController::receive()).
+            ->withSum('items as issue_qty_total', 'issued_qty')
+            ->withSum('items as delivery_qty_total', 'department_received_qty')
             ->when($request->filled('department_id'), fn ($q) => $q->where('department_id', $request->department_id))
+            ->when($request->filled('buyer_id'), fn ($q) => $q->where('buyer_id', $request->buyer_id))
+            ->when($request->filled('style'), fn ($q) => $q->where('style', 'like', '%' . $request->style . '%'))
+            ->when($request->filled('item_id'), fn ($q) => $q->whereHas('items', fn ($iq) => $iq->where('item_id', $request->item_id)))
             ->when($request->filled('date_from'), fn ($q) => $q->whereDate('issue_date', '>=', $request->date_from))
             ->when($request->filled('date_to'), fn ($q) => $q->whereDate('issue_date', '<=', $request->date_to))
             ->latest('issue_date')
@@ -582,8 +544,10 @@ class InvReportController extends Controller
             ->withQueryString();
 
         $departments = InvDepartment::active()->orderBy('name')->get();
+        $buyers = InvBuyer::active()->orderBy('name')->get();
+        $items = InvItem::active()->orderBy('item_name')->get();
 
-        return view('sfl-inventory::admin.reports.issue-report', compact('issues', 'departments'));
+        return view('sfl-inventory::admin.reports.issue-report', compact('issues', 'departments', 'buyers', 'items'));
     }
 
     public function gatePassReport(Request $request): View
@@ -778,8 +742,7 @@ class InvReportController extends Controller
             'department-consumption' => 'departmentWiseConsumption',
             'supplier-purchase'      => 'supplierWisePurchase',
             'supplier-list'          => 'supplierList',
-            'buyer-wise'             => 'buyerWiseReport',
-            'style-wise'             => 'styleWiseReport',
+            'buyer-style-wise'       => 'buyerStyleWiseReport',
             'grn'                    => 'grnReport',
             'grn-item-wise'          => 'grnItemWiseReport',
             'expiry-tracking'        => 'expiryTracking',

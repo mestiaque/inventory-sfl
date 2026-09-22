@@ -4,13 +4,9 @@ namespace ME\SflInventory\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
-use Illuminate\Validation\Validator;
-use ME\SflInventory\Http\Requests\Concerns\ValidatesLineItemVariants;
 
 class InvGrnRequest extends FormRequest
 {
-    use ValidatesLineItemVariants;
-
     public function authorize(): bool
     {
         $ability = $this->route('grn') ? 'inv_grn.edit' : 'inv_grn.add';
@@ -58,10 +54,5 @@ class InvGrnRequest extends FormRequest
             'purchase_order_id.required_if' => 'Select a Store Order — a purchase challan cannot be received without one.',
             'purchase_order_id.exists'       => 'This purchase order has not been approved yet, so a challan cannot be received against it.',
         ];
-    }
-
-    public function withValidator(Validator $validator): void
-    {
-        $validator->after(fn (Validator $v) => $this->validateLineItemVariants($v, $this->input('items', [])));
     }
 }

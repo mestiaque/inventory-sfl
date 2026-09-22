@@ -42,10 +42,26 @@
                             @endforeach
                         </select>
                     </div>
-                    <div class="col-md-3">
+                    <div class="col-md-2">
+                        <select name="color_id" class="form-control inv-select2">
+                            <option value="">All Colors</option>
+                            @foreach($colors as $color)
+                                <option value="{{ $color->id }}" @selected(request('color_id') == $color->id)>{{ $color->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <select name="size_id" class="form-control inv-select2">
+                            <option value="">All Sizes</option>
+                            @foreach($sizes as $size)
+                                <option value="{{ $size->id }}" @selected(request('size_id') == $size->id)>{{ $size->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="col-md-2">
                         <input type="date" name="date_from" class="form-control" value="{{ $from }}" placeholder="From">
                     </div>
-                    <div class="col-md-3">
+                    <div class="col-md-2">
                         <input type="date" name="date_to" class="form-control" value="{{ $to }}" placeholder="To">
                     </div>
                     <div class="col-md-2">
@@ -62,7 +78,7 @@
                             @unless($selectedItem)
                                 <th>Item</th>
                             @endunless
-                            <th>Store</th><th>Type</th><th class="text-end">Qty In</th><th class="text-end">Qty Out</th><th class="text-end">Rate</th><th class="text-end">Value</th><th class="text-end">Current Stock</th>
+                            <th>Color</th><th>Size</th><th>Store</th><th>Type</th><th class="text-end">Qty In</th><th class="text-end">Qty Out</th><th class="text-end">Rate</th><th class="text-end">Value</th><th class="text-end">Current Stock</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -72,6 +88,8 @@
                                 @unless($selectedItem)
                                     <td>{{ $txn->item_code }} — {{ $txn->item_name }}</td>
                                 @endunless
+                                <td>{{ $txn->color_name ?? '—' }}</td>
+                                <td>{{ $txn->size_name ?? '—' }}</td>
                                 <td>{{ $txn->store_name }}</td>
                                 <td>{{ ucwords(str_replace('_', ' ', $txn->transaction_type)) }}</td>
                                 <td class="text-end text-success">{{ $txn->qty_in > 0 ? inv_qty($txn->qty_in) : '' }}</td>
@@ -81,7 +99,7 @@
                                 <td class="text-end fw-bold">{{ inv_qty($txn->running_balance) }}</td>
                             </tr>
                         @empty
-                            <tr><td colspan="{{ $selectedItem ? 8 : 9 }}" class="text-center text-muted">No movements found for this period.</td></tr>
+                            <tr><td colspan="{{ $selectedItem ? 10 : 11 }}" class="text-center text-muted">No movements found for this period.</td></tr>
                         @endforelse
                     </tbody>
                 </table>

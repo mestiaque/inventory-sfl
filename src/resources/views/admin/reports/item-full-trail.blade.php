@@ -56,6 +56,8 @@
                                 <th>Document Type</th>
                                 <th>Document No</th>
                                 <th class="text-end">Qty</th>
+                                <th>Color</th>
+                                <th>Size</th>
                                 <th>Done By</th>
                                 <th>Store/Department/Supplier</th>
                                 <th>Status</th>
@@ -72,12 +74,14 @@
                                     </td>
                                     <td>{{ $row->document_no }}</td>
                                     <td class="text-end">{{ inv_qty($row->qty) }}</td>
+                                    <td>{{ $row->color_name ?? '—' }}</td>
+                                    <td>{{ $row->size_name ?? '—' }}</td>
                                     <td>{{ $row->person_name ?? '—' }}</td>
                                     <td>{{ $row->party_name ?? '—' }}</td>
                                     <td>{{ ucwords(str_replace('_', ' ', $row->status ?? '')) }}</td>
                                 </tr>
                             @empty
-                                <tr><td colspan="7" class="text-center text-muted">No purchase/receive/requisition/issue history found for this item.</td></tr>
+                                <tr><td colspan="9" class="text-center text-muted">No purchase/receive/requisition/issue history found for this item.</td></tr>
                             @endforelse
                         </tbody>
                     </table>

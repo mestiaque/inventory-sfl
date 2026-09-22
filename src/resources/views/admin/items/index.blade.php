@@ -122,8 +122,9 @@
                                 <td>{{ $item->item_code }}</td>
                                 <td>
                                     {{ $item->item_name }}
-                                    @if($item->brand || $item->color || $item->size)
-                                        <br><small class="text-muted">{{ collect([$item->brand?->name, $item->color?->name, $item->size?->name])->filter()->implode(' / ') }}</small>
+                                    {{-- Color/Size no longer live on the Item Master — picked per transaction line at Goods Receive instead. --}}
+                                    @if($item->brand)
+                                        <br><small class="text-muted">{{ $item->brand->name }}</small>
                                     @endif
                                 </td>
                                 <td>{{ $item->category?->name }}</td>
@@ -184,8 +185,10 @@
                                                 <dt class="col-sm-3">Buyer</dt><dd class="col-sm-9">{{ $item->buyer?->name ?? '—' }}</dd>
                                                 <dt class="col-sm-3">Unit</dt><dd class="col-sm-9">{{ $item->unit?->name ?? '—' }} @if($item->unit?->short_name) ({{ $item->unit->short_name }}) @endif</dd>
                                                 <dt class="col-sm-3">Brand</dt><dd class="col-sm-9">{{ $item->brand?->name ?? '—' }}</dd>
+                                                {{-- Color/Size no longer live on the Item Master — picked per transaction line at Goods Receive instead.
                                                 <dt class="col-sm-3">Color</dt><dd class="col-sm-9">{{ $item->color?->name ?? '—' }}</dd>
                                                 <dt class="col-sm-3">Size</dt><dd class="col-sm-9">{{ $item->size?->name ?? '—' }}</dd>
+                                                --}}
                                                 <dt class="col-sm-3">Type</dt><dd class="col-sm-9">{{ $item->item_type ? ucwords(str_replace('_', ' ', $item->item_type)) : '—' }}</dd>
                                                 <dt class="col-sm-3">Store</dt><dd class="col-sm-9">{{ $item->openingStore?->name ?? '—' }}</dd>
                                                 <dt class="col-sm-3">Specification</dt><dd class="col-sm-9">{{ $item->specification ?: '—' }}</dd>
