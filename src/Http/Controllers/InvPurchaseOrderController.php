@@ -220,16 +220,29 @@ class InvPurchaseOrderController extends Controller
     }
 
     /**
-     * The order's own items live in inv_purchase_order_items, deleted first
-     * since this database's declared FK cascades aren't reliably enforced
-     * (see InvItemController::forceDestroy) — matching that same pattern
-     * rather than trusting the migration's cascadeOnDelete().
+     * Allowed even if real GRNs (challans) were already received against
+     * this order — the GRN, its items, and everything they already posted
+     * to the stock ledger are kept exactly as-is; they just lose their
+     * back-reference to this order/order-line, same "keep the real
+     * document, drop the link" rule InvPurchaseRequisitionController::
+     * forceDestroy() already uses one level up. Nulled explicitly here
+     * rather than trusted to the migration's declared nullOnDelete()
+     * cascade — checked live against this database and neither FK actually
+     * exists as a real constraint (see InvItemController::forceDestroy for
+     * the same "cascades aren't reliably enforced" precedent).
      */
     public function forceDestroy(InvPurchaseOrder $purchase_order): RedirectResponse
     {
         $this->authorize('inv_purchase_order.force_delete');
 
         DB::transaction(function () use ($purchase_order) {
+            $itemIds = DB::table('inv_purchase_order_items')->where('purchase_order_id', $purchase_order->id)->pluck('id');
+
+            if ($itemIds->isNotEmpty()) {
+                DB::table('inv_grn_items')->whereIn('purchase_order_item_id', $itemIds)->update(['purchase_order_item_id' => null]);
+            }
+            DB::table('inv_grns')->where('purchase_order_id', $purchase_order->id)->update(['purchase_order_id' => null]);
+
             DB::table('inv_purchase_order_items')->where('purchase_order_id', $purchase_order->id)->delete();
             $purchase_order->forceDelete();
         });

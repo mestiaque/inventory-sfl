@@ -122,6 +122,17 @@
                                             </button>
                                         @endif
                                     @endcan
+                                    {{-- No grns_count gate here, unlike the soft-delete button above — safe
+                                         even with challans already received, since both
+                                         inv_grns.purchase_order_id and inv_grn_items.purchase_order_item_id
+                                         are nullOnDelete: the GRNs and everything they already posted to
+                                         the stock ledger stay completely intact, they just lose their
+                                         back-link to this order. --}}
+                                    @can('inv_purchase_order.force_delete')
+                                        <button type="button" class="btn btn-sm btn-outline-danger" title="Delete Permanently" data-toggle="modal" data-target="#forcePoModal" data-action="{{ route('inventory.purchase-orders.force-destroy', $po) }}">
+                                            <i class="fa-solid fa-triangle-exclamation"></i>
+                                        </button>
+                                    @endcan
                                     @can('inv_grn.add')
                                         @if(in_array($po->status, ['approved', 'received']))
                                             <a href="{{ route('inventory.grns.create-purchase', ['purchase_order_id' => $po->id]) }}" class="btn btn-sm btn-outline-secondary" title="Receive (GRN)">
@@ -144,6 +155,42 @@
 </div>
 
 @include('sfl-inventory::admin.partials.delete-confirm-modal', ['modalId' => 'deletePoModal', 'label' => 'store order'])
+
+{{-- Direct permanent delete right from the main list — a one-click
+     alternative to the usual soft-delete-then-force-delete-from-Trash
+     dance, for a fresh/mistaken auto-created Store Order. Same
+     grns_count===0 safety gate as the row's own soft-delete button above. --}}
+@can('inv_purchase_order.force_delete')
+    <div class="modal fade" id="forcePoModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form method="POST" id="forcePoModalForm">
+                    @csrf
+                    @method('DELETE')
+                    <div class="modal-header">
+                        <h5 class="modal-title text-danger"><i class="fa-solid fa-triangle-exclamation"></i> Delete Permanently</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    </div>
+                    <div class="modal-body">
+                        <p class="text-danger mb-0">Permanently delete this store order? This cannot be undone — it skips Trash entirely.</p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-light" data-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-danger">Delete Permanently</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    @push('js')
+    <script>
+        $('#forcePoModal').on('show.bs.modal', function (event) {
+            $('#forcePoModalForm').attr('action', $(event.relatedTarget).data('action'));
+        });
+    </script>
+    @endpush
+@endcan
+
 @include('sfl-inventory::admin.partials.trash-modal', [
     'modalId' => 'poTrashModal',
     'label' => 'Store Order',
