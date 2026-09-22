@@ -99,6 +99,16 @@
                                             <a href="{{ route('inventory.purchase-orders.create', ['purchase_requisition_id' => $purchaseRequisition->id]) }}" class="btn btn-sm btn-outline-secondary">Create Purchase Order</a>
                                         @endif
                                     @endcan
+                                    {{-- Direct permanent delete right from the main list, regardless of
+                                         status — a one-click alternative to soft-delete-then-force-from-Trash.
+                                         Safe even if a real Store Order was already auto-created from this
+                                         requisition: forceDestroy() explicitly nulls that order's
+                                         purchase_requisition_id link rather than deleting the order itself. --}}
+                                    @can('inv_purchase_requisition.force_delete')
+                                        <button type="button" class="btn btn-sm btn-outline-danger" title="Delete Permanently" data-toggle="modal" data-target="#forcePreqModal" data-action="{{ route('inventory.purchase-requisitions.force-destroy', $purchaseRequisition) }}">
+                                            <i class="fa-solid fa-triangle-exclamation"></i>
+                                        </button>
+                                    @endcan
                                 </td>
                             </tr>
                         @empty
@@ -179,6 +189,38 @@
 @endforeach
 
 @include('sfl-inventory::admin.partials.delete-confirm-modal', ['modalId' => 'deletePreqModal', 'label' => 'purchase requisition'])
+
+@can('inv_purchase_requisition.force_delete')
+    <div class="modal fade" id="forcePreqModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form method="POST" id="forcePreqModalForm">
+                    @csrf
+                    @method('DELETE')
+                    <div class="modal-header">
+                        <h5 class="modal-title text-danger"><i class="fa-solid fa-triangle-exclamation"></i> Delete Permanently</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    </div>
+                    <div class="modal-body">
+                        <p class="text-danger mb-0">Permanently delete this purchase requisition? This cannot be undone — it skips Trash entirely. If a real Store Order was already created from it, that order is kept — it just loses its link back to this requisition.</p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-light" data-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-danger">Delete Permanently</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    @push('js')
+    <script>
+        $('#forcePreqModal').on('show.bs.modal', function (event) {
+            $('#forcePreqModalForm').attr('action', $(event.relatedTarget).data('action'));
+        });
+    </script>
+    @endpush
+@endcan
+
 @include('sfl-inventory::admin.partials.trash-modal', [
     'modalId' => 'purchaseRequisitionTrashModal',
     'label' => 'Purchase Requisition',
