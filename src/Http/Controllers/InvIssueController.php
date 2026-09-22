@@ -11,6 +11,7 @@ use ME\SflInventory\Http\Requests\InvIssueReceiveRequest;
 use ME\SflInventory\Http\Requests\InvIssueRequest;
 use ME\SflInventory\Models\InvBuyer;
 use ME\SflInventory\Models\InvDepartment;
+use ME\SflInventory\Models\InvGrn;
 use ME\SflInventory\Models\InvIssue;
 use ME\SflInventory\Models\InvItem;
 use ME\SflInventory\Models\InvRequisition;
@@ -90,6 +91,27 @@ class InvIssueController extends Controller
         // requisition) takes them straight from the form.
         $requisition = ! empty($data['requisition_id']) ? InvRequisition::find($data['requisition_id']) : null;
 
+        $buyerId = $requisition->buyer_id ?? $data['buyer_id'] ?? null;
+        $style = $requisition->style ?? $data['style'] ?? null;
+
+        // A style can only be delivered if that same buyer's stock actually
+        // has it — i.e. it was posted into the store by a real (posted)
+        // Store Receive challan under this buyer. Prevents delivering
+        // against a style that was never received at all, or was only
+        // received for a different buyer.
+        if ($style) {
+            $receivedUnderStyle = InvGrn::where('status', 'posted')
+                ->where('buyer_id', $buyerId)
+                ->where('style', $style)
+                ->exists();
+
+            if (! $receivedUnderStyle) {
+                throw ValidationException::withMessages([
+                    'style' => "Style \"{$style}\" hasn't been received into stock for this buyer yet — check Store Receive (GRN) first.",
+                ]);
+            }
+        }
+
         // Auto-approve implies auto-authorize — it skips straight past both
         // gates to a fully stock-posted challan, so it requires both
         // permissions, not just one. If the user can also confirm department
@@ -101,15 +123,15 @@ class InvIssueController extends Controller
             && auth()->user()->can('inv_issue.approve');
         $autoReceive = $autoApprove && auth()->user()->can('inv_issue.receive');
 
-        $issue = DB::transaction(function () use ($data, $requisition, $autoApprove, $autoReceive) {
+        $issue = DB::transaction(function () use ($data, $requisition, $buyerId, $style, $autoApprove, $autoReceive) {
             $issue = InvIssue::create([
                 'requisition_id' => $data['requisition_id'] ?? null,
                 'store_id'       => $data['store_id'],
                 'to_store_id'    => $data['to_store_id'] ?? null,
                 'department_id'  => $data['department_id'],
                 'status'         => $autoApprove ? 'authorized' : 'pending',
-                'buyer_id'       => $requisition->buyer_id ?? $data['buyer_id'] ?? null,
-                'style'          => $requisition->style ?? $data['style'] ?? null,
+                'buyer_id'       => $buyerId,
+                'style'          => $style,
                 'order_ref'      => $requisition->order_ref ?? $data['order_ref'] ?? null,
                 'issue_date'     => $data['issue_date'],
                 'issued_by'      => auth()->id(),
