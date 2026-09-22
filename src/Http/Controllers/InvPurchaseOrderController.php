@@ -26,7 +26,7 @@ class InvPurchaseOrderController extends Controller
         $this->authorize('inv_purchase_order.list');
 
         $purchaseOrders = InvPurchaseOrder::query()
-            ->with(['supplier', 'creator'])
+            ->with(['supplier', 'creator', 'purchaseRequisition'])
             ->withCount(['grns', 'items'])
             ->when($request->filled('search'), fn ($q) => $q->where('po_number', 'like', '%' . $request->search . '%'))
             ->when($request->filled('supplier_id'), fn ($q) => $q->where('supplier_id', $request->supplier_id))

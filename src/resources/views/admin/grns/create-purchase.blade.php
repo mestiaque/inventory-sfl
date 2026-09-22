@@ -47,9 +47,16 @@
                             @endif
                         </div>
                         <div class="col-md-3 mb-3">
-                            <label class="form-label">Supplier</label>
-                            <input type="text" class="form-control" value="{{ $purchaseOrder->supplier?->name }}" disabled>
-                            <input type="hidden" name="supplier_id" value="{{ $purchaseOrder->supplier_id }}">
+                            <label class="form-label">Supplier <span class="text-danger">*</span></label>
+                            <select name="supplier_id" class="form-control inv-select2" required>
+                                <option value="">— Select —</option>
+                                @foreach($suppliers as $supplier)
+                                    <option value="{{ $supplier->id }}" @selected(old('supplier_id', $purchaseOrder->supplier_id) == $supplier->id)>{{ $supplier->name }}</option>
+                                @endforeach
+                            </select>
+                            @unless($purchaseOrder->supplier_id)
+                                <div class="form-text">Not picked yet at Store Order stage — select the actual supplier for this challan now.</div>
+                            @endunless
                         </div>
                         <div class="col-md-3 mb-3">
                             <label class="form-label">Receive Date <span class="text-danger">*</span></label>

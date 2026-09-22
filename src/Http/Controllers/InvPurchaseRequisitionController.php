@@ -13,6 +13,7 @@ use ME\SflInventory\Http\Requests\InvPurchaseRequisitionRequest;
 use ME\SflInventory\Models\InvColor;
 use ME\SflInventory\Models\InvDepartment;
 use ME\SflInventory\Models\InvItem;
+use ME\SflInventory\Models\InvPurchaseOrder;
 use ME\SflInventory\Models\InvPurchaseRequisition;
 use ME\SflInventory\Models\InvPurchaseRequisitionItem;
 use ME\SflInventory\Models\InvSize;
@@ -85,7 +86,9 @@ class InvPurchaseRequisitionController extends Controller
         });
 
         if ($autoApprove) {
-            return redirect()->route('inventory.purchase-requisitions.index')->with('success', "Purchase requisition {$purchaseRequisition->requisition_no} created and auto-approved.");
+            $this->autoCreatePurchaseOrder($purchaseRequisition);
+
+            return redirect()->route('inventory.purchase-requisitions.index')->with('success', "Purchase requisition {$purchaseRequisition->requisition_no} created, auto-approved, and its Store Order was created automatically.");
         }
 
         app(ApprovalService::class)->request([
@@ -221,7 +224,9 @@ class InvPurchaseRequisitionController extends Controller
 
         $this->syncCentralApproval($purchase_requisition, 'approved', $data['approval_remarks'] ?? null);
 
-        return redirect()->route('inventory.purchase-requisitions.index')->with('success', "Purchase requisition {$purchase_requisition->requisition_no} approved.");
+        $this->autoCreatePurchaseOrder($purchase_requisition);
+
+        return redirect()->route('inventory.purchase-requisitions.index')->with('success', "Purchase requisition {$purchase_requisition->requisition_no} approved and its Store Order was created automatically.");
     }
 
     public function destroy(InvPurchaseRequisition $purchase_requisition): RedirectResponse
@@ -265,6 +270,57 @@ class InvPurchaseRequisitionController extends Controller
         });
 
         return back()->with('success', 'Purchase requisition permanently deleted.');
+    }
+
+    /**
+     * A Store Order is no longer created by hand — the moment a requisition
+     * is approved (fully or partially, e.g. 100 requested but only 80
+     * approved), one Store Order is auto-created here covering exactly the
+     * approved lines/quantities. Supplier and rate aren't known yet at this
+     * point — those are picked/entered later, at GRN Receive time (see
+     * InvGrnController::store(), which now also backfills this Store
+     * Order's supplier_id from the receiving GRN). A line approved with 0
+     * qty (effectively rejected even though the requisition itself is
+     * 'approved') is simply excluded; if every line is like that, no Store
+     * Order is created at all.
+     */
+    private function autoCreatePurchaseOrder(InvPurchaseRequisition $purchaseRequisition): void
+    {
+        $purchaseRequisition->loadMissing('items');
+
+        $approvedLines = $purchaseRequisition->items->filter(fn (InvPurchaseRequisitionItem $item) => $item->approved_qty > 0);
+
+        if ($approvedLines->isEmpty()) {
+            return;
+        }
+
+        DB::transaction(function () use ($purchaseRequisition, $approvedLines) {
+            $purchaseOrder = InvPurchaseOrder::create([
+                'purchase_requisition_id' => $purchaseRequisition->id,
+                'supplier_id'   => null,
+                'order_date'    => now()->toDateString(),
+                'expected_date' => null,
+                'status'        => 'approved',
+                'total_amount'  => 0,
+                'remarks'       => null,
+                'created_by'    => auth()->id(),
+            ]);
+
+            foreach ($approvedLines as $line) {
+                $purchaseOrder->items()->create([
+                    'item_id'  => $line->item_id,
+                    'color_id' => $line->color_id,
+                    'size_id'  => $line->size_id,
+                    'quantity' => $line->approved_qty,
+                    'rate'     => 0,
+                    'amount'   => 0,
+                ]);
+
+                $line->increment('converted_qty', $line->approved_qty);
+            }
+        });
+
+        $purchaseRequisition->refreshConversionStatus();
     }
 
     /**

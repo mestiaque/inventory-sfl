@@ -222,6 +222,15 @@ class InvGrnController extends Controller
             // the actual ledger post (real stock truth) waits for approval.
             $this->createGrnItems($grn, $data['items'], $autoApprove, '', $grn->created_by);
 
+            // A Store Order is auto-created (on Purchase Requisition
+            // approval) with no supplier yet — the first challan received
+            // against it is the one that actually names the supplier, so
+            // backfill it here rather than leaving it null forever. Only
+            // fills a still-empty value — never overwrites one already set.
+            if ($grn->source_type === 'purchase' && $grn->purchaseOrder && ! $grn->purchaseOrder->supplier_id) {
+                $grn->purchaseOrder->update(['supplier_id' => $grn->supplier_id]);
+            }
+
             $grn->purchaseOrder?->refreshReceiptStatus();
 
             return $grn;

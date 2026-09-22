@@ -75,7 +75,12 @@
                         @forelse($purchaseOrders as $po)
                             <tr>
                                 <td>{{ $loop->iteration + $purchaseOrders->firstItem() - 1 }}</td>
-                                <td>{{ $po->po_number }}</td>
+                                <td>
+                                    {{ $po->po_number }}
+                                    @if($po->purchaseRequisition)
+                                        <br><small class="text-muted">from {{ $po->purchaseRequisition->requisition_no }}</small>
+                                    @endif
+                                </td>
                                 <td>{{ $po->supplier?->name }}</td>
                                 <td>{{ $po->order_date?->format('d M Y') }}</td>
                                 <td>{{ $po->expected_date?->format('d M Y') ?? '—' }}</td>
@@ -104,12 +109,19 @@
                                                 <button type="submit" class="btn btn-sm btn-outline-success" title="Approve" onclick="return confirm('Approve this store order?')"><i class="fa-solid fa-check"></i></button>
                                             </form>
                                         @endcan
-                                        @can('inv_purchase_order.delete')
+                                    @endif
+                                    {{-- Store Orders now land as 'approved' straight away (draft is a legacy
+                                         state), so Delete can't stay gated to status==='draft' — it would
+                                         never show for any new order and nothing could ever reach Trash to
+                                         be force-deleted. Gated on "no challans received against it yet"
+                                         instead (same check destroy() itself already enforces server-side). --}}
+                                    @can('inv_purchase_order.delete')
+                                        @if($po->grns_count === 0)
                                             <button type="button" class="btn btn-sm btn-outline-danger" title="Delete" data-toggle="modal" data-target="#deletePoModal" data-action="{{ route('inventory.purchase-orders.destroy', $po) }}">
                                                 <i class="fa-solid fa-trash"></i>
                                             </button>
-                                        @endcan
-                                    @endif
+                                        @endif
+                                    @endcan
                                     @can('inv_grn.add')
                                         @if(in_array($po->status, ['approved', 'received']))
                                             <a href="{{ route('inventory.grns.create-purchase', ['purchase_order_id' => $po->id]) }}" class="btn btn-sm btn-outline-secondary" title="Receive (GRN)">
