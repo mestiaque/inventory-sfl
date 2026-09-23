@@ -51,7 +51,7 @@ return [
         ],
         'inv_item' => [
             'label' => 'Item Master',
-            'permissions' => $crud + ['import' => 'Import', 'export' => 'Export', 'force_delete' => 'Force Delete'],
+            'permissions' => $crud + ['import' => 'Import', 'export' => 'Export', 'merge' => 'Merge Duplicates', 'force_delete' => 'Force Delete'],
         ],
         'inv_supplier' => [
             'label' => 'Suppliers',

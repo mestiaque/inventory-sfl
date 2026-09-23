@@ -77,10 +77,13 @@ class InvIssueController extends Controller
     }
 
     /**
-     * Creates the Store Delivery Challan as a draft — no stock movement yet.
-     * Goods only leave the store once the challan is authorized and approved
-     * (see authorizeIssue()/approve() below), matching the printed challan's
-     * Prepared By -> Authorized By -> Approved By signature chain.
+     * Creates the Store Delivery Challan and posts stock immediately — the
+     * requisition already went through its one approval, so the challan
+     * itself no longer needs a separate Authorize/Approve gate. Prepared By
+     * -> Authorized By -> Approved By on the printed challan are still
+     * populated (all with this same action) so the signature layout is
+     * unchanged; authorizeIssue()/approve() below are kept only so any
+     * pre-existing pending/authorized challan can still be moved forward.
      */
     public function store(InvIssueRequest $request): RedirectResponse
     {
@@ -112,24 +115,20 @@ class InvIssueController extends Controller
             }
         }
 
-        // Auto-approve implies auto-authorize — it skips straight past both
-        // gates to a fully stock-posted challan, so it requires both
-        // permissions, not just one. If the user can also confirm department
-        // receipt, the same checkbox carries the challan all the way to a
-        // fully received state (used when one person handles the whole
-        // hand-off in person and the paper trail is just a formality).
-        $autoApprove = $request->boolean('auto_approve')
-            && auth()->user()->can('inv_issue.authorize')
-            && auth()->user()->can('inv_issue.approve');
-        $autoReceive = $autoApprove && auth()->user()->can('inv_issue.receive');
+        // The requisition already carries its one approval, so the challan no
+        // longer waits on a separate Authorize/Approve gate — it's created
+        // already approved and stock is posted immediately. Only department
+        // receipt confirmation stays optional (a real-world hand-off event,
+        // not an approval step).
+        $autoReceive = $request->boolean('auto_approve') && auth()->user()->can('inv_issue.receive');
 
-        $issue = DB::transaction(function () use ($data, $requisition, $buyerId, $style, $autoApprove, $autoReceive) {
+        $issue = DB::transaction(function () use ($data, $requisition, $buyerId, $style, $autoReceive) {
             $issue = InvIssue::create([
                 'requisition_id' => $data['requisition_id'] ?? null,
                 'store_id'       => $data['store_id'],
                 'to_store_id'    => $data['to_store_id'] ?? null,
                 'department_id'  => $data['department_id'],
-                'status'         => $autoApprove ? 'authorized' : 'pending',
+                'status'         => 'authorized',
                 'buyer_id'       => $buyerId,
                 'style'          => $style,
                 'order_ref'      => $requisition->order_ref ?? $data['order_ref'] ?? null,
@@ -137,8 +136,8 @@ class InvIssueController extends Controller
                 'issued_by'      => auth()->id(),
                 'remarks'        => $data['remarks'] ?? null,
                 'created_by'     => auth()->id(),
-                'authorized_by'  => $autoApprove ? auth()->id() : null,
-                'authorized_at'  => $autoApprove ? now() : null,
+                'authorized_by'  => auth()->id(),
+                'authorized_at'  => now(),
             ]);
 
             foreach ($data['items'] as $line) {
@@ -161,7 +160,7 @@ class InvIssueController extends Controller
                     $remaining = (float) $requisitionItem->approved_qty - (float) $requisitionItem->issued_qty;
                     if ((float) $line['issued_qty'] > $remaining + 0.0001) {
                         throw ValidationException::withMessages([
-                            'items' => "Cannot issue " . inv_qty($line['issued_qty']) . " of \"{$itemName}\" — only " . inv_qty($remaining) . ' remains approved on this requisition line.',
+                            'items' => "\"{$itemName}\" — you're trying to issue " . inv_qty($line['issued_qty']) . ', but only ' . inv_qty($remaining) . ' is still approved (unissued) on this requisition line. Lower the quantity, or ask for the requisition to be revised.',
                         ]);
                     }
                 }
@@ -171,8 +170,13 @@ class InvIssueController extends Controller
                 // an issue claim more than is physically there right now.
                 $available = $this->stock->currentStock($line['item_id'], $data['store_id'], $requisitionItem?->color_id, $requisitionItem?->size_id);
                 if ((float) $line['issued_qty'] > $available + 0.0001) {
+                    $storeName = InvStore::find($data['store_id'])?->name ?? 'this store';
+                    $stockMessage = $available > 0
+                        ? "only " . inv_qty($available) . " is in stock right now"
+                        : "there is no stock left";
+
                     throw ValidationException::withMessages([
-                        'items' => "Cannot issue " . inv_qty($line['issued_qty']) . " of \"{$itemName}\" — only " . inv_qty($available) . ' is currently in stock at this store.',
+                        'items' => "\"{$itemName}\" — you're trying to issue " . inv_qty($line['issued_qty']) . ", but {$stockMessage} for it at {$storeName}. Lower the quantity, or receive more stock (GRN) into this store before issuing.",
                     ]);
                 }
 
@@ -196,11 +200,9 @@ class InvIssueController extends Controller
 
             $issue->requisition?->refreshIssueStatus();
 
-            if ($autoApprove) {
-                $issue->load('items.item');
-                $this->postIssueStock($issue);
-                $issue->update(['status' => 'approved', 'approved_by' => auth()->id(), 'approved_at' => now()]);
-            }
+            $issue->load('items.item');
+            $this->postIssueStock($issue);
+            $issue->update(['status' => 'approved', 'approved_by' => auth()->id(), 'approved_at' => now()]);
 
             if ($autoReceive) {
                 $issue->update([
@@ -213,11 +215,9 @@ class InvIssueController extends Controller
             return $issue;
         });
 
-        $message = match (true) {
-            $autoReceive => "Challan {$issue->issue_no} prepared, auto-authorized, auto-approved and receipt auto-confirmed. Stock updated.",
-            $autoApprove => "Challan {$issue->issue_no} prepared, auto-authorized and auto-approved. Stock updated.",
-            default => "Challan {$issue->issue_no} prepared. Awaiting authorization.",
-        };
+        $message = $autoReceive
+            ? "Challan {$issue->issue_no} issued and receipt auto-confirmed. Stock updated."
+            : "Challan {$issue->issue_no} issued. Stock updated.";
 
         return redirect()->route('inventory.issues.index')->with('success', $message);
     }

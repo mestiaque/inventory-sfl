@@ -18,6 +18,11 @@
                         <i class="fa-solid fa-trash"></i> Trash ({{ $trashedItems->count() }})
                     </button>
                 @endcan
+                @can('inv_item.merge')
+                    <a href="{{ route('inventory.items.merge-form') }}" class="btn btn-outline-warning btn-sm">
+                        <i class="fa-solid fa-code-merge"></i> Merge Duplicates
+                    </a>
+                @endcan
                 @can('inv_item.add')
                     <a href="{{ route('inventory.items.create') }}" class="btn btn-primary btn-sm">
                         <i class="fa-solid fa-plus"></i> Add Item
@@ -163,6 +168,15 @@
                                     @can('inv_item.delete')
                                         <button type="button" class="btn btn-sm btn-outline-danger" data-toggle="modal" data-target="#deleteItemModal" data-action="{{ route('inventory.items.destroy', $item) }}">
                                             <i class="fa-solid fa-trash"></i>
+                                        </button>
+                                    @endcan
+                                    @can('inv_item.force_delete')
+                                        {{-- Same permanent-delete confirm/modal the Trash list uses (itemTrashModalForceConfirm below) —
+                                             skips the normal Delete-then-Trash-then-Force two-step for an emergency one-click permanent
+                                             delete. Still runs through forceDestroy()'s referencing-table checks, so it's refused with a
+                                             clear error if the item is actually used on a real document; nothing here bypasses that. --}}
+                                        <button type="button" class="btn btn-sm btn-outline-dark" title="Force Delete (skip Trash)" data-toggle="modal" data-target="#itemTrashModalForceConfirm" data-action="{{ route('inventory.items.force-destroy', $item) }}">
+                                            <i class="fa-solid fa-triangle-exclamation"></i>
                                         </button>
                                     @endcan
                                 </td>

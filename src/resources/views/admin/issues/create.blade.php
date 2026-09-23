@@ -101,9 +101,27 @@
                         <thead><tr><th style="min-width:220px">Item</th><th>Color</th><th>Size</th><th style="width:140px">Remaining Approved</th><th style="width:160px">Issue Qty</th><th style="width:40px"></th></tr></thead>
                         <tbody id="issRowsBody">
                             @php
-                                $lines = old('items', $requisition
-                                    ? $requisition->items->map(fn ($i) => ['requisition_item_id' => $i->id, 'item_id' => $i->item_id, 'color' => $i->color?->name, 'size' => $i->size?->name, 'remaining' => $i->approved_qty - $i->issued_qty])->all()
-                                    : [[]]);
+                                // Color/Size/Remaining come from the requisition, not the submitted
+                                // form — old('items') never carries them (they're plain text, not
+                                // inputs), so rebuilding rows from old() alone after a validation
+                                // error wiped those columns blank. Recompute them from the
+                                // requisition every time and only pull issued_qty from old().
+                                $oldItems = old('items');
+                                if ($requisition) {
+                                    $lines = $requisition->items->map(function ($i, $index) use ($oldItems) {
+                                        $remaining = $i->approved_qty - $i->issued_qty;
+                                        return [
+                                            'requisition_item_id' => $i->id,
+                                            'item_id'              => $i->item_id,
+                                            'color'                => $i->color?->name,
+                                            'size'                 => $i->size?->name,
+                                            'remaining'            => $remaining,
+                                            'issued_qty'           => $oldItems[$index]['issued_qty'] ?? $remaining,
+                                        ];
+                                    })->all();
+                                } else {
+                                    $lines = $oldItems ?: [[]];
+                                }
                             @endphp
                             @foreach($lines as $index => $line)
                                 <tr>
@@ -122,7 +140,7 @@
                                     <td>{{ $line['color'] ?? '—' }}</td>
                                     <td>{{ $line['size'] ?? '—' }}</td>
                                     <td>{{ $line['remaining'] ?? '—' }}</td>
-                                    <td><input type="number" step="0.0001" min="0.0001" name="items[{{ $index }}][issued_qty]" class="form-control" value="{{ $line['remaining'] ?? '' }}" required></td>
+                                    <td><input type="number" step="0.0001" min="0.0001" name="items[{{ $index }}][issued_qty]" class="form-control" value="{{ $line['issued_qty'] ?? ($line['remaining'] ?? '') }}" required></td>
                                     <td><button type="button" class="btn btn-sm btn-outline-danger" data-line-items-remove><i class="fa-solid fa-xmark"></i></button></td>
                                 </tr>
                             @endforeach
@@ -148,19 +166,12 @@
                     </tr>
                 </template>
 
-                @can('inv_issue.authorize')
-                    @can('inv_issue.approve')
-                        <div class="form-check mt-3">
-                            <input type="checkbox" name="auto_approve" value="1" class="form-check-input" id="autoApprove" @checked(old('auto_approve'))>
-                            @can('inv_issue.receive')
-                                <label class="form-check-label" for="autoApprove">Auto-authorize, auto-approve &amp; auto-confirm receipt for this challan</label>
-                                <div class="form-text">Skips Authorize, Approve and department Receipt Confirmation — the challan is created already fully received and stock is updated immediately.</div>
-                            @else
-                                <label class="form-check-label" for="autoApprove">Auto-authorize &amp; auto-approve this challan</label>
-                                <div class="form-text">Skips both the Authorize and Approve steps — the challan is created already approved and stock is updated immediately.</div>
-                            @endcan
-                        </div>
-                    @endcan
+                @can('inv_issue.receive')
+                    <div class="form-check mt-3">
+                        <input type="checkbox" name="auto_approve" value="1" class="form-check-input" id="autoApprove" @checked(old('auto_approve'))>
+                        <label class="form-check-label" for="autoApprove">Auto-confirm department receipt for this challan</label>
+                        <div class="form-text">The challan is always issued and stock updated immediately — this only also marks department receipt as confirmed, used when one person handles the whole hand-off in person.</div>
+                    </div>
                 @endcan
 
                 <button type="submit" class="btn btn-primary mt-3">Issue &amp; Update Stock</button>

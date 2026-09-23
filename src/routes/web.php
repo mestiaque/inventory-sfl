@@ -83,6 +83,8 @@ Route::middleware($route['middleware'] ?? ['web', 'auth'])
         Route::post('items/{item}/restore', [InvItemController::class, 'restore'])->name('items.restore')->withTrashed();
         Route::delete('items/{item}/force', [InvItemController::class, 'forceDestroy'])->name('items.force-destroy')->withTrashed();
         Route::post('items/{item}/generate-barcode', [InvItemController::class, 'generateBarcode'])->name('items.generate-barcode');
+        Route::get('items-merge', [InvItemController::class, 'mergeForm'])->name('items.merge-form');
+        Route::post('items-merge', [InvItemController::class, 'merge'])->name('items.merge');
 
         // Purchase Requisition -> Approval -> Purchase Order -> GRN
         Route::resource('purchase-requisitions', InvPurchaseRequisitionController::class)

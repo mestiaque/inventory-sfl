@@ -6,6 +6,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
+use ME\SflInventory\Http\Requests\InvItemMergeRequest;
 use ME\SflInventory\Http\Requests\InvItemRequest;
 use ME\SflInventory\Models\InvBrand;
 use ME\SflInventory\Models\InvBuyer;
@@ -96,6 +97,87 @@ class InvItemController extends Controller
         return back()->with('success', 'Item deleted successfully.');
     }
 
+    public function mergeForm(): View
+    {
+        $this->authorize('inv_item.merge');
+
+        $items = InvItem::with('unit')->orderBy('item_name')->get();
+
+        return view('sfl-inventory::admin.items.merge', compact('items'));
+    }
+
+    /**
+     * Folds one or more duplicate items into a single "keep" item: every
+     * document line that pointed at a duplicate (GRN, PO, requisition,
+     * issue, stock transactions, etc. — every inv_items-referencing table
+     * this package knows about, the same set forceDestroy() checks against)
+     * is repointed at the surviving item, then the duplicate is soft-deleted
+     * — its stock history now lives entirely under the surviving item, so a
+     * plain delete() (not force) is enough and it stays recoverable from
+     * Trash if this was a mistake (though restoring it won't move the
+     * history back).
+     */
+    public function merge(InvItemMergeRequest $request): RedirectResponse
+    {
+        $data = $request->validated();
+
+        $survivor = InvItem::with('unit')->findOrFail($data['keep_item_id']);
+        $duplicates = InvItem::with('unit')->whereIn('id', $data['duplicate_item_ids'])->get();
+
+        // Quantities are just numbers in the stock ledger — merging an item
+        // that's actually tracked in a different unit would silently mix
+        // e.g. "kg" balances into a "pcs" item's total.
+        foreach ($duplicates as $duplicate) {
+            if ($duplicate->unit_id !== $survivor->unit_id) {
+                return back()->withInput()->with('error',
+                    "\"{$duplicate->item_code} — {$duplicate->item_name}\" is tracked in " . ($duplicate->unit?->short_name ?? 'a different unit') .
+                    ", but \"{$survivor->item_code} — {$survivor->item_name}\" is tracked in " . ($survivor->unit?->short_name ?? 'a different unit') .
+                    ' — merging would mix incompatible quantities. Fix the unit on one of them first, or pick a different pair.'
+                );
+            }
+        }
+
+        $mergedLabel = $duplicates->map(fn ($d) => $d->item_code)->implode(', ');
+
+        DB::transaction(function () use ($survivor, $duplicates) {
+            foreach ($duplicates as $duplicate) {
+                foreach (self::itemReferencingTables() as $table) {
+                    DB::table($table)->where('item_id', $duplicate->id)->update(['item_id' => $survivor->id]);
+                }
+
+                $duplicate->update(['is_active' => false]);
+                $duplicate->delete();
+            }
+        });
+
+        return redirect()->route('inventory.items.index')
+            ->with('success', "Merged {$mergedLabel} into {$survivor->item_code} — all history moved over and the duplicate" . ($duplicates->count() > 1 ? 's were' : ' was') . ' deleted.');
+    }
+
+    /**
+     * Every table this package knows about that stores a real inv_items.id
+     * foreign key — kept as one list so merge() (repoint) and forceDestroy()
+     * (block-and-check) can't drift out of sync with each other or with the
+     * migrations that actually create these columns.
+     */
+    private static function itemReferencingTables(): array
+    {
+        return [
+            'inv_stock_transactions',
+            'inv_purchase_requisition_items',
+            'inv_purchase_order_items',
+            'inv_grn_items',
+            'inv_requisition_items',
+            'inv_issue_items',
+            'inv_stock_transfer_items',
+            'inv_production_consumption_items',
+            'inv_finished_goods_receive_items',
+            'inv_gate_pass_items',
+            'inv_shipment_items',
+            'inv_stock_adjustment_items',
+        ];
+    }
+
     public function restore(InvItem $item): RedirectResponse
     {
         $this->authorize('inv_item.delete');
@@ -121,6 +203,7 @@ class InvItemController extends Controller
 
         $referencingTables = [
             'GRN'                      => 'inv_grn_items',
+            'Purchase Requisition'     => 'inv_purchase_requisition_items',
             'Purchase Order'           => 'inv_purchase_order_items',
             'Requisition'              => 'inv_requisition_items',
             'Issue'                    => 'inv_issue_items',
