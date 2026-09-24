@@ -161,6 +161,9 @@ class InvGrnController extends Controller
             $grn->update([
                 'style'              => $data['style'] ?? null,
                 'order_ref'          => $data['order_ref'] ?? null,
+                'mer_style_id'              => $data['mer_style_id'] ?? null,
+                'mer_sales_contract_po_id'  => $data['mer_sales_contract_po_id'] ?? null,
+                'mer_buyer_id'              => $data['mer_buyer_id'] ?? null,
                 'challan_invoice_no' => $data['challan_invoice_no'] ?? null,
                 'receive_date'       => $data['receive_date'],
                 'received_by'        => $data['received_by'] ?? null,
@@ -203,6 +206,9 @@ class InvGrnController extends Controller
                 'buyer_id'           => $data['source_type'] === 'buyer_supplied' ? $data['buyer_id'] : null,
                 'style'              => $data['style'] ?? null,
                 'order_ref'          => $data['order_ref'] ?? null,
+                'mer_style_id'              => $data['mer_style_id'] ?? null,
+                'mer_sales_contract_po_id'  => $data['mer_sales_contract_po_id'] ?? null,
+                'mer_buyer_id'              => $data['mer_buyer_id'] ?? null,
                 'challan_invoice_no' => $data['challan_invoice_no'] ?? null,
                 'receive_date'       => $data['receive_date'],
                 'received_by'        => $data['received_by'] ?? null,
@@ -556,6 +562,15 @@ class InvGrnController extends Controller
             'colors'          => InvColor::active()->orderBy('name')->get(),
             'sizes'           => InvSize::active()->ordered()->get(),
             'employees'       => $employees,
+            'merStylesOptions' => class_exists(\ME\MerchandisingTrace\Models\Style::class)
+                ? \ME\MerchandisingTrace\Models\Style::query()->orderBy('style_no')->get(['id', 'style_no', 'name'])
+                : collect(),
+            'merSalesContractPosOptions' => class_exists(\ME\MerchandisingTrace\Models\SalesContractPo::class)
+                ? \ME\MerchandisingTrace\Models\SalesContractPo::query()->latest('id')->limit(500)->get(['id', 'po_no'])
+                : collect(),
+            'merBuyersOptions' => class_exists(\ME\MerchandisingTrace\Models\Buyer::class)
+                ? \ME\MerchandisingTrace\Models\Buyer::query()->orderBy('name')->get(['id', 'name'])
+                : collect(),
         ];
     }
 }

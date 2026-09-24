@@ -21,6 +21,7 @@ class InvRequisition extends Model
     protected $fillable = [
         'requisition_no', 'requisition_date', 'department_id', 'requisition_for', 'buyer_id', 'style', 'order_ref', 'store_id',
         'requested_by', 'received_by', 'status', 'approved_by', 'approved_at', 'approval_remarks', 'remarks', 'created_by',
+        'mer_style_id', 'mer_sales_contract_po_id', 'mer_buyer_id',
     ];
 
     protected $casts = [

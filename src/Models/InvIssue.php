@@ -23,6 +23,7 @@ class InvIssue extends Model
         'issue_date', 'status', 'issued_by', 'authorized_by', 'authorized_at', 'approved_by', 'approved_at',
         'department_received_by', 'department_received_at', 'department_receive_status',
         'department_receive_remarks', 'remarks', 'created_by',
+        'mer_style_id', 'mer_sales_contract_po_id', 'mer_buyer_id',
     ];
 
     protected $casts = [

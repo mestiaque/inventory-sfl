@@ -22,6 +22,7 @@ class InvGrn extends Model
         'grn_number', 'purchase_order_id', 'source_type', 'store_id', 'supplier_id', 'buyer_id', 'style', 'order_ref',
         'challan_invoice_no', 'receive_date', 'status', 'approved_by', 'approved_at', 'approval_remarks',
         'total_amount', 'remarks', 'created_by', 'received_by',
+        'mer_style_id', 'mer_sales_contract_po_id', 'mer_buyer_id',
     ];
 
     protected $casts = [

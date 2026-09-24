@@ -97,6 +97,13 @@ class InvIssueController extends Controller
         $buyerId = $requisition->buyer_id ?? $data['buyer_id'] ?? null;
         $style = $requisition->style ?? $data['style'] ?? null;
 
+        // Same inheritance rule as buyer_id/style above — a requisition-linked
+        // issue carries the same merch links the requisition was tagged with;
+        // a direct issue takes them straight from the form.
+        $merStyleId = $requisition->mer_style_id ?? $data['mer_style_id'] ?? null;
+        $merSalesContractPoId = $requisition->mer_sales_contract_po_id ?? $data['mer_sales_contract_po_id'] ?? null;
+        $merBuyerId = $requisition->mer_buyer_id ?? $data['mer_buyer_id'] ?? null;
+
         // A style can only be delivered if that same buyer's stock actually
         // has it — i.e. it was posted into the store by a real (posted)
         // Store Receive challan under this buyer. Prevents delivering
@@ -122,7 +129,7 @@ class InvIssueController extends Controller
         // not an approval step).
         $autoReceive = $request->boolean('auto_approve') && auth()->user()->can('inv_issue.receive');
 
-        $issue = DB::transaction(function () use ($data, $requisition, $buyerId, $style, $autoReceive) {
+        $issue = DB::transaction(function () use ($data, $requisition, $buyerId, $style, $merStyleId, $merSalesContractPoId, $merBuyerId, $autoReceive) {
             $issue = InvIssue::create([
                 'requisition_id' => $data['requisition_id'] ?? null,
                 'store_id'       => $data['store_id'],
@@ -132,6 +139,9 @@ class InvIssueController extends Controller
                 'buyer_id'       => $buyerId,
                 'style'          => $style,
                 'order_ref'      => $requisition->order_ref ?? $data['order_ref'] ?? null,
+                'mer_style_id'              => $merStyleId,
+                'mer_sales_contract_po_id'  => $merSalesContractPoId,
+                'mer_buyer_id'              => $merBuyerId,
                 'issue_date'     => $data['issue_date'],
                 'issued_by'      => auth()->id(),
                 'remarks'        => $data['remarks'] ?? null,
@@ -404,6 +414,15 @@ class InvIssueController extends Controller
             'departments' => InvDepartment::active()->orderBy('name')->get(),
             'items'       => InvItem::active()->orderBy('item_name')->get(),
             'buyers'      => InvBuyer::active()->orderBy('name')->get(),
+            'merStylesOptions' => class_exists(\ME\MerchandisingTrace\Models\Style::class)
+                ? \ME\MerchandisingTrace\Models\Style::query()->orderBy('style_no')->get(['id', 'style_no', 'name'])
+                : collect(),
+            'merSalesContractPosOptions' => class_exists(\ME\MerchandisingTrace\Models\SalesContractPo::class)
+                ? \ME\MerchandisingTrace\Models\SalesContractPo::query()->latest('id')->limit(500)->get(['id', 'po_no'])
+                : collect(),
+            'merBuyersOptions' => class_exists(\ME\MerchandisingTrace\Models\Buyer::class)
+                ? \ME\MerchandisingTrace\Models\Buyer::query()->orderBy('name')->get(['id', 'name'])
+                : collect(),
         ];
     }
 }

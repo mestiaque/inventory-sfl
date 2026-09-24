@@ -82,6 +82,39 @@
                             <label class="form-label">Order Ref</label>
                             <input type="text" name="order_ref" class="form-control" value="{{ old('order_ref') }}">
                         </div>
+                        @if(($merStylesOptions ?? collect())->isNotEmpty())
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Merchandising Style</label>
+                            <select name="mer_style_id" class="form-control inv-select2">
+                                <option value="">— None —</option>
+                                @foreach($merStylesOptions as $s)
+                                    <option value="{{ $s->id }}" @selected(old('mer_style_id') == $s->id)>{{ $s->style_no }} — {{ $s->name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        @endif
+                        @if(($merSalesContractPosOptions ?? collect())->isNotEmpty())
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Sales Contract PO</label>
+                            <select name="mer_sales_contract_po_id" class="form-control inv-select2">
+                                <option value="">— None —</option>
+                                @foreach($merSalesContractPosOptions as $po)
+                                    <option value="{{ $po->id }}" @selected(old('mer_sales_contract_po_id') == $po->id)>{{ $po->po_no }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        @endif
+                        @if(($merBuyersOptions ?? collect())->isNotEmpty())
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Merchandising Buyer</label>
+                            <select name="mer_buyer_id" class="form-control inv-select2">
+                                <option value="">— None —</option>
+                                @foreach($merBuyersOptions as $b)
+                                    <option value="{{ $b->id }}" @selected(old('mer_buyer_id') == $b->id)>{{ $b->name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        @endif
                     @endif
                     <div class="col-12 mb-3">
                         <label class="form-label">Remarks</label>

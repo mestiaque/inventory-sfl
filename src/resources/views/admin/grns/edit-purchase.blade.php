@@ -43,6 +43,39 @@
                         <label class="form-label">Receive Date <span class="text-danger">*</span></label>
                         <input type="date" name="receive_date" class="form-control" value="{{ old('receive_date', optional($grn->receive_date)->format('Y-m-d')) }}" required>
                     </div>
+                    @if(($merStylesOptions ?? collect())->isNotEmpty())
+                    <div class="col-md-3 mb-3">
+                        <label class="form-label">Merchandising Style</label>
+                        <select name="mer_style_id" class="form-control inv-select2">
+                            <option value="">— None —</option>
+                            @foreach($merStylesOptions as $s)
+                                <option value="{{ $s->id }}" @selected(old('mer_style_id', $grn->mer_style_id ?? '') == $s->id)>{{ $s->style_no }} — {{ $s->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    @endif
+                    @if(($merSalesContractPosOptions ?? collect())->isNotEmpty())
+                    <div class="col-md-3 mb-3">
+                        <label class="form-label">Sales Contract PO</label>
+                        <select name="mer_sales_contract_po_id" class="form-control inv-select2">
+                            <option value="">— None —</option>
+                            @foreach($merSalesContractPosOptions as $po)
+                                <option value="{{ $po->id }}" @selected(old('mer_sales_contract_po_id', $grn->mer_sales_contract_po_id ?? '') == $po->id)>{{ $po->po_no }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    @endif
+                    @if(($merBuyersOptions ?? collect())->isNotEmpty())
+                    <div class="col-md-3 mb-3">
+                        <label class="form-label">Merchandising Buyer</label>
+                        <select name="mer_buyer_id" class="form-control inv-select2">
+                            <option value="">— None —</option>
+                            @foreach($merBuyersOptions as $b)
+                                <option value="{{ $b->id }}" @selected(old('mer_buyer_id', $grn->mer_buyer_id ?? '') == $b->id)>{{ $b->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    @endif
                     <div class="col-md-3 mb-3">
                         <label class="form-label">Invoice / Challan No.</label>
                         <input type="text" name="challan_invoice_no" class="form-control" value="{{ old('challan_invoice_no', $grn->challan_invoice_no) }}" placeholder="Supplier's invoice or challan number">

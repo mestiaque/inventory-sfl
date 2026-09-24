@@ -18,7 +18,10 @@ class InvFinishedGoodsReceive extends Model
 
     protected $table = 'inv_finished_goods_receives';
 
-    protected $fillable = ['receive_no', 'receive_date', 'style', 'buyer_id', 'order_ref', 'store_id', 'remarks', 'created_by'];
+    protected $fillable = [
+        'receive_no', 'receive_date', 'style', 'buyer_id', 'order_ref', 'store_id', 'remarks', 'created_by',
+        'mer_style_id', 'mer_sales_contract_po_id', 'mer_buyer_id',
+    ];
 
     protected $casts = [
         'receive_date' => 'date',

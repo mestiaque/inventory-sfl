@@ -21,6 +21,7 @@ class InvProductionConsumption extends Model
     protected $fillable = [
         'consumption_no', 'department_id', 'issue_id', 'style', 'order_ref', 'consumption_date',
         'store_id', 'remarks', 'created_by',
+        'mer_style_id', 'mer_sales_contract_po_id', 'mer_buyer_id',
     ];
 
     protected $casts = [

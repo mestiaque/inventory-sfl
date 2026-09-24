@@ -61,6 +61,9 @@ class InvFinishedGoodsReceiveController extends Controller
                 'style'        => $data['style'] ?? null,
                 'buyer_id'     => $data['buyer_id'] ?? null,
                 'order_ref'    => $data['order_ref'] ?? null,
+                'mer_style_id'              => $data['mer_style_id'] ?? null,
+                'mer_sales_contract_po_id'  => $data['mer_sales_contract_po_id'] ?? null,
+                'mer_buyer_id'              => $data['mer_buyer_id'] ?? null,
                 'store_id'     => $data['store_id'],
                 'remarks'      => $data['remarks'] ?? null,
                 'created_by'   => auth()->id(),
@@ -99,6 +102,15 @@ class InvFinishedGoodsReceiveController extends Controller
             'stores'  => InvStore::active()->orderBy('name')->get(),
             'fgStore' => $fgStore,
             'items'   => InvItem::active()->ofType('finished_good')->orderBy('item_name')->get(),
+            'merStylesOptions' => class_exists(\ME\MerchandisingTrace\Models\Style::class)
+                ? \ME\MerchandisingTrace\Models\Style::query()->orderBy('style_no')->get(['id', 'style_no', 'name'])
+                : collect(),
+            'merSalesContractPosOptions' => class_exists(\ME\MerchandisingTrace\Models\SalesContractPo::class)
+                ? \ME\MerchandisingTrace\Models\SalesContractPo::query()->latest('id')->limit(500)->get(['id', 'po_no'])
+                : collect(),
+            'merBuyersOptions' => class_exists(\ME\MerchandisingTrace\Models\Buyer::class)
+                ? \ME\MerchandisingTrace\Models\Buyer::query()->orderBy('name')->get(['id', 'name'])
+                : collect(),
         ];
     }
 }
