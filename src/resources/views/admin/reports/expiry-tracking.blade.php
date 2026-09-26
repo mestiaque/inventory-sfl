@@ -20,52 +20,55 @@
 
     <div class="card">
         <div class="card-header d-flex justify-content-between align-items-center">
-            <h5 class="mb-0">Expiry Tracking Report</h5>
+            <h4 class="mb-0">Expiry Tracking Report</h4>
             @unless($printMode)
                 @include('sfl-inventory::admin.reports.partials.export-print-buttons', ['report' => 'expiry-tracking'])
             @endunless
         </div>
         <div class="card-body">
             @unless($printMode)
-                <form method="GET" class="row g-2 mb-3">
-                    <div class="col-md-3">
-                        <select name="item_id" class="form-control inv-select2">
+                <form method="GET" class="row mb-3 align-items-end">
+                    <div class="col-md-3 mb-2">
+                        <select name="item_id" class="form-control form-control-sm inv-select2">
                             <option value="">All Items</option>
                             @foreach($items as $item)
                                 <option value="{{ $item->id }}" @selected(request('item_id') == $item->id)>{{ $item->item_code }} — {{ $item->item_name }}</option>
                             @endforeach
                         </select>
                     </div>
-                    <div class="col-md-2">
-                        <select name="store_id" class="form-control inv-select2">
+                    <div class="col-md-3 mb-2">
+                        <select name="store_id" class="form-control form-control-sm inv-select2">
                             <option value="">All Stores</option>
                             @foreach($stores as $store)
                                 <option value="{{ $store->id }}" @selected(request('store_id') == $store->id)>{{ $store->name }}</option>
                             @endforeach
                         </select>
                     </div>
-                    <div class="col-md-2">
-                        <select name="status" class="form-control inv-select2">
+                    <div class="col-md-3 mb-2">
+                        <select name="status" class="form-control form-control-sm inv-select2">
                             <option value="">All Status</option>
                             <option value="expired" @selected(request('status') === 'expired')>Expired</option>
                             <option value="expiring_soon" @selected(request('status') === 'expiring_soon')>Expiring Soon</option>
                             <option value="ok" @selected(request('status') === 'ok')>OK</option>
                         </select>
                     </div>
-                    <div class="col-md-2">
-                        <input type="number" min="1" name="within_days" class="form-control" placeholder="Within days" value="{{ $withinDays }}">
+                    <div class="col-md-3 mb-2">
+                        <input type="number" min="1" name="within_days" class="form-control form-control-sm" placeholder="Within days" value="{{ $withinDays }}">
                         <div class="form-text">"Expiring Soon" window</div>
                     </div>
-                    <div class="col-md-1"><button type="submit" class="btn btn-secondary w-100">Filter</button></div>
+                    <div class="col-md-3 mb-2 d-flex align-items-end flex-wrap gap-1">
+                        <button type="submit" class="btn btn-secondary btn-sm">Filter</button>
+                        <a href="{{ url()->current() }}" class="btn btn-light btn-sm">Reset</a>
+                    </div>
                 </form>
             @endunless
 
             <div class="table-responsive">
-                <table class="table table-bordered table-striped table-sm align-middle">
+                <table class="table table-bordered table-sm align-middle">
                     <thead>
                         <tr>
                             <th>Item Code</th><th>Item Name</th><th>Store</th><th>GRN No</th>
-                            <th>Lot No</th><th>Batch No</th><th class="text-end">Qty</th>
+                            <th>Lot No</th><th>Batch No</th><th class="text-right">Qty</th>
                             <th>Expiry Date</th><th>Status</th>
                         </tr>
                     </thead>
@@ -88,10 +91,10 @@
                                 <td>{{ $line->grn?->grn_number }}</td>
                                 <td>{{ $line->lot_no ?? '—' }}</td>
                                 <td>{{ $line->batch_no ?? '—' }}</td>
-                                <td class="text-end">{{ inv_qty($line->received_qty) }} {{ $line->item?->unit?->short_name }}</td>
+                                <td class="text-right">{{ inv_qty($line->received_qty) }} {{ $line->item?->unit?->short_name }}</td>
                                 <td>{{ $line->expiry_date->format('d M Y') }}</td>
                                 <td>
-                                    <span class="badge p-1 text-white bg-{{ $badge }}">
+                                    <span class="badge badge-{{ $badge }}">
                                         {{ $status }}{{ $daysLeft >= 0 ? ' (' . $daysLeft . 'd)' : '' }}
                                     </span>
                                 </td>

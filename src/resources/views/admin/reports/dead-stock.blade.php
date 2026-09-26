@@ -30,16 +30,16 @@
         </div>
         <div class="card-body">
             <div class="table-responsive">
-                <table class="table table-bordered table-striped table-sm align-middle">
-                    <thead><tr><th>Item Code</th><th>Item Name</th><th>Category</th><th class="text-end">Current Stock</th><th class="text-end">Stock Value</th></tr></thead>
+                <table class="table table-bordered table-sm align-middle">
+                    <thead><tr><th>Item Code</th><th>Item Name</th><th>Category</th><th class="text-right">Current Stock</th><th class="text-right">Stock Value</th></tr></thead>
                     <tbody>
                         @forelse($items as $item)
                             <tr class="table-danger">
                                 <td>{{ $item->item_code }}</td>
                                 <td>{{ $item->item_name }}</td>
                                 <td>{{ $item->category?->name }}</td>
-                                <td class="text-end">{{ inv_qty($item->current_stock) }} {{ $item->unit?->short_name }}</td>
-                                <td class="text-end">{{ inv_qty($item->stock_value) }}</td>
+                                <td class="text-right">{{ inv_qty($item->current_stock) }} {{ $item->unit?->short_name }}</td>
+                                <td class="text-right">{{ inv_qty($item->stock_value) }}</td>
                             </tr>
                         @empty
                             <tr><td colspan="5" class="text-center text-muted">No dead stock found.</td></tr>

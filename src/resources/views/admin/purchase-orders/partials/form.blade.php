@@ -1,25 +1,25 @@
 {{-- props: purchaseOrder (optional, for edit), suppliers, items --}}
 <div class="row">
-    <div class="col-md-4 mb-3">
+    <div class="col-md-3 mb-3">
         <label class="form-label">Supplier <span class="text-danger">*</span></label>
-        <select name="supplier_id" class="form-control inv-select2" required>
+        <select name="supplier_id" class="form-control form-control-sm inv-select2" required>
             <option value="">— Select —</option>
             @foreach($suppliers as $supplier)
                 <option value="{{ $supplier->id }}" @selected(old('supplier_id', $purchaseOrder->supplier_id ?? '') == $supplier->id)>{{ $supplier->name }}</option>
             @endforeach
         </select>
     </div>
-    <div class="col-md-4 mb-3">
+    <div class="col-md-3 mb-3">
         <label class="form-label">Order Date <span class="text-danger">*</span></label>
-        <input type="date" name="order_date" class="form-control" value="{{ old('order_date', optional($purchaseOrder->order_date ?? null)->format('Y-m-d') ?? now()->toDateString()) }}" required>
+        <input type="date" name="order_date" class="form-control form-control-sm" value="{{ old('order_date', optional($purchaseOrder->order_date ?? null)->format('Y-m-d') ?? now()->toDateString()) }}" required>
     </div>
-    <div class="col-md-4 mb-3">
+    <div class="col-md-3 mb-3">
         <label class="form-label">Expected Date</label>
-        <input type="date" name="expected_date" class="form-control" value="{{ old('expected_date', optional($purchaseOrder->expected_date ?? null)->format('Y-m-d')) }}">
+        <input type="date" name="expected_date" class="form-control form-control-sm" value="{{ old('expected_date', optional($purchaseOrder->expected_date ?? null)->format('Y-m-d')) }}">
     </div>
     <div class="col-12 mb-3">
         <label class="form-label">Remarks</label>
-        <textarea name="remarks" class="form-control" rows="2">{{ old('remarks', $purchaseOrder->remarks ?? '') }}</textarea>
+        <textarea name="remarks" class="form-control form-control-sm" rows="2">{{ old('remarks', $purchaseOrder->remarks ?? '') }}</textarea>
     </div>
 </div>
 
@@ -39,18 +39,18 @@
                 @php $selectedItem = $items->firstWhere('id', (int) ($line['item_id'] ?? null)); @endphp
                 <tr>
                     <td>
-                        <select name="items[{{ $index }}][item_id]" class="form-control inv-select2" required>
+                        <select name="items[{{ $index }}][item_id]" class="form-control form-control-sm inv-select2" required>
                             <option value="">— Select —</option>
                             @foreach($items as $item)
                                 <option value="{{ $item->id }}" data-unit="{{ $item->unit?->short_name }}" @selected(($line['item_id'] ?? null) == $item->id)>{{ $item->item_code }} — {{ $item->item_name }}</option>
                             @endforeach
                         </select>
                     </td>
-                    <td><input type="text" class="form-control" data-role="unit" value="{{ $selectedItem?->unit?->short_name }}" disabled></td>
-                    <td><input type="number" step="0.0001" min="0.0001" name="items[{{ $index }}][quantity]" class="form-control" data-role="qty" value="{{ $line['quantity'] ?? '' }}" required></td>
-                    <td><input type="number" step="0.01" min="0" name="items[{{ $index }}][rate]" class="form-control" data-role="rate" value="{{ $line['rate'] ?? '' }}" placeholder="Priced at receive"></td>
-                    <td><input type="text" class="form-control" data-role="amount" value="{{ $line['amount'] ?? '' }}" disabled></td>
-                    <td><button type="button" class="btn btn-sm btn-outline-danger" data-line-items-remove><i class="fa-solid fa-xmark"></i></button></td>
+                    <td><input type="text" class="form-control form-control-sm" data-role="unit" value="{{ $selectedItem?->unit?->short_name }}" disabled></td>
+                    <td><input type="number" step="0.0001" min="0.0001" name="items[{{ $index }}][quantity]" class="form-control form-control-sm" data-role="qty" value="{{ $line['quantity'] ?? '' }}" required></td>
+                    <td><input type="number" step="0.01" min="0" name="items[{{ $index }}][rate]" class="form-control form-control-sm" data-role="rate" value="{{ $line['rate'] ?? '' }}" placeholder="Priced at receive"></td>
+                    <td><input type="text" class="form-control form-control-sm" data-role="amount" value="{{ $line['amount'] ?? '' }}" disabled></td>
+                    <td><button type="button" class="btn-custom danger" data-line-items-remove><i class="fa-solid fa-xmark"></i></button></td>
                 </tr>
             @endforeach
         </tbody>
@@ -60,17 +60,17 @@
 <template id="poRowTemplate">
     <tr>
         <td>
-            <select name="items[__INDEX__][item_id]" class="form-control inv-select2" required>
+            <select name="items[__INDEX__][item_id]" class="form-control form-control-sm inv-select2" required>
                 <option value="">— Select —</option>
                 @foreach($items as $item)
                     <option value="{{ $item->id }}" data-unit="{{ $item->unit?->short_name }}">{{ $item->item_code }} — {{ $item->item_name }}</option>
                 @endforeach
             </select>
         </td>
-        <td><input type="text" class="form-control" data-role="unit" disabled></td>
-        <td><input type="number" step="0.0001" min="0.0001" name="items[__INDEX__][quantity]" class="form-control" data-role="qty" required></td>
-        <td><input type="number" step="0.01" min="0" name="items[__INDEX__][rate]" class="form-control" data-role="rate" placeholder="Priced at receive"></td>
-        <td><input type="text" class="form-control" data-role="amount" disabled></td>
-        <td><button type="button" class="btn btn-sm btn-outline-danger" data-line-items-remove><i class="fa-solid fa-xmark"></i></button></td>
+        <td><input type="text" class="form-control form-control-sm" data-role="unit" disabled></td>
+        <td><input type="number" step="0.0001" min="0.0001" name="items[__INDEX__][quantity]" class="form-control form-control-sm" data-role="qty" required></td>
+        <td><input type="number" step="0.01" min="0" name="items[__INDEX__][rate]" class="form-control form-control-sm" data-role="rate" placeholder="Priced at receive"></td>
+        <td><input type="text" class="form-control form-control-sm" data-role="amount" disabled></td>
+        <td><button type="button" class="btn-custom danger" data-line-items-remove><i class="fa-solid fa-xmark"></i></button></td>
     </tr>
 </template>

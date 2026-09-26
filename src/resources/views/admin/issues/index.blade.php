@@ -11,71 +11,69 @@
 
     <div class="card">
         <div class="card-header d-flex justify-content-between align-items-center">
-            <h5 class="mb-0">Store Issues</h5>
+            <h4 class="mb-0">Store Issues</h4>
         </div>
         <div class="card-body">
-            <form method="GET" class="row g-2 mb-3">
-                <div class="col-md-2">
-                    <input type="text" name="search" class="form-control" placeholder="Search issue no" value="{{ request('search') }}">
+            <form method="GET" class="row mb-3 align-items-end">
+                <div class="col-md-3 mb-2">
+                    <input type="text" name="search" class="form-control form-control-sm" placeholder="Search issue no" value="{{ request('search') }}">
                 </div>
-                <div class="col-md-2">
-                    <select name="department_id" class="form-control inv-select2">
+                <div class="col-md-3 mb-2">
+                    <select name="department_id" class="form-control form-control-sm inv-select2">
                         <option value="">All Departments</option>
                         @foreach($departments as $department)
                             <option value="{{ $department->id }}" @selected(request('department_id') == $department->id)>{{ $department->name }}</option>
                         @endforeach
                     </select>
                 </div>
-                <div class="col-md-2">
-                    <select name="buyer_id" class="form-control inv-select2">
+                <div class="col-md-3 mb-2">
+                    <select name="buyer_id" class="form-control form-control-sm inv-select2">
                         <option value="">All Buyers</option>
                         @foreach($buyers as $buyer)
                             <option value="{{ $buyer->id }}" @selected(request('buyer_id') == $buyer->id)>{{ $buyer->name }}</option>
                         @endforeach
                     </select>
                 </div>
-                <div class="col-md-2">
-                    <select name="store_id" class="form-control inv-select2">
+                <div class="col-md-3 mb-2">
+                    <select name="store_id" class="form-control form-control-sm inv-select2">
                         <option value="">All Stores</option>
                         @foreach($stores as $store)
                             <option value="{{ $store->id }}" @selected(request('store_id') == $store->id)>{{ $store->name }}</option>
                         @endforeach
                     </select>
                 </div>
-                <div class="col-md-2">
-                    <select name="status" class="form-control inv-select2">
+                <div class="col-md-3 mb-2">
+                    <select name="status" class="form-control form-control-sm inv-select2">
                         <option value="">All Status</option>
                         <option value="pending" @selected(request('status') === 'pending')>Pending</option>
                         <option value="authorized" @selected(request('status') === 'authorized')>Authorized</option>
                         <option value="approved" @selected(request('status') === 'approved')>Approved</option>
                     </select>
                 </div>
-                <div class="col-md-2">
-                    <input type="date" name="date_from" class="form-control" value="{{ request('date_from') }}" placeholder="From">
+                <div class="col-md-3 mb-2">
+                    <input type="date" name="date_from" class="form-control form-control-sm" value="{{ request('date_from') }}" placeholder="From">
                 </div>
-                <div class="col-md-2">
-                    <input type="date" name="date_to" class="form-control" value="{{ request('date_to') }}" placeholder="To">
+                <div class="col-md-3 mb-2">
+                    <input type="date" name="date_to" class="form-control form-control-sm" value="{{ request('date_to') }}" placeholder="To">
                 </div>
-                <div class="col-md-2">
-                    <select name="item_id" class="form-control inv-select2">
+                <div class="col-md-3 mb-2">
+                    <select name="item_id" class="form-control form-control-sm inv-select2">
                         <option value="">All Items</option>
                         @foreach($items as $item)
                             <option value="{{ $item->id }}" @selected(request('item_id') == $item->id)>{{ $item->item_code }} — {{ $item->item_name }}</option>
                         @endforeach
                     </select>
                 </div>
-                <div class="col-md-2 mt-2">
-                    <button type="submit" class="btn btn-secondary w-100">Filter</button>
-                </div>
-                <div class="col-md-2 mt-2">
-                    <a href="{{ route('inventory.issues.index') }}" class="btn btn-light w-100">Reset</a>
+                <div class="col-md-3 mb-2 d-flex align-items-end flex-wrap gap-1">
+                    <button type="submit" class="btn btn-secondary btn-sm">Filter</button>
+                    <a href="{{ route('inventory.issues.index') }}" class="btn btn-light btn-sm">Reset</a>
                 </div>
             </form>
 
             <div class="table-responsive">
-                <table class="table table-bordered table-striped align-middle">
+                <table class="table table-bordered table-sm align-middle">
                     <thead>
-                        <tr><th>#</th><th>Issue No</th><th>Department</th><th>From Store</th><th>To Store</th><th>Buyer / Style</th><th>Date</th><th>Status</th><th>Dept. Receive</th><th class="text-end">Actions</th></tr>
+                        <tr><th>#</th><th>Issue No</th><th>Department</th><th>From Store</th><th>To Store</th><th>Buyer / Style</th><th>Date</th><th>Status</th><th>Dept. Receive</th><th class="text-right">Actions</th></tr>
                     </thead>
                     <tbody>
                         @forelse($issues as $issue)
@@ -91,16 +89,16 @@
                                 </td>
                                 <td>{{ $issue->issue_date?->format('d M Y') }}</td>
                                 <td>
-                                    <span class="badge p-1 text-white bg-{{ ['pending' => 'secondary', 'authorized' => 'info', 'approved' => 'success'][$issue->status] ?? 'secondary' }}">
+                                    <span class="badge badge-{{ ['pending' => 'secondary', 'authorized' => 'info', 'approved' => 'success'][$issue->status] ?? 'secondary' }}">
                                         {{ ucfirst($issue->status) }}
                                     </span>
                                 </td>
                                 <td>
-                                    <span class="badge p-1 text-white bg-{{ ['pending' => 'secondary', 'partial' => 'warning', 'full' => 'success'][$issue->department_receive_status] ?? 'secondary' }}">
+                                    <span class="badge badge-{{ ['pending' => 'secondary', 'partial' => 'warning', 'full' => 'success'][$issue->department_receive_status] ?? 'secondary' }}">
                                         {{ ucfirst($issue->department_receive_status) }}
                                     </span>
                                 </td>
-                                <td class="text-end">
+                                <td class="text-right">
                                     @can('inv_issue.authorize')
                                         @if($issue->status === 'pending')
                                             <form action="{{ route('inventory.issues.authorize', $issue) }}" method="POST" class="d-inline">
@@ -127,7 +125,7 @@
                                         @endif
                                     @endcan
                                     @can('inv_issue.print')
-                                        <a href="{{ route('inventory.issues.print', $issue) }}" target="_blank" class="btn btn-sm btn-outline-secondary"><i class="fa-solid fa-print"></i></a>
+                                        <a href="{{ route('inventory.issues.print', $issue) }}" target="_blank" class="btn-custom primary"><i class="fa-solid fa-print"></i></a>
                                     @endcan
                                     @can('inv_issue.receive')
                                         @if($issue->status === 'approved' && $issue->department_receive_status !== 'full')

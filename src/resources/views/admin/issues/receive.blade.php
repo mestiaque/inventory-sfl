@@ -11,7 +11,7 @@
 
     <div class="card">
         <div class="card-header d-flex justify-content-between align-items-center">
-            <h5 class="mb-0">Confirm Department Receipt — {{ $issue->issue_no }}</h5>
+            <h4 class="mb-0">Confirm Department Receipt — {{ $issue->issue_no }}</h4>
             <a href="{{ route('inventory.issues.index') }}" class="btn btn-light btn-sm"><i class="fa-solid fa-arrow-left"></i> Back</a>
         </div>
         <div class="card-body">
@@ -31,7 +31,7 @@
                                     <td>{{ $item->issued_qty }}</td>
                                     <td>
                                         <input type="hidden" name="items[{{ $loop->index }}][id]" value="{{ $item->id }}">
-                                        <input type="number" step="0.0001" min="0" max="{{ $item->issued_qty }}" class="form-control"
+                                        <input type="number" step="0.0001" min="0" max="{{ $item->issued_qty }}" class="form-control form-control-sm"
                                             name="items[{{ $loop->index }}][department_received_qty]"
                                             value="{{ $item->department_received_qty > 0 ? $item->department_received_qty : $item->issued_qty }}">
                                     </td>
@@ -43,11 +43,11 @@
 
                 <div class="mb-3">
                     <label class="form-label">Remarks</label>
-                    <textarea name="department_receive_remarks" class="form-control" rows="2">{{ $issue->department_receive_remarks }}</textarea>
+                    <textarea name="department_receive_remarks" class="form-control form-control-sm" rows="2">{{ $issue->department_receive_remarks }}</textarea>
                 </div>
 
-                <button type="submit" class="btn btn-primary">Confirm Receipt</button>
-                <a href="{{ route('inventory.issues.index') }}" class="btn btn-light">Cancel</a>
+                <button type="submit" class="btn btn-primary btn-sm">Confirm Receipt</button>
+                <a href="{{ route('inventory.issues.index') }}" class="btn btn-light btn-sm">Cancel</a>
             </form>
         </div>
     </div>

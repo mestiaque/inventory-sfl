@@ -11,7 +11,7 @@
 
     <div class="card">
         <div class="card-header d-flex justify-content-between align-items-center">
-            <h5 class="mb-0">GRN {{ $grn->grn_number }}</h5>
+            <h4 class="mb-0">GRN {{ $grn->grn_number }}</h4>
             <div class="d-flex align-items-center gap-2">
                 @can('inv_grn.approve')
                     @if($grn->source_type === 'purchase' && $grn->status === 'pending')
@@ -31,14 +31,14 @@
                 <dt class="col-sm-2">Source</dt>
                 <dd class="col-sm-4">
                     @if($grn->source_type === 'buyer_supplied')
-                        <span class="badge p-1 text-white bg-info">Buyer Supplied</span>
+                        <span class="badge badge-info">Buyer Supplied</span>
                     @else
-                        <span class="badge p-1 text-white bg-secondary">Purchase</span>
+                        <span class="badge badge-secondary">Purchase</span>
                     @endif
                 </dd>
                 <dt class="col-sm-2">Status</dt>
                 <dd class="col-sm-4">
-                    <span class="badge p-1 text-white bg-{{ ['pending' => 'warning', 'posted' => 'success', 'rejected' => 'danger', 'cancelled' => 'secondary'][$grn->status] ?? 'secondary' }}">
+                    <span class="badge badge-{{ ['pending' => 'warning', 'posted' => 'success', 'rejected' => 'danger', 'cancelled' => 'secondary'][$grn->status] ?? 'secondary' }}">
                         {{ $grn->status === 'pending' ? 'Pending Approval' : ucfirst($grn->status) }}
                     </span>
                 </dd>
@@ -93,8 +93,8 @@
                 <table class="table table-bordered table-sm align-middle">
                     <thead>
                         <tr>
-                            <th>Item</th><th>Unit</th><th>Color</th><th>Size</th><th class="text-end">Received Qty</th><th class="text-end">Rejected Qty</th>
-                            <th class="text-end">Rate</th><th class="text-end">Amount</th><th>Lot No</th><th>Batch No</th><th>Expiry Date</th>
+                            <th>Item</th><th>Unit</th><th>Color</th><th>Size</th><th class="text-right">Received Qty</th><th class="text-right">Rejected Qty</th>
+                            <th class="text-right">Rate</th><th class="text-right">Amount</th><th>Lot No</th><th>Batch No</th><th>Expiry Date</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -104,10 +104,10 @@
                                 <td>{{ $item->item?->unit?->short_name }}</td>
                                 <td>{{ $item->color?->name ?? '—' }}</td>
                                 <td>{{ $item->size?->name ?? '—' }}</td>
-                                <td class="text-end">{{ inv_qty($item->received_qty) }}</td>
-                                <td class="text-end">{{ inv_qty($item->rejected_qty) }}</td>
-                                <td class="text-end">{{ inv_qty($item->rate) }}</td>
-                                <td class="text-end">{{ inv_qty($item->amount) }}</td>
+                                <td class="text-right">{{ inv_qty($item->received_qty) }}</td>
+                                <td class="text-right">{{ inv_qty($item->rejected_qty) }}</td>
+                                <td class="text-right">{{ inv_qty($item->rate) }}</td>
+                                <td class="text-right">{{ inv_qty($item->amount) }}</td>
                                 <td>{{ $item->lot_no ?? '—' }}</td>
                                 <td>{{ $item->batch_no ?? '—' }}</td>
                                 <td>{{ optional($item->expiry_date)->format('d M Y') ?? '—' }}</td>
@@ -115,7 +115,7 @@
                         @endforeach
                     </tbody>
                     <tfoot>
-                        <tr class="fw-bold"><td colspan="7" class="text-end">Total</td><td class="text-end">{{ inv_qty($grn->total_amount) }}</td><td colspan="3"></td></tr>
+                        <tr class="font-weight-bold"><td colspan="7" class="text-right">Total</td><td class="text-right">{{ inv_qty($grn->total_amount) }}</td><td colspan="3"></td></tr>
                     </tfoot>
                 </table>
             </div>

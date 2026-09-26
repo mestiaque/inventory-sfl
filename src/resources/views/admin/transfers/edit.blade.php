@@ -11,38 +11,38 @@
 
     <div class="card">
         <div class="card-header d-flex justify-content-between align-items-center">
-            <h5 class="mb-0">Edit Transfer — {{ $transfer->transfer_no }}</h5>
+            <h4 class="mb-0">Edit Transfer — {{ $transfer->transfer_no }}</h4>
             <a href="{{ route('inventory.transfers.show', $transfer) }}" class="btn btn-light btn-sm"><i class="fa-solid fa-arrow-left"></i> Back</a>
         </div>
         <div class="card-body">
             <form method="POST" action="{{ route('inventory.transfers.update', $transfer) }}">
                 @csrf @method('PUT')
                 <div class="row">
-                    <div class="col-md-4 mb-3">
+                    <div class="col-md-3 mb-3">
                         <label class="form-label">From Store <span class="text-danger">*</span></label>
-                        <select name="from_store_id" class="form-control inv-select2" required>
+                        <select name="from_store_id" class="form-control form-control-sm inv-select2" required>
                             <option value="">— Select —</option>
                             @foreach($stores as $store)
                                 <option value="{{ $store->id }}" @selected(old('from_store_id', $transfer->from_store_id) == $store->id)>{{ $store->name }}</option>
                             @endforeach
                         </select>
                     </div>
-                    <div class="col-md-4 mb-3">
+                    <div class="col-md-3 mb-3">
                         <label class="form-label">To Store <span class="text-danger">*</span></label>
-                        <select name="to_store_id" class="form-control inv-select2" required>
+                        <select name="to_store_id" class="form-control form-control-sm inv-select2" required>
                             <option value="">— Select —</option>
                             @foreach($stores as $store)
                                 <option value="{{ $store->id }}" @selected(old('to_store_id', $transfer->to_store_id) == $store->id)>{{ $store->name }}</option>
                             @endforeach
                         </select>
                     </div>
-                    <div class="col-md-4 mb-3">
+                    <div class="col-md-3 mb-3">
                         <label class="form-label">Transfer Date <span class="text-danger">*</span></label>
-                        <input type="date" name="transfer_date" class="form-control" value="{{ old('transfer_date', optional($transfer->transfer_date)->format('Y-m-d')) }}" required>
+                        <input type="date" name="transfer_date" class="form-control form-control-sm" value="{{ old('transfer_date', optional($transfer->transfer_date)->format('Y-m-d')) }}" required>
                     </div>
                     <div class="col-12 mb-3">
                         <label class="form-label">Remarks</label>
-                        <textarea name="remarks" class="form-control" rows="2">{{ old('remarks', $transfer->remarks) }}</textarea>
+                        <textarea name="remarks" class="form-control form-control-sm" rows="2">{{ old('remarks', $transfer->remarks) }}</textarea>
                     </div>
                 </div>
 
@@ -58,7 +58,7 @@
                             @foreach(old('items', $transfer->items->map(fn ($i) => ['item_id' => $i->item_id, 'color_id' => $i->color_id, 'size_id' => $i->size_id, 'quantity' => (float) $i->quantity])->all()) as $index => $line)
                                 <tr>
                                     <td>
-                                        <select name="items[{{ $index }}][item_id]" class="form-control inv-select2" required>
+                                        <select name="items[{{ $index }}][item_id]" class="form-control form-control-sm inv-select2" required>
                                             <option value="">— Select —</option>
                                             @foreach($items as $item)
                                                 <option value="{{ $item->id }}" data-store="{{ $item->opening_store_id }}" data-color-id="{{ $item->color_id }}" data-size-id="{{ $item->size_id }}" @selected(($line['item_id'] ?? null) == $item->id)>{{ $item->item_code }} — {{ $item->item_name }}</option>
@@ -66,7 +66,7 @@
                                         </select>
                                     </td>
                                     <td>
-                                        <select name="items[{{ $index }}][color_id]" class="form-control">
+                                        <select name="items[{{ $index }}][color_id]" class="form-control form-control-sm">
                                             <option value="">— Select —</option>
                                             @foreach($colors as $color)
                                                 <option value="{{ $color->id }}" @selected(($line['color_id'] ?? null) == $color->id)>{{ $color->name }}</option>
@@ -74,15 +74,15 @@
                                         </select>
                                     </td>
                                     <td>
-                                        <select name="items[{{ $index }}][size_id]" class="form-control">
+                                        <select name="items[{{ $index }}][size_id]" class="form-control form-control-sm">
                                             <option value="">— Select —</option>
                                             @foreach($sizes as $size)
                                                 <option value="{{ $size->id }}" @selected(($line['size_id'] ?? null) == $size->id)>{{ $size->name }}</option>
                                             @endforeach
                                         </select>
                                     </td>
-                                    <td><input type="number" step="0.0001" min="0.0001" name="items[{{ $index }}][quantity]" class="form-control" value="{{ $line['quantity'] ?? '' }}" required></td>
-                                    <td><button type="button" class="btn btn-sm btn-outline-danger" data-line-items-remove><i class="fa-solid fa-xmark"></i></button></td>
+                                    <td><input type="number" step="0.0001" min="0.0001" name="items[{{ $index }}][quantity]" class="form-control form-control-sm" value="{{ $line['quantity'] ?? '' }}" required></td>
+                                    <td><button type="button" class="btn-custom danger" data-line-items-remove><i class="fa-solid fa-xmark"></i></button></td>
                                 </tr>
                             @endforeach
                         </tbody>
@@ -92,7 +92,7 @@
                 <template id="trfRowTemplate">
                     <tr>
                         <td>
-                            <select name="items[__INDEX__][item_id]" class="form-control inv-select2" required>
+                            <select name="items[__INDEX__][item_id]" class="form-control form-control-sm inv-select2" required>
                                 <option value="">— Select —</option>
                                 @foreach($items as $item)
                                     <option value="{{ $item->id }}" data-store="{{ $item->opening_store_id }}" data-color-id="{{ $item->color_id }}" data-size-id="{{ $item->size_id }}">{{ $item->item_code }} — {{ $item->item_name }}</option>
@@ -100,7 +100,7 @@
                             </select>
                         </td>
                         <td>
-                            <select name="items[__INDEX__][color_id]" class="form-control">
+                            <select name="items[__INDEX__][color_id]" class="form-control form-control-sm">
                                 <option value="">— Select —</option>
                                 @foreach($colors as $color)
                                     <option value="{{ $color->id }}">{{ $color->name }}</option>
@@ -108,20 +108,20 @@
                             </select>
                         </td>
                         <td>
-                            <select name="items[__INDEX__][size_id]" class="form-control">
+                            <select name="items[__INDEX__][size_id]" class="form-control form-control-sm">
                                 <option value="">— Select —</option>
                                 @foreach($sizes as $size)
                                     <option value="{{ $size->id }}">{{ $size->name }}</option>
                                 @endforeach
                             </select>
                         </td>
-                        <td><input type="number" step="0.0001" min="0.0001" name="items[__INDEX__][quantity]" class="form-control" required></td>
-                        <td><button type="button" class="btn btn-sm btn-outline-danger" data-line-items-remove><i class="fa-solid fa-xmark"></i></button></td>
+                        <td><input type="number" step="0.0001" min="0.0001" name="items[__INDEX__][quantity]" class="form-control form-control-sm" required></td>
+                        <td><button type="button" class="btn-custom danger" data-line-items-remove><i class="fa-solid fa-xmark"></i></button></td>
                     </tr>
                 </template>
 
-                <button type="submit" class="btn btn-primary mt-3">Save Changes</button>
-                <a href="{{ route('inventory.transfers.show', $transfer) }}" class="btn btn-light mt-3">Cancel</a>
+                <button type="submit" class="btn btn-primary mt-3 btn-sm">Save Changes</button>
+                <a href="{{ route('inventory.transfers.show', $transfer) }}" class="btn btn-light mt-3 btn-sm">Cancel</a>
             </form>
         </div>
     </div>

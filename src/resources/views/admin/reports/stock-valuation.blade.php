@@ -20,38 +20,41 @@
 
     <div class="card">
         <div class="card-header d-flex justify-content-between align-items-center">
-            <h5 class="mb-0">Stock Valuation (Moving Weighted Average)</h5>
+            <h4 class="mb-0">Stock Valuation (Moving Weighted Average)</h4>
             @unless($printMode)
                 @include('sfl-inventory::admin.reports.partials.export-print-buttons', ['report' => 'stock-valuation'])
             @endunless
         </div>
         <div class="card-body">
             @unless($printMode)
-                <form method="GET" class="row g-2 mb-3">
-                    <div class="col-md-4">
-                        <select name="category_id" class="form-control inv-select2">
+                <form method="GET" class="row mb-3 align-items-end">
+                    <div class="col-md-3 mb-2">
+                        <select name="category_id" class="form-control form-control-sm inv-select2">
                             <option value="">All Categories</option>
                             @foreach($categories as $category)
                                 <option value="{{ $category->id }}" @selected(request('category_id') == $category->id)>{{ $category->name }}</option>
                             @endforeach
                         </select>
                     </div>
-                    <div class="col-md-4"><button type="submit" class="btn btn-secondary">Filter</button></div>
+                    <div class="col-md-3 mb-2 d-flex align-items-end flex-wrap gap-1">
+                        <button type="submit" class="btn btn-secondary btn-sm">Filter</button>
+                        <a href="{{ url()->current() }}" class="btn btn-light btn-sm">Reset</a>
+                    </div>
                 </form>
             @endunless
 
             <div class="table-responsive">
-                <table class="table table-bordered table-striped table-sm align-middle">
-                    <thead><tr><th>Item Code</th><th>Item Name</th><th>Category</th><th class="text-end">Qty</th><th class="text-end">Latest Rate</th><th class="text-end">Value</th></tr></thead>
+                <table class="table table-bordered table-sm align-middle">
+                    <thead><tr><th>Item Code</th><th>Item Name</th><th>Category</th><th class="text-right">Qty</th><th class="text-right">Latest Rate</th><th class="text-right">Value</th></tr></thead>
                     <tbody>
                         @forelse($items as $item)
                             <tr>
                                 <td>{{ $item->item_code }}</td>
                                 <td>{{ $item->item_name }}</td>
                                 <td>{{ $item->category?->name }}</td>
-                                <td class="text-end">{{ inv_qty($item->current_stock) }} {{ $item->unit?->short_name }}</td>
-                                <td class="text-end">{{ inv_qty($item->latest_rate) }}</td>
-                                <td class="text-end">{{ inv_qty($item->stock_value) }}</td>
+                                <td class="text-right">{{ inv_qty($item->current_stock) }} {{ $item->unit?->short_name }}</td>
+                                <td class="text-right">{{ inv_qty($item->latest_rate) }}</td>
+                                <td class="text-right">{{ inv_qty($item->stock_value) }}</td>
                             </tr>
                         @empty
                             <tr><td colspan="6" class="text-center text-muted">No stock records found.</td></tr>
@@ -59,7 +62,7 @@
                     </tbody>
                     @if($items->isNotEmpty())
                         <tfoot>
-                            <tr class="fw-bold"><td colspan="5" class="text-end">Total Stock Value</td><td class="text-end">{{ inv_qty($items->sum('stock_value')) }}</td></tr>
+                            <tr class="font-weight-bold"><td colspan="5" class="text-right">Total Stock Value</td><td class="text-right">{{ inv_qty($items->sum('stock_value')) }}</td></tr>
                         </tfoot>
                     @endif
                 </table>

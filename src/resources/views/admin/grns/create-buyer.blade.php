@@ -11,7 +11,7 @@
 
     <div class="card">
         <div class="card-header d-flex justify-content-between align-items-center">
-            <h5 class="mb-0">Buyer Supplied Challan</h5>
+            <h4 class="mb-0">Buyer Supplied Challan</h4>
             <a href="{{ route('inventory.grns.create') }}" class="btn btn-light btn-sm"><i class="fa-solid fa-arrow-left"></i> Back</a>
         </div>
         <div class="card-body">
@@ -22,7 +22,7 @@
                 <div class="row">
                     <div class="col-md-3 mb-3">
                         <label class="form-label">Store <span class="text-danger">*</span></label>
-                        <select name="{{ $buyerStore ? '' : 'store_id' }}" class="form-control inv-select2" required @disabled($buyerStore)>
+                        <select name="{{ $buyerStore ? '' : 'store_id' }}" class="form-control form-control-sm inv-select2" required @disabled($buyerStore)>
                             <option value="">— Select —</option>
                             @foreach($stores as $store)
                                 <option value="{{ $store->id }}" @selected(old('store_id', $buyerStore?->id) == $store->id)>{{ $store->name }}</option>
@@ -34,7 +34,7 @@
                     </div>
                     <div class="col-md-3 mb-3">
                         <label class="form-label">Buyer <span class="text-danger">*</span></label>
-                        <select name="buyer_id" class="form-control inv-select2" required>
+                        <select name="buyer_id" class="form-control form-control-sm inv-select2" required>
                             <option value="">— Select —</option>
                             @foreach($buyers as $buyer)
                                 <option value="{{ $buyer->id }}" @selected(old('buyer_id') == $buyer->id)>{{ $buyer->name }}</option>
@@ -43,16 +43,16 @@
                     </div>
                     <div class="col-md-3 mb-3">
                         <label class="form-label">Style</label>
-                        <input type="text" name="style" class="form-control" value="{{ old('style') }}" placeholder="e.g. Style-A">
+                        <input type="text" name="style" class="form-control form-control-sm" value="{{ old('style') }}" placeholder="e.g. Style-A">
                     </div>
                     <div class="col-md-3 mb-3">
                         <label class="form-label">Purchase order ref</label>
-                        <input type="text" name="order_ref" class="form-control" value="{{ old('order_ref') }}">
+                        <input type="text" name="order_ref" class="form-control form-control-sm" value="{{ old('order_ref') }}">
                     </div>
                     @if(($merStylesOptions ?? collect())->isNotEmpty())
                     <div class="col-md-3 mb-3">
                         <label class="form-label">Merchandising Style</label>
-                        <select name="mer_style_id" class="form-control inv-select2">
+                        <select name="mer_style_id" class="form-control form-control-sm inv-select2">
                             <option value="">— None —</option>
                             @foreach($merStylesOptions as $s)
                                 <option value="{{ $s->id }}" @selected(old('mer_style_id') == $s->id)>{{ $s->style_no }} — {{ $s->name }}</option>
@@ -63,7 +63,7 @@
                     @if(($merSalesContractPosOptions ?? collect())->isNotEmpty())
                     <div class="col-md-3 mb-3">
                         <label class="form-label">Sales Contract PO</label>
-                        <select name="mer_sales_contract_po_id" class="form-control inv-select2">
+                        <select name="mer_sales_contract_po_id" class="form-control form-control-sm inv-select2">
                             <option value="">— None —</option>
                             @foreach($merSalesContractPosOptions as $po)
                                 <option value="{{ $po->id }}" @selected(old('mer_sales_contract_po_id') == $po->id)>{{ $po->po_no }}</option>
@@ -74,7 +74,7 @@
                     @if(($merBuyersOptions ?? collect())->isNotEmpty())
                     <div class="col-md-3 mb-3">
                         <label class="form-label">Merchandising Buyer</label>
-                        <select name="mer_buyer_id" class="form-control inv-select2">
+                        <select name="mer_buyer_id" class="form-control form-control-sm inv-select2">
                             <option value="">— None —</option>
                             @foreach($merBuyersOptions as $b)
                                 <option value="{{ $b->id }}" @selected(old('mer_buyer_id') == $b->id)>{{ $b->name }}</option>
@@ -84,15 +84,15 @@
                     @endif
                     <div class="col-md-3 mb-3">
                         <label class="form-label">Receive Date <span class="text-danger">*</span></label>
-                        <input type="date" name="receive_date" class="form-control" value="{{ old('receive_date', now()->toDateString()) }}" required>
+                        <input type="date" name="receive_date" class="form-control form-control-sm" value="{{ old('receive_date', now()->toDateString()) }}" required>
                     </div>
-                    <div class="col-md-4 mb-3">
+                    <div class="col-md-3 mb-3">
                         <label class="form-label">Invoice / Challan No.</label>
-                        <input type="text" name="challan_invoice_no" class="form-control" value="{{ old('challan_invoice_no') }}" placeholder="Buyer's challan number">
+                        <input type="text" name="challan_invoice_no" class="form-control form-control-sm" value="{{ old('challan_invoice_no') }}" placeholder="Buyer's challan number">
                     </div>
-                    <div class="col-md-4 mb-3">
+                    <div class="col-md-3 mb-3">
                         <label class="form-label">Received By</label>
-                        <select name="received_by" class="form-control inv-select2">
+                        <select name="received_by" class="form-control form-control-sm inv-select2">
                             <option value="">— Select —</option>
                             @foreach($employees as $employee)
                                 <option value="{{ $employee->id }}" @selected(old('received_by') == $employee->id)>{{ $employee->name }} ({{ $employee->employee_id }})</option>
@@ -101,7 +101,7 @@
                     </div>
                     <div class="col-12 mb-3">
                         <label class="form-label">Remarks</label>
-                        <textarea name="remarks" class="form-control" rows="2">{{ old('remarks') }}</textarea>
+                        <textarea name="remarks" class="form-control form-control-sm" rows="2">{{ old('remarks') }}</textarea>
                     </div>
                 </div>
 
@@ -113,7 +113,7 @@
                 @can('inv_barcode.use')
                     <div class="mb-3" style="max-width:320px;">
                         <label class="form-label">Scan Barcode to Receive</label>
-                        <input type="text" class="form-control" data-barcode-scan="grn" placeholder="Scan or type a barcode, then Enter" autocomplete="off">
+                        <input type="text" class="form-control form-control-sm" data-barcode-scan="grn" placeholder="Scan or type a barcode, then Enter" autocomplete="off">
                         <div id="grnBarcodeScanFeedback" class="form-text"></div>
                     </div>
                 @endcan
@@ -127,16 +127,16 @@
                                 @php $selectedItem = $items->firstWhere('id', (int) ($line['item_id'] ?? null)); @endphp
                                 <tr>
                                     <td>
-                                        <select name="items[{{ $index }}][item_id]" class="form-control inv-select2" required>
+                                        <select name="items[{{ $index }}][item_id]" class="form-control form-control-sm inv-select2" required>
                                             <option value="">— Select —</option>
                                             @foreach($items as $item)
                                                 <option value="{{ $item->id }}" data-unit="{{ $item->unit?->short_name }}" data-store="{{ $item->opening_store_id }}" data-barcode="{{ $item->barcode }}" data-color-id="{{ $item->color_id }}" data-size-id="{{ $item->size_id }}" @selected(($line['item_id'] ?? null) == $item->id)>{{ $item->item_code }} — {{ $item->item_name }}</option>
                                             @endforeach
                                         </select>
                                     </td>
-                                    <td><input type="text" class="form-control" data-role="unit" value="{{ $selectedItem?->unit?->short_name }}" disabled></td>
+                                    <td><input type="text" class="form-control form-control-sm" data-role="unit" value="{{ $selectedItem?->unit?->short_name }}" disabled></td>
                                     <td>
-                                        <select name="items[{{ $index }}][color_id]" class="form-control">
+                                        <select name="items[{{ $index }}][color_id]" class="form-control form-control-sm">
                                             <option value="">— Select —</option>
                                             @foreach($colors as $color)
                                                 <option value="{{ $color->id }}" @selected(($line['color_id'] ?? null) == $color->id)>{{ $color->name }}</option>
@@ -144,19 +144,19 @@
                                         </select>
                                     </td>
                                     <td>
-                                        <select name="items[{{ $index }}][size_id]" class="form-control">
+                                        <select name="items[{{ $index }}][size_id]" class="form-control form-control-sm">
                                             <option value="">— Select —</option>
                                             @foreach($sizes as $size)
                                                 <option value="{{ $size->id }}" @selected(($line['size_id'] ?? null) == $size->id)>{{ $size->name }}</option>
                                             @endforeach
                                         </select>
                                     </td>
-                                    <td><input type="number" step="0.0001" min="0.0001" name="items[{{ $index }}][received_qty]" class="form-control" value="{{ $line['received_qty'] ?? '' }}" required></td>
-                                    <td><input type="date" name="items[{{ $index }}][expiry_date]" class="form-control" value="{{ $line['expiry_date'] ?? '' }}"></td>
+                                    <td><input type="number" step="0.0001" min="0.0001" name="items[{{ $index }}][received_qty]" class="form-control form-control-sm" value="{{ $line['received_qty'] ?? '' }}" required></td>
+                                    <td><input type="date" name="items[{{ $index }}][expiry_date]" class="form-control form-control-sm" value="{{ $line['expiry_date'] ?? '' }}"></td>
                                     <td>
                                         <input type="hidden" name="items[{{ $index }}][rate]" value="0">
                                         <input type="hidden" name="items[{{ $index }}][rejected_qty]" value="0">
-                                        <button type="button" class="btn btn-sm btn-outline-danger" data-line-items-remove><i class="fa-solid fa-xmark"></i></button>
+                                        <button type="button" class="btn-custom danger" data-line-items-remove><i class="fa-solid fa-xmark"></i></button>
                                     </td>
                                 </tr>
                             @endforeach
@@ -167,16 +167,16 @@
                 <template id="grnRowTemplate">
                     <tr>
                         <td>
-                            <select name="items[__INDEX__][item_id]" class="form-control inv-select2" required>
+                            <select name="items[__INDEX__][item_id]" class="form-control form-control-sm inv-select2" required>
                                 <option value="">— Select —</option>
                                 @foreach($items as $item)
                                     <option value="{{ $item->id }}" data-unit="{{ $item->unit?->short_name }}" data-store="{{ $item->opening_store_id }}" data-barcode="{{ $item->barcode }}" data-color-id="{{ $item->color_id }}" data-size-id="{{ $item->size_id }}">{{ $item->item_code }} — {{ $item->item_name }}</option>
                                 @endforeach
                             </select>
                         </td>
-                        <td><input type="text" class="form-control" data-role="unit" disabled></td>
+                        <td><input type="text" class="form-control form-control-sm" data-role="unit" disabled></td>
                         <td>
-                            <select name="items[__INDEX__][color_id]" class="form-control">
+                            <select name="items[__INDEX__][color_id]" class="form-control form-control-sm">
                                 <option value="">— Select —</option>
                                 @foreach($colors as $color)
                                     <option value="{{ $color->id }}">{{ $color->name }}</option>
@@ -184,25 +184,25 @@
                             </select>
                         </td>
                         <td>
-                            <select name="items[__INDEX__][size_id]" class="form-control">
+                            <select name="items[__INDEX__][size_id]" class="form-control form-control-sm">
                                 <option value="">— Select —</option>
                                 @foreach($sizes as $size)
                                     <option value="{{ $size->id }}">{{ $size->name }}</option>
                                 @endforeach
                             </select>
                         </td>
-                        <td><input type="number" step="0.0001" min="0.0001" name="items[__INDEX__][received_qty]" class="form-control" required></td>
-                        <td><input type="date" name="items[__INDEX__][expiry_date]" class="form-control"></td>
+                        <td><input type="number" step="0.0001" min="0.0001" name="items[__INDEX__][received_qty]" class="form-control form-control-sm" required></td>
+                        <td><input type="date" name="items[__INDEX__][expiry_date]" class="form-control form-control-sm"></td>
                         <td>
                             <input type="hidden" name="items[__INDEX__][rate]" value="0">
                             <input type="hidden" name="items[__INDEX__][rejected_qty]" value="0">
-                            <button type="button" class="btn btn-sm btn-outline-danger" data-line-items-remove><i class="fa-solid fa-xmark"></i></button>
+                            <button type="button" class="btn-custom danger" data-line-items-remove><i class="fa-solid fa-xmark"></i></button>
                         </td>
                     </tr>
                 </template>
 
-                <button type="submit" class="btn btn-primary mt-3">Post Challan &amp; Update Stock</button>
-                <a href="{{ route('inventory.grns.index') }}" class="btn btn-light mt-3">Cancel</a>
+                <button type="submit" class="btn btn-primary mt-3 btn-sm">Post Challan &amp; Update Stock</button>
+                <a href="{{ route('inventory.grns.index') }}" class="btn btn-light mt-3 btn-sm">Cancel</a>
             </form>
         </div>
     </div>

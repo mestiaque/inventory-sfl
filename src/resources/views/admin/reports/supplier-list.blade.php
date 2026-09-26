@@ -37,29 +37,27 @@
 
     <div class="card">
         <div class="card-header d-flex justify-content-between align-items-center">
-            <h5 class="mb-0">Supplier List</h5>
+            <h4 class="mb-0">Supplier List</h4>
             @unless($printMode)
                 @include('sfl-inventory::admin.reports.partials.export-print-buttons', ['report' => 'supplier-list'])
             @endunless
         </div>
         <div class="card-body">
             @unless($printMode)
-                <form method="GET" class="row g-2 mb-3">
-                    <div class="col-md-3">
-                        <input type="text" name="search" class="form-control" placeholder="Search name or code" value="{{ request('search') }}">
+                <form method="GET" class="row mb-3 align-items-end">
+                    <div class="col-md-3 mb-2">
+                        <input type="text" name="search" class="form-control form-control-sm" placeholder="Search name or code" value="{{ request('search') }}">
                     </div>
-                    <div class="col-md-3">
-                        <select name="status" class="form-control inv-select2">
+                    <div class="col-md-3 mb-2">
+                        <select name="status" class="form-control form-control-sm inv-select2">
                             <option value="">All Status</option>
                             <option value="active" @selected(request('status') === 'active')>Active</option>
                             <option value="inactive" @selected(request('status') === 'inactive')>Inactive</option>
                         </select>
                     </div>
-                    <div class="col-md-2">
-                        <button type="submit" class="btn btn-secondary w-100">Filter</button>
-                    </div>
-                    <div class="col-md-2">
-                        <a href="{{ route('inventory.reports.supplier-list') }}" class="btn btn-light w-100">Reset</a>
+                    <div class="col-md-3 mb-2 d-flex align-items-end flex-wrap gap-1">
+                        <button type="submit" class="btn btn-secondary btn-sm">Filter</button>
+                        <a href="{{ route('inventory.reports.supplier-list') }}" class="btn btn-light btn-sm">Reset</a>
                     </div>
                 </form>
             @endunless
@@ -70,7 +68,7 @@
             </div>
 
             <div class="table-responsive">
-                <table class="table table-bordered supplier-list-table {{ $printMode ? '' : 'table-striped align-middle' }}">
+                <table class="table table-bordered table-sm supplier-list-table {{ $printMode ? '' : 'table-striped align-middle' }}">
                     <thead>
                         <tr>
                             <th>SL No.</th>

@@ -11,7 +11,7 @@
 
     <div class="card">
         <div class="card-header d-flex justify-content-between align-items-center">
-            <h5 class="mb-0">Item Master</h5>
+            <h4 class="mb-0">Item Master</h4>
             <div>
                 @can('inv_item.delete')
                     <button type="button" class="btn btn-outline-secondary btn-sm" data-toggle="modal" data-target="#itemTrashModal">
@@ -31,93 +31,91 @@
             </div>
         </div>
         <div class="card-body">
-            <form method="GET" class="row g-2 mb-3">
-                <div class="col-md-2">
-                    <input type="text" name="item_code" class="form-control" placeholder="Search Code" value="{{ request('item_code') }}">
+            <form method="GET" class="row mb-3 align-items-end">
+                <div class="col-md-3 mb-2">
+                    <input type="text" name="item_code" class="form-control form-control-sm" placeholder="Search Code" value="{{ request('item_code') }}">
                 </div>
-                <div class="col-md-2">
-                    <input type="text" name="item_name" class="form-control" placeholder="Search Name" value="{{ request('item_name') }}">
+                <div class="col-md-3 mb-2">
+                    <input type="text" name="item_name" class="form-control form-control-sm" placeholder="Search Name" value="{{ request('item_name') }}">
                 </div>
-                <div class="col-md-2">
-                    <select name="category_id" class="form-control inv-select2">
+                <div class="col-md-3 mb-2">
+                    <select name="category_id" class="form-control form-control-sm inv-select2">
                         <option value="">All Categories</option>
                         @foreach($categories as $category)
                             <option value="{{ $category->id }}" @selected(request('category_id') == $category->id)>{{ $category->name }}</option>
                         @endforeach
                     </select>
                 </div>
-                <div class="col-md-2">
-                    <select name="unit_id" class="form-control inv-select2">
+                <div class="col-md-3 mb-2">
+                    <select name="unit_id" class="form-control form-control-sm inv-select2">
                         <option value="">All Units</option>
                         @foreach($units as $unit)
                             <option value="{{ $unit->id }}" @selected(request('unit_id') == $unit->id)>{{ $unit->name }} ({{ $unit->short_name }})</option>
                         @endforeach
                     </select>
                 </div>
-                <div class="col-md-2">
-                    <select name="item_type" class="form-control inv-select2">
+                <div class="col-md-3 mb-2">
+                    <select name="item_type" class="form-control form-control-sm inv-select2">
                         <option value="">All Types</option>
                         <option value="raw_material" @selected(request('item_type') === 'raw_material')>Raw Material</option>
                         <option value="wip" @selected(request('item_type') === 'wip')>WIP</option>
                         <option value="finished_good" @selected(request('item_type') === 'finished_good')>Finished Good</option>
                     </select>
                 </div>
-                <div class="col-md-2">
-                    <select name="department_id" class="form-control inv-select2">
+                <div class="col-md-3 mb-2">
+                    <select name="department_id" class="form-control form-control-sm inv-select2">
                         <option value="">All Departments</option>
                         @foreach($departments as $department)
                             <option value="{{ $department->id }}" @selected(request('department_id') == $department->id)>{{ $department->name }}</option>
                         @endforeach
                     </select>
                 </div>
-                <div class="col-md-2">
-                    <select name="supplier_id" class="form-control inv-select2">
+                <div class="col-md-3 mb-2">
+                    <select name="supplier_id" class="form-control form-control-sm inv-select2">
                         <option value="">All Suppliers</option>
                         @foreach($suppliers as $supplier)
                             <option value="{{ $supplier->id }}" @selected(request('supplier_id') == $supplier->id)>{{ $supplier->name }}</option>
                         @endforeach
                     </select>
                 </div>
-                <div class="col-md-2">
-                    <select name="store_id" class="form-control inv-select2">
+                <div class="col-md-3 mb-2">
+                    <select name="store_id" class="form-control form-control-sm inv-select2">
                         <option value="">All Stores</option>
                         @foreach($stores as $store)
                             <option value="{{ $store->id }}" @selected(request('store_id') == $store->id)>{{ $store->name }}</option>
                         @endforeach
                     </select>
                 </div>
-                <div class="col-md-2">
-                    <select name="buyer_id" class="form-control inv-select2">
+                <div class="col-md-3 mb-2">
+                    <select name="buyer_id" class="form-control form-control-sm inv-select2">
                         <option value="">All Buyers</option>
                         @foreach($buyers as $buyer)
                             <option value="{{ $buyer->id }}" @selected(request('buyer_id') == $buyer->id)>{{ $buyer->name }}</option>
                         @endforeach
                     </select>
                 </div>
-                <div class="col-md-2">
-                    <select name="status" class="form-control inv-select2">
+                <div class="col-md-3 mb-2">
+                    <select name="status" class="form-control form-control-sm inv-select2">
                         <option value="">All Status</option>
                         <option value="active" @selected(request('status') === 'active')>Active</option>
                         <option value="inactive" @selected(request('status') === 'inactive')>Inactive</option>
                     </select>
                 </div>
-                <div class="col-md-2 mt-2">
-                    <button type="submit" class="btn btn-secondary w-100">Filter</button>
-                </div>
-                <div class="col-md-2 mt-2">
-                    <a href="{{ route('inventory.items.index') }}" class="btn btn-light w-100">Reset</a>
+                <div class="col-md-3 mb-2 d-flex align-items-end flex-wrap gap-1">
+                    <button type="submit" class="btn btn-secondary btn-sm">Filter</button>
+                    <a href="{{ route('inventory.items.index') }}" class="btn btn-light btn-sm">Reset</a>
                 </div>
             </form>
 
             <div class="table-responsive">
-                <table class="table table-bordered table-striped align-middle">
+                <table class="table table-bordered table-sm align-middle">
                     <thead>
                         <tr>
                             <th>#</th><th>Code</th><th>Name</th><th>Category</th><th>Department</th><th>Supplier</th><th>Buyer</th><th>Unit</th><th>Type</th><th>Store</th><th>Status</th>
                             @can('inv_barcode.use')
                                 <th>Barcode</th>
                             @endcan
-                            <th class="text-end">Actions</th>
+                            <th class="text-right">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -140,7 +138,7 @@
                                 <td>{{ ucwords(str_replace('_', ' ', $item->item_type)) }}</td>
                                 <td>{{ $item->openingStore?->name ?? '—' }}</td>
                                 <td>
-                                    <span class="badge p-1 text-white bg-{{ $item->is_active ? 'success' : 'secondary' }}">
+                                    <span class="badge badge-{{ $item->is_active ? 'success' : 'secondary' }}">
                                         {{ $item->is_active ? 'Active' : 'Inactive' }}
                                     </span>
                                 </td>
@@ -151,33 +149,27 @@
                                         @elseif($item->barcode_enabled)
                                             <form method="POST" action="{{ route('inventory.items.generate-barcode', $item) }}" class="d-inline">
                                                 @csrf
-                                                <button type="submit" class="btn btn-xs btn-outline-secondary" style="font-size:11px; padding:2px 6px;">Generate</button>
+                                                <button type="submit" class="btn btn-sm btn-outline-secondary" style="font-size:11px; padding:2px 6px;">Generate</button>
                                             </form>
                                         @else
                                             <span class="text-muted">—</span>
                                         @endif
                                     </td>
                                 @endcan
-                                <td class="text-end">
-                                    <button type="button" class="btn btn-sm btn-outline-secondary" data-toggle="modal" data-target="#viewItemModal{{ $item->id }}">
-                                        <i class="fa-solid fa-eye"></i>
-                                    </button>
+                                <td class="text-right">
+                                    <button type="button" class="btn-custom success" data-toggle="modal" data-target="#viewItemModal{{ $item->id }}"><i class="fa-solid fa-eye"></i></button>
                                     @can('inv_item.edit')
-                                        <a href="{{ route('inventory.items.edit', $item) }}" class="btn btn-sm btn-outline-primary"><i class="fa-solid fa-pen"></i></a>
+                                        <a href="{{ route('inventory.items.edit', $item) }}" class="btn-custom yellow"><i class="fa-solid fa-pen"></i></a>
                                     @endcan
                                     @can('inv_item.delete')
-                                        <button type="button" class="btn btn-sm btn-outline-danger" data-toggle="modal" data-target="#deleteItemModal" data-action="{{ route('inventory.items.destroy', $item) }}">
-                                            <i class="fa-solid fa-trash"></i>
-                                        </button>
+                                        <button type="button" class="btn-custom danger" data-toggle="modal" data-target="#deleteItemModal" data-action="{{ route('inventory.items.destroy', $item) }}"><i class="fa-solid fa-trash"></i></button>
                                     @endcan
                                     @can('inv_item.force_delete')
                                         {{-- Same permanent-delete confirm/modal the Trash list uses (itemTrashModalForceConfirm below) —
                                              skips the normal Delete-then-Trash-then-Force two-step for an emergency one-click permanent
                                              delete. Still runs through forceDestroy()'s referencing-table checks, so it's refused with a
                                              clear error if the item is actually used on a real document; nothing here bypasses that. --}}
-                                        <button type="button" class="btn btn-sm btn-outline-dark" title="Force Delete (skip Trash)" data-toggle="modal" data-target="#itemTrashModalForceConfirm" data-action="{{ route('inventory.items.force-destroy', $item) }}">
-                                            <i class="fa-solid fa-triangle-exclamation"></i>
-                                        </button>
+                                        <button type="button" class="btn-custom danger" title="Force Delete (skip Trash)" data-toggle="modal" data-target="#itemTrashModalForceConfirm" data-action="{{ route('inventory.items.force-destroy', $item) }}"><i class="fa-solid fa-triangle-exclamation"></i></button>
                                     @endcan
                                 </td>
                             </tr>
@@ -209,7 +201,7 @@
                                                 <dt class="col-sm-3">Low Stock Alert Qty</dt><dd class="col-sm-9">{{ $item->minimum_stock > 0 ? inv_qty($item->minimum_stock) : '—' }}</dd>
                                                 <dt class="col-sm-3">Status</dt>
                                                 <dd class="col-sm-9">
-                                                    <span class="badge p-1 text-white bg-{{ $item->is_active ? 'success' : 'secondary' }}">
+                                                    <span class="badge badge-{{ $item->is_active ? 'success' : 'secondary' }}">
                                                         {{ $item->is_active ? 'Active' : 'Inactive' }}
                                                     </span>
                                                 </dd>
@@ -225,7 +217,7 @@
                                             @endcan
                                         </div>
                                         <div class="modal-footer">
-                                            <button type="button" class="btn btn-light" data-dismiss="modal">Close</button>
+                                            <button type="button" class="btn btn-light btn-sm" data-dismiss="modal">Close</button>
                                         </div>
                                     </div>
                                 </div>

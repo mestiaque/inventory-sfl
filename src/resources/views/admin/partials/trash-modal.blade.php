@@ -22,7 +22,7 @@
                 <div class="table-responsive">
                     <table class="table table-bordered table-sm align-middle mb-0">
                         <thead>
-                            <tr><th>#</th><th>{{ $label }}</th><th>Deleted At</th><th class="text-end">Actions</th></tr>
+                            <tr><th>#</th><th>{{ $label }}</th><th>Deleted At</th><th class="text-right">Actions</th></tr>
                         </thead>
                         <tbody>
                             @forelse($rows as $row)
@@ -35,19 +35,15 @@
                                         @endif
                                     </td>
                                     <td>{{ optional($row['deleted_at'])->format('d-M-Y h:i A') }}</td>
-                                    <td class="text-end">
+                                    <td class="text-right">
                                         @if ($canRestore && $restoreRoute)
                                             <form method="POST" action="{{ route($restoreRoute, $row['id']) }}" class="d-inline" onsubmit="return confirm('Restore this {{ strtolower($label) }}?')">
                                                 @csrf
-                                                <button type="submit" class="btn btn-sm btn-outline-success" title="Restore">
-                                                    <i class="fa-solid fa-rotate-left"></i>
-                                                </button>
+                                                <button type="submit" class="btn-custom success" title="Restore"><i class="fa-solid fa-rotate-left"></i></button>
                                             </form>
                                         @endif
                                         @if ($canForce && $forceRoute)
-                                            <button type="button" class="btn btn-sm btn-outline-danger" title="Delete Permanently" data-toggle="modal" data-target="#{{ $modalId }}ForceConfirm" data-action="{{ route($forceRoute, $row['id']) }}">
-                                                <i class="fa-solid fa-triangle-exclamation"></i>
-                                            </button>
+                                            <button type="button" class="btn-custom danger" title="Delete Permanently" data-toggle="modal" data-target="#{{ $modalId }}ForceConfirm" data-action="{{ route($forceRoute, $row['id']) }}"><i class="fa-solid fa-triangle-exclamation"></i></button>
                                         @endif
                                     </td>
                                 </tr>
@@ -59,7 +55,7 @@
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-light" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-light btn-sm" data-dismiss="modal">Close</button>
             </div>
         </div>
     </div>
@@ -80,8 +76,8 @@
                         <p class="text-danger mb-0">{{ $forceWarning ?? 'Permanently delete this ' . strtolower($label) . '? This cannot be undone.' }}</p>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-light" data-dismiss="modal">Cancel</button>
-                        <button type="submit" class="btn btn-danger">Delete Permanently</button>
+                        <button type="button" class="btn btn-light btn-sm" data-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-danger btn-sm">Delete Permanently</button>
                     </div>
                 </form>
             </div>

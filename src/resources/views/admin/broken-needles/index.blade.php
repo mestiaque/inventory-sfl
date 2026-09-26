@@ -11,7 +11,7 @@
 
     <div class="card">
         <div class="card-header d-flex justify-content-between align-items-center">
-            <h5 class="mb-0">Broken Needle Entries</h5>
+            <h4 class="mb-0">Broken Needle Entries</h4>
             <div class="d-flex align-items-center gap-2">
                 <a href="{{ route('inventory.broken-needles.daily-report') }}" class="btn btn-outline-warning btn-sm"><i class="fa-solid fa-file-lines"></i> Daily Needle Supply Report</a>
                 <a href="{{ route('inventory.broken-needles.report') }}" class="btn btn-outline-info btn-sm"><i class="fa-solid fa-chart-column"></i> Monthly Report</a>
@@ -29,62 +29,60 @@
             </div>
         </div>
         <div class="card-body">
-            <form method="GET" class="row g-2 mb-3">
-                <div class="col-md-2">
-                    <select name="employee_id" class="form-control inv-select2">
+            <form method="GET" class="row mb-3 align-items-end">
+                <div class="col-md-3 mb-2">
+                    <select name="employee_id" class="form-control form-control-sm inv-select2">
                         <option value="">All Employees</option>
                         @foreach($employees as $employee)
                             <option value="{{ $employee->id }}" @selected(request('employee_id') == $employee->id)>{{ $employee->name }} ({{ $employee->employee_id }})</option>
                         @endforeach
                     </select>
                 </div>
-                <div class="col-md-2">
-                    <select name="department_id" class="form-control inv-select2">
+                <div class="col-md-3 mb-2">
+                    <select name="department_id" class="form-control form-control-sm inv-select2">
                         <option value="">All Departments</option>
                         @foreach($departments as $department)
                             <option value="{{ $department->id }}" @selected(request('department_id') == $department->id)>{{ $department->name }}</option>
                         @endforeach
                     </select>
                 </div>
-                <div class="col-md-2">
-                    <select name="machine_id" class="form-control inv-select2">
+                <div class="col-md-3 mb-2">
+                    <select name="machine_id" class="form-control form-control-sm inv-select2">
                         <option value="">All Machines</option>
                         @foreach($machines as $machine)
                             <option value="{{ $machine->id }}" @selected(request('machine_id') == $machine->id)>{{ $machine->name }} ({{ $machine->code }})</option>
                         @endforeach
                     </select>
                 </div>
-                <div class="col-md-1">
-                    <input type="text" name="line_no" class="form-control" placeholder="Line No" value="{{ request('line_no') }}">
+                <div class="col-md-3 mb-2">
+                    <input type="text" name="line_no" class="form-control form-control-sm" placeholder="Line No" value="{{ request('line_no') }}">
                 </div>
-                <div class="col-md-2">
-                    <select name="buyer_id" class="form-control inv-select2">
+                <div class="col-md-3 mb-2">
+                    <select name="buyer_id" class="form-control form-control-sm inv-select2">
                         <option value="">All Buyers</option>
                         @foreach($buyers as $buyer)
                             <option value="{{ $buyer->id }}" @selected(request('buyer_id') == $buyer->id)>{{ $buyer->name }}</option>
                         @endforeach
                     </select>
                 </div>
-                <div class="col-md-1">
-                    <input type="date" name="date_from" class="form-control" value="{{ request('date_from') }}" placeholder="From">
+                <div class="col-md-3 mb-2">
+                    <input type="date" name="date_from" class="form-control form-control-sm" value="{{ request('date_from') }}" placeholder="From">
                 </div>
-                <div class="col-md-1">
-                    <input type="date" name="date_to" class="form-control" value="{{ request('date_to') }}" placeholder="To">
+                <div class="col-md-3 mb-2">
+                    <input type="date" name="date_to" class="form-control form-control-sm" value="{{ request('date_to') }}" placeholder="To">
                 </div>
-                <div class="col-md-1">
-                    <button type="submit" class="btn btn-secondary w-100">Filter</button>
-                </div>
-                <div class="col-md-12">
+                <div class="col-md-3 mb-2 d-flex align-items-end flex-wrap gap-1">
+                    <button type="submit" class="btn btn-secondary btn-sm">Filter</button>
                     <a href="{{ route('inventory.broken-needles.index') }}" class="btn btn-light btn-sm">Reset</a>
                 </div>
             </form>
 
             <div class="table-responsive">
-                <table class="table table-bordered table-striped align-middle">
+                <table class="table table-bordered table-sm align-middle">
                     <thead>
                         <tr>
                             <th>#</th><th>Date</th><th>Line</th><th>Employee</th><th>Department</th><th>Machine</th>
-                            <th>Needle Type</th><th>Needle Size</th><th class="text-end">Qty</th><th>Buyer / Style</th><th>Remarks</th><th class="text-end">Actions</th>
+                            <th>Needle Type</th><th>Needle Size</th><th class="text-right">Qty</th><th>Buyer / Style</th><th>Remarks</th><th class="text-right">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -98,19 +96,15 @@
                                 <td>{{ $entry->machine?->name ?? '—' }}</td>
                                 <td>{{ $entry->needle_type }}</td>
                                 <td>{{ $entry->needle_size }}</td>
-                                <td class="text-end">{{ $entry->quantity }}</td>
+                                <td class="text-right">{{ $entry->quantity }}</td>
                                 <td>{{ trim(($entry->buyer?->name ?? '') . ($entry->style ? ' / ' . $entry->style : '')) ?: '—' }}</td>
                                 <td>{{ $entry->remarks }}</td>
-                                <td class="text-end">
+                                <td class="text-right">
                                     @can('inv_broken_needle.edit')
-                                        <button type="button" class="btn btn-sm btn-outline-primary" data-toggle="modal" data-target="#editBrokenNeedleModal{{ $entry->id }}">
-                                            <i class="fa-solid fa-pen"></i>
-                                        </button>
+                                        <button type="button" class="btn-custom yellow" data-toggle="modal" data-target="#editBrokenNeedleModal{{ $entry->id }}"><i class="fa-solid fa-pen"></i></button>
                                     @endcan
                                     @can('inv_broken_needle.delete')
-                                        <button type="button" class="btn btn-sm btn-outline-danger" data-toggle="modal" data-target="#deleteBrokenNeedleModal" data-action="{{ route('inventory.broken-needles.destroy', $entry) }}">
-                                            <i class="fa-solid fa-trash"></i>
-                                        </button>
+                                        <button type="button" class="btn-custom danger" data-toggle="modal" data-target="#deleteBrokenNeedleModal" data-action="{{ route('inventory.broken-needles.destroy', $entry) }}"><i class="fa-solid fa-trash"></i></button>
                                     @endcan
                                 </td>
                             </tr>
@@ -129,8 +123,8 @@
                                                     @include('sfl-inventory::admin.broken-needles.partials.fields', ['entry' => $entry])
                                                 </div>
                                                 <div class="modal-footer">
-                                                    <button type="button" class="btn btn-light" data-dismiss="modal">Cancel</button>
-                                                    <button type="submit" class="btn btn-primary">Update</button>
+                                                    <button type="button" class="btn btn-light btn-sm" data-dismiss="modal">Cancel</button>
+                                                    <button type="submit" class="btn btn-primary btn-sm">Update</button>
                                                 </div>
                                             </form>
                                         </div>
@@ -163,8 +157,8 @@
                         @include('sfl-inventory::admin.broken-needles.partials.fields', ['entry' => null])
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-light" data-dismiss="modal">Cancel</button>
-                        <button type="submit" class="btn btn-primary">Save</button>
+                        <button type="button" class="btn btn-light btn-sm" data-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary btn-sm">Save</button>
                     </div>
                 </form>
             </div>

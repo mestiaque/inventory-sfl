@@ -55,23 +55,24 @@
                 </div>
             </div>
             <div class="card-body">
-                <form method="GET" class="row g-2">
-                    <div class="col-md-3">
-                        <input type="date" name="date" class="form-control" value="{{ $date }}">
+                <form method="GET" class="row align-items-end">
+                    <div class="col-md-3 mb-2">
+                        <input type="date" name="date" class="form-control form-control-sm" value="{{ $date }}">
                     </div>
-                    <div class="col-md-3">
-                        <select name="buyer_id" class="form-control inv-select2">
+                    <div class="col-md-3 mb-2">
+                        <select name="buyer_id" class="form-control form-control-sm inv-select2">
                             <option value="">All Buyers</option>
                             @foreach($buyers as $buyer)
                                 <option value="{{ $buyer->id }}" @selected(request('buyer_id') == $buyer->id)>{{ $buyer->name }}</option>
                             @endforeach
                         </select>
                     </div>
-                    <div class="col-md-3">
-                        <input type="text" name="line_no" class="form-control" placeholder="Line No" value="{{ request('line_no') }}">
+                    <div class="col-md-3 mb-2">
+                        <input type="text" name="line_no" class="form-control form-control-sm" placeholder="Line No" value="{{ request('line_no') }}">
                     </div>
-                    <div class="col-md-3">
-                        <button type="submit" class="btn btn-secondary w-100">Filter</button>
+                    <div class="col-md-3 mb-2 d-flex align-items-end flex-wrap gap-1">
+                        <button type="submit" class="btn btn-secondary btn-sm">Filter</button>
+                        <a href="{{ url()->current() }}" class="btn btn-light btn-sm">Reset</a>
                     </div>
                 </form>
             </div>
@@ -142,7 +143,7 @@
 
         <div class="needle-instructions">
             <strong>INSTRUCTION:</strong>
-            <ul class="mb-0 ps-3">
+            <ul class="mb-0 pl-3">
                 <li>THE OPERATOR MUST STOP WORK IMMEDIATELY, COLLECT ALL BROKEN METAL/NEEDLE PIECES AND MUST BE SUBMITTED TO THE NEEDLE MAN TO RECEIVE A REPLACEMENT NEEDLE.</li>
                 <li>THE NEEDLE MAN MUST TAPE THE BROKEN METAL/NEEDLE PIECES SECURELY TO A CONTROL CARD AND LOG IN REGISTER.</li>
                 <li>IF ANY BROKEN PART IS MISSING, THE NEEDLE MAN WILL NOT ISSUE A NEW NEEDLE UNTIL AUTHORIZATION IS RECEIVED FROM PM.</li>

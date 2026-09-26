@@ -11,50 +11,48 @@
 
     <div class="card">
         <div class="card-header d-flex justify-content-between align-items-center">
-            <h5 class="mb-0">Shipments</h5>
+            <h4 class="mb-0">Shipments</h4>
             @can('inv_shipment.add')
                 <a href="{{ route('inventory.shipments.create') }}" class="btn btn-primary btn-sm"><i class="fa-solid fa-plus"></i> Add Shipment</a>
             @endcan
         </div>
         <div class="card-body">
-            <form method="GET" class="row g-2 mb-3">
-                <div class="col-md-2">
-                    <input type="text" name="search" class="form-control" placeholder="Search shipment no" value="{{ request('search') }}">
+            <form method="GET" class="row mb-3 align-items-end">
+                <div class="col-md-3 mb-2">
+                    <input type="text" name="search" class="form-control form-control-sm" placeholder="Search shipment no" value="{{ request('search') }}">
                 </div>
-                <div class="col-md-2">
-                    <select name="buyer_id" class="form-control inv-select2">
+                <div class="col-md-3 mb-2">
+                    <select name="buyer_id" class="form-control form-control-sm inv-select2">
                         <option value="">All Buyers</option>
                         @foreach($buyers as $buyer)
                             <option value="{{ $buyer->id }}" @selected(request('buyer_id') == $buyer->id)>{{ $buyer->name }}</option>
                         @endforeach
                     </select>
                 </div>
-                <div class="col-md-2">
-                    <select name="status" class="form-control inv-select2">
+                <div class="col-md-3 mb-2">
+                    <select name="status" class="form-control form-control-sm inv-select2">
                         <option value="">All Status</option>
                         @foreach(['pending' => 'Pending', 'dispatched' => 'Dispatched', 'delivered' => 'Delivered'] as $value => $label)
                             <option value="{{ $value }}" @selected(request('status') === $value)>{{ $label }}</option>
                         @endforeach
                     </select>
                 </div>
-                <div class="col-md-2">
-                    <input type="date" name="date_from" class="form-control" value="{{ request('date_from') }}" placeholder="From">
+                <div class="col-md-3 mb-2">
+                    <input type="date" name="date_from" class="form-control form-control-sm" value="{{ request('date_from') }}" placeholder="From">
                 </div>
-                <div class="col-md-2">
-                    <input type="date" name="date_to" class="form-control" value="{{ request('date_to') }}" placeholder="To">
+                <div class="col-md-3 mb-2">
+                    <input type="date" name="date_to" class="form-control form-control-sm" value="{{ request('date_to') }}" placeholder="To">
                 </div>
-                <div class="col-md-1">
-                    <button type="submit" class="btn btn-secondary w-100">Filter</button>
-                </div>
-                <div class="col-md-1">
-                    <a href="{{ route('inventory.shipments.index') }}" class="btn btn-light w-100">Reset</a>
+                <div class="col-md-3 mb-2 d-flex align-items-end flex-wrap gap-1">
+                    <button type="submit" class="btn btn-secondary btn-sm">Filter</button>
+                    <a href="{{ route('inventory.shipments.index') }}" class="btn btn-light btn-sm">Reset</a>
                 </div>
             </form>
 
             <div class="table-responsive">
-                <table class="table table-bordered table-striped align-middle">
+                <table class="table table-bordered table-sm align-middle">
                     <thead>
-                        <tr><th>#</th><th>Shipment No</th><th>Buyer</th><th>Invoice No</th><th>Gate Pass</th><th>Date</th><th>Status</th><th class="text-end">Actions</th></tr>
+                        <tr><th>#</th><th>Shipment No</th><th>Buyer</th><th>Invoice No</th><th>Gate Pass</th><th>Date</th><th>Status</th><th class="text-right">Actions</th></tr>
                     </thead>
                     <tbody>
                         @forelse($shipments as $shipment)
@@ -66,14 +64,12 @@
                                 <td>{{ $shipment->gatePasses->pluck('gate_pass_no')->implode(', ') ?: ($shipment->gatePass?->gate_pass_no ?? '—') }}</td>
                                 <td>{{ $shipment->shipment_date?->format('d M Y') }}</td>
                                 <td>
-                                    <span class="badge p-1 text-white bg-{{ ['pending' => 'secondary', 'dispatched' => 'warning', 'delivered' => 'success'][$shipment->status] ?? 'secondary' }}">
+                                    <span class="badge badge-{{ ['pending' => 'secondary', 'dispatched' => 'warning', 'delivered' => 'success'][$shipment->status] ?? 'secondary' }}">
                                         {{ ucfirst($shipment->status) }}
                                     </span>
                                 </td>
-                                <td class="text-end">
-                                    <button type="button" class="btn btn-sm btn-outline-secondary" data-toggle="modal" data-target="#viewShpModal{{ $shipment->id }}">
-                                        <i class="fa-solid fa-eye"></i>
-                                    </button>
+                                <td class="text-right">
+                                    <button type="button" class="btn-custom success" data-toggle="modal" data-target="#viewShpModal{{ $shipment->id }}"><i class="fa-solid fa-eye"></i></button>
                                     @can('inv_gate_pass.add')
                                         @if($shipment->gatePasses->isEmpty())
                                             <a href="{{ route('inventory.gate-passes.create', ['shipment_id' => $shipment->id]) }}" class="btn btn-sm btn-outline-success">
@@ -125,7 +121,7 @@
                         <dt class="col-sm-3">Store</dt><dd class="col-sm-9">{{ $shipment->store?->name ?? '—' }}</dd>
                         <dt class="col-sm-3">Status</dt>
                         <dd class="col-sm-9">
-                            <span class="badge p-1 text-white bg-{{ ['pending' => 'secondary', 'dispatched' => 'warning', 'delivered' => 'success'][$shipment->status] ?? 'secondary' }}">
+                            <span class="badge badge-{{ ['pending' => 'secondary', 'dispatched' => 'warning', 'delivered' => 'success'][$shipment->status] ?? 'secondary' }}">
                                 {{ ucfirst($shipment->status) }}
                             </span>
                         </dd>
@@ -136,7 +132,7 @@
                     <div class="table-responsive">
                         <table class="table table-bordered table-sm align-middle mb-0">
                             <thead>
-                                <tr><th>#</th><th>Item</th><th>Unit</th><th class="text-end">Quantity</th></tr>
+                                <tr><th>#</th><th>Item</th><th>Unit</th><th class="text-right">Quantity</th></tr>
                             </thead>
                             <tbody>
                                 @foreach($shipment->items as $line)
@@ -144,7 +140,7 @@
                                         <td>{{ $loop->iteration }}</td>
                                         <td>{{ $line->item?->item_code }} — {{ $line->item?->item_name }}</td>
                                         <td>{{ $line->item?->unit?->short_name ?? '—' }}</td>
-                                        <td class="text-end">{{ inv_qty($line->quantity) }}</td>
+                                        <td class="text-right">{{ inv_qty($line->quantity) }}</td>
                                     </tr>
                                 @endforeach
                             </tbody>
@@ -152,7 +148,7 @@
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-light" data-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-light btn-sm" data-dismiss="modal">Close</button>
                 </div>
             </div>
         </div>

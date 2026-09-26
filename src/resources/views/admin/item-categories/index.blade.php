@@ -11,7 +11,7 @@
 
     <div class="card">
         <div class="card-header d-flex justify-content-between align-items-center">
-            <h5 class="mb-0">Item Categories</h5>
+            <h4 class="mb-0">Item Categories</h4>
             <div>
                 @can('inv_item_category.delete')
                     <button type="button" class="btn btn-outline-secondary btn-sm" data-toggle="modal" data-target="#categoryTrashModal">
@@ -26,35 +26,33 @@
             </div>
         </div>
         <div class="card-body">
-            <form method="GET" class="row g-2 mb-3">
-                <div class="col-md-2">
-                    <input type="text" name="search" class="form-control" placeholder="Search name" value="{{ request('search') }}">
+            <form method="GET" class="row mb-3 align-items-end">
+                <div class="col-md-3 mb-2">
+                    <input type="text" name="search" class="form-control form-control-sm" placeholder="Search name" value="{{ request('search') }}">
                 </div>
-                <div class="col-md-2">
-                    <select name="parent_id" class="form-control inv-select2">
+                <div class="col-md-3 mb-2">
+                    <select name="parent_id" class="form-control form-control-sm inv-select2">
                         <option value="">All Parents</option>
                         @foreach($parents as $parent)
                             <option value="{{ $parent->id }}" @selected(request('parent_id') == $parent->id)>{{ $parent->name }}</option>
                         @endforeach
                     </select>
                 </div>
-                <div class="col-md-2">
-                    <select name="status" class="form-control inv-select2">
+                <div class="col-md-3 mb-2">
+                    <select name="status" class="form-control form-control-sm inv-select2">
                         <option value="">All Status</option>
                         <option value="active" @selected(request('status') === 'active')>Active</option>
                         <option value="inactive" @selected(request('status') === 'inactive')>Inactive</option>
                     </select>
                 </div>
-                <div class="col-md-2">
-                    <button type="submit" class="btn btn-secondary w-100">Filter</button>
-                </div>
-                <div class="col-md-2">
-                    <a href="{{ route('inventory.item-categories.index') }}" class="btn btn-light w-100">Reset</a>
+                <div class="col-md-3 mb-2 d-flex align-items-end flex-wrap gap-1">
+                    <button type="submit" class="btn btn-secondary btn-sm">Filter</button>
+                    <a href="{{ route('inventory.item-categories.index') }}" class="btn btn-light btn-sm">Reset</a>
                 </div>
             </form>
 
             <div class="table-responsive">
-                <table class="table table-bordered table-striped align-middle">
+                <table class="table table-bordered table-sm align-middle">
                     <thead>
                         <tr>
                             <th>#</th>
@@ -62,7 +60,7 @@
                             <th>Code</th>
                             <th>Parent</th>
                             <th>Status</th>
-                            <th class="text-end">Actions</th>
+                            <th class="text-right">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -73,26 +71,20 @@
                                 <td>{{ $category->code }}</td>
                                 <td>{{ $category->parent?->name ?? '—' }}</td>
                                 <td>
-                                    <span class="badge p-1 text-white bg-{{ $category->is_active ? 'success' : 'secondary' }}">
+                                    <span class="badge badge-{{ $category->is_active ? 'success' : 'secondary' }}">
                                         {{ $category->is_active ? 'Active' : 'Inactive' }}
                                     </span>
                                 </td>
-                                <td class="text-end">
-                                    <button type="button" class="btn btn-sm btn-outline-secondary" data-toggle="modal"
-                                        data-target="#viewCategoryModal{{ $category->id }}">
-                                        <i class="fa-solid fa-eye"></i>
-                                    </button>
+                                <td class="text-right">
+                                    <button type="button" class="btn-custom success" data-toggle="modal"
+                                        data-target="#viewCategoryModal{{ $category->id }}"><i class="fa-solid fa-eye"></i></button>
                                     @can('inv_item_category.edit')
-                                        <button type="button" class="btn btn-sm btn-outline-primary" data-toggle="modal"
-                                            data-target="#editCategoryModal{{ $category->id }}">
-                                            <i class="fa-solid fa-pen"></i>
-                                        </button>
+                                        <button type="button" class="btn-custom yellow" data-toggle="modal"
+                                            data-target="#editCategoryModal{{ $category->id }}"><i class="fa-solid fa-pen"></i></button>
                                     @endcan
                                     @can('inv_item_category.delete')
-                                        <button type="button" class="btn btn-sm btn-outline-danger" data-toggle="modal"
-                                            data-target="#deleteCategoryModal" data-action="{{ route('inventory.item-categories.destroy', $category) }}">
-                                            <i class="fa-solid fa-trash"></i>
-                                        </button>
+                                        <button type="button" class="btn-custom danger" data-toggle="modal"
+                                            data-target="#deleteCategoryModal" data-action="{{ route('inventory.item-categories.destroy', $category) }}"><i class="fa-solid fa-trash"></i></button>
                                     @endcan
                                 </td>
                             </tr>
@@ -111,14 +103,14 @@
                                                 <dt class="col-sm-4">Parent Category</dt><dd class="col-sm-8">{{ $category->parent?->name ?? '—' }}</dd>
                                                 <dt class="col-sm-4">Status</dt>
                                                 <dd class="col-sm-8">
-                                                    <span class="badge p-1 text-white bg-{{ $category->is_active ? 'success' : 'secondary' }}">
+                                                    <span class="badge badge-{{ $category->is_active ? 'success' : 'secondary' }}">
                                                         {{ $category->is_active ? 'Active' : 'Inactive' }}
                                                     </span>
                                                 </dd>
                                             </dl>
                                         </div>
                                         <div class="modal-footer">
-                                            <button type="button" class="btn btn-light" data-dismiss="modal">Close</button>
+                                            <button type="button" class="btn btn-light btn-sm" data-dismiss="modal">Close</button>
                                         </div>
                                     </div>
                                 </div>
@@ -126,7 +118,7 @@
 
                             @can('inv_item_category.edit')
                                 <div class="modal fade" id="editCategoryModal{{ $category->id }}" tabindex="-1" aria-hidden="true">
-                                    <div class="modal-dialog">
+                                    <div class="modal-dialog modal-lg">
                                         <div class="modal-content">
                                             <form method="POST" action="{{ route('inventory.item-categories.update', $category) }}">
                                                 @csrf @method('PUT')
@@ -138,8 +130,8 @@
                                                     @include('sfl-inventory::admin.item-categories.partials.fields', ['category' => $category, 'parents' => $parents])
                                                 </div>
                                                 <div class="modal-footer">
-                                                    <button type="button" class="btn btn-light" data-dismiss="modal">Cancel</button>
-                                                    <button type="submit" class="btn btn-primary">Update</button>
+                                                    <button type="button" class="btn btn-light btn-sm" data-dismiss="modal">Cancel</button>
+                                                    <button type="submit" class="btn btn-primary btn-sm">Update</button>
                                                 </div>
                                             </form>
                                         </div>
@@ -162,7 +154,7 @@
 
 @can('inv_item_category.add')
     <div class="modal fade" id="createCategoryModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog">
+        <div class="modal-dialog modal-lg">
             <div class="modal-content">
                 <form method="POST" action="{{ route('inventory.item-categories.store') }}">
                     @csrf
@@ -174,8 +166,8 @@
                         @include('sfl-inventory::admin.item-categories.partials.fields', ['category' => null, 'parents' => $parents])
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-light" data-dismiss="modal">Cancel</button>
-                        <button type="submit" class="btn btn-primary">Save</button>
+                        <button type="button" class="btn btn-light btn-sm" data-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary btn-sm">Save</button>
                     </div>
                 </form>
             </div>

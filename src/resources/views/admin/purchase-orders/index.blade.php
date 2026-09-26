@@ -11,7 +11,7 @@
 
     <div class="card">
         <div class="card-header d-flex justify-content-between align-items-center">
-            <h5 class="mb-0">Store Order</h5>
+            <h4 class="mb-0">Store Order</h4>
             <div>
                 @can('inv_purchase_order.delete')
                     <button type="button" class="btn btn-outline-secondary btn-sm" data-toggle="modal" data-target="#poTrashModal">
@@ -24,52 +24,50 @@
             </div>
         </div>
         <div class="card-body">
-            <form method="GET" class="row g-2 mb-3">
-                <div class="col-md-2">
-                    <input type="text" name="search" class="form-control" placeholder="Search Store Order number" value="{{ request('search') }}">
+            <form method="GET" class="row mb-3 align-items-end">
+                <div class="col-md-3 mb-2">
+                    <input type="text" name="search" class="form-control form-control-sm" placeholder="Search Store Order number" value="{{ request('search') }}">
                 </div>
-                <div class="col-md-2">
-                    <select name="supplier_id" class="form-control inv-select2">
+                <div class="col-md-3 mb-2">
+                    <select name="supplier_id" class="form-control form-control-sm inv-select2">
                         <option value="">All Suppliers</option>
                         @foreach($suppliers as $supplier)
                             <option value="{{ $supplier->id }}" @selected(request('supplier_id') == $supplier->id)>{{ $supplier->name }}</option>
                         @endforeach
                     </select>
                 </div>
-                <div class="col-md-2">
-                    <select name="status" class="form-control inv-select2">
+                <div class="col-md-3 mb-2">
+                    <select name="status" class="form-control form-control-sm inv-select2">
                         <option value="">All Status</option>
                         @foreach(['draft' => 'Draft', 'approved' => 'Approved', 'received' => 'Received', 'closed' => 'Closed', 'cancelled' => 'Cancelled'] as $value => $label)
                             <option value="{{ $value }}" @selected(request('status') === $value)>{{ $label }}</option>
                         @endforeach
                     </select>
                 </div>
-                <div class="col-md-2">
-                    <input type="date" name="date_from" class="form-control" value="{{ request('date_from') }}" placeholder="From">
+                <div class="col-md-3 mb-2">
+                    <input type="date" name="date_from" class="form-control form-control-sm" value="{{ request('date_from') }}" placeholder="From">
                 </div>
-                <div class="col-md-2">
-                    <input type="date" name="date_to" class="form-control" value="{{ request('date_to') }}" placeholder="To">
+                <div class="col-md-3 mb-2">
+                    <input type="date" name="date_to" class="form-control form-control-sm" value="{{ request('date_to') }}" placeholder="To">
                 </div>
-                <div class="col-md-2">
-                    <select name="item_id" class="form-control inv-select2">
+                <div class="col-md-3 mb-2">
+                    <select name="item_id" class="form-control form-control-sm inv-select2">
                         <option value="">All Items</option>
                         @foreach($items as $item)
                             <option value="{{ $item->id }}" @selected(request('item_id') == $item->id)>{{ $item->item_code }} — {{ $item->item_name }}</option>
                         @endforeach
                     </select>
                 </div>
-                <div class="col-md-1">
-                    <button type="submit" class="btn btn-secondary w-100">Filter</button>
-                </div>
-                <div class="col-md-1">
-                    <a href="{{ route('inventory.purchase-orders.index') }}" class="btn btn-light w-100">Reset</a>
+                <div class="col-md-3 mb-2 d-flex align-items-end flex-wrap gap-1">
+                    <button type="submit" class="btn btn-secondary btn-sm">Filter</button>
+                    <a href="{{ route('inventory.purchase-orders.index') }}" class="btn btn-light btn-sm">Reset</a>
                 </div>
             </form>
 
             <div class="table-responsive">
-                <table class="table table-bordered table-striped align-middle">
+                <table class="table table-bordered table-sm align-middle">
                     <thead>
-                        <tr><th>#</th><th>Store Order No</th><th>Supplier</th><th>Order Date</th><th>Expected Date</th><th>Items</th><th>Total (at order)</th><th>Status</th><th>Created Date</th><th>Created By</th><th class="text-end">Actions</th></tr>
+                        <tr><th>#</th><th>Store Order No</th><th>Supplier</th><th>Order Date</th><th>Expected Date</th><th>Items</th><th>Total (at order)</th><th>Status</th><th>Created Date</th><th>Created By</th><th class="text-right">Actions</th></tr>
                     </thead>
                     <tbody>
                         @forelse($purchaseOrders as $po)
@@ -87,26 +85,24 @@
                                 <td>{{ $po->items_count }}</td>
                                 <td>{{ inv_qty($po->total_amount) }}</td>
                                 <td>
-                                    <span class="badge p-1 text-white bg-{{ ['draft' => 'secondary', 'approved' => 'info', 'received' => 'primary', 'closed' => 'success', 'cancelled' => 'danger'][$po->status] ?? 'secondary' }}">
+                                    <span class="badge badge-{{ ['draft' => 'secondary', 'approved' => 'info', 'received' => 'primary', 'closed' => 'success', 'cancelled' => 'danger'][$po->status] ?? 'secondary' }}">
                                         {{ ucfirst($po->status) }}
                                     </span>
                                 </td>
                                 <td>{{ $po->created_at?->format('d M Y, h:i A') }}</td>
                                 <td>{{ $po->creator?->name ?? '—' }}</td>
-                                <td class="text-end">
+                                <td class="text-right">
                                     @can('inv_purchase_order.view')
-                                        <a href="{{ route('inventory.purchase-orders.show', $po) }}" class="btn btn-sm btn-outline-secondary" title="Challans ({{ $po->grns_count }})">
-                                            <i class="fa-solid fa-eye"></i>
-                                        </a>
+                                        <a href="{{ route('inventory.purchase-orders.show', $po) }}" class="btn-custom success" title="Challans ({{ $po->grns_count }})"><i class="fa-solid fa-eye"></i></a>
                                     @endcan
                                     @if($po->status === 'draft')
                                         @can('inv_purchase_order.edit')
-                                            <a href="{{ route('inventory.purchase-orders.edit', $po) }}" class="btn btn-sm btn-outline-primary" title="Edit"><i class="fa-solid fa-pen"></i></a>
+                                            <a href="{{ route('inventory.purchase-orders.edit', $po) }}" class="btn-custom yellow" title="Edit"><i class="fa-solid fa-pen"></i></a>
                                         @endcan
                                         @can('inv_purchase_order.approve')
                                             <form method="POST" action="{{ route('inventory.purchase-orders.approve', $po) }}" class="d-inline">
                                                 @csrf
-                                                <button type="submit" class="btn btn-sm btn-outline-success" title="Approve" onclick="return confirm('Approve this store order?')"><i class="fa-solid fa-check"></i></button>
+                                                <button type="submit" class="btn-custom success" title="Approve" onclick="return confirm('Approve this store order?')"><i class="fa-solid fa-check"></i></button>
                                             </form>
                                         @endcan
                                     @endif
@@ -117,9 +113,7 @@
                                          instead (same check destroy() itself already enforces server-side). --}}
                                     @can('inv_purchase_order.delete')
                                         @if($po->grns_count === 0)
-                                            <button type="button" class="btn btn-sm btn-outline-danger" title="Delete" data-toggle="modal" data-target="#deletePoModal" data-action="{{ route('inventory.purchase-orders.destroy', $po) }}">
-                                                <i class="fa-solid fa-trash"></i>
-                                            </button>
+                                            <button type="button" class="btn-custom danger" title="Delete" data-toggle="modal" data-target="#deletePoModal" data-action="{{ route('inventory.purchase-orders.destroy', $po) }}"><i class="fa-solid fa-trash"></i></button>
                                         @endif
                                     @endcan
                                     {{-- No grns_count gate here, unlike the soft-delete button above — safe
@@ -129,9 +123,7 @@
                                          the stock ledger stay completely intact, they just lose their
                                          back-link to this order. --}}
                                     @can('inv_purchase_order.force_delete')
-                                        <button type="button" class="btn btn-sm btn-outline-danger" title="Delete Permanently" data-toggle="modal" data-target="#forcePoModal" data-action="{{ route('inventory.purchase-orders.force-destroy', $po) }}">
-                                            <i class="fa-solid fa-triangle-exclamation"></i>
-                                        </button>
+                                        <button type="button" class="btn-custom danger" title="Delete Permanently" data-toggle="modal" data-target="#forcePoModal" data-action="{{ route('inventory.purchase-orders.force-destroy', $po) }}"><i class="fa-solid fa-triangle-exclamation"></i></button>
                                     @endcan
                                     @can('inv_grn.add')
                                         @if(in_array($po->status, ['approved', 'received']))
@@ -175,8 +167,8 @@
                         <p class="text-danger mb-0">Permanently delete this store order? This cannot be undone — it skips Trash entirely.</p>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-light" data-dismiss="modal">Cancel</button>
-                        <button type="submit" class="btn btn-danger">Delete Permanently</button>
+                        <button type="button" class="btn btn-light btn-sm" data-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-danger btn-sm">Delete Permanently</button>
                     </div>
                 </form>
             </div>

@@ -11,7 +11,7 @@
 
     <div class="card">
         <div class="card-header d-flex justify-content-between align-items-center">
-            <h5 class="mb-0">Stock Adjustment</h5>
+            <h4 class="mb-0">Stock Adjustment</h4>
             <div>
                 @can('inv_adjustment.delete')
                     <button type="button" class="btn btn-outline-secondary btn-sm" data-toggle="modal" data-target="#adjustmentTrashModal">
@@ -24,20 +24,20 @@
             </div>
         </div>
         <div class="card-body">
-            <form method="GET" class="row g-2 mb-3">
-                <div class="col-md-2">
-                    <input type="text" name="search" class="form-control" placeholder="Search adjustment no" value="{{ request('search') }}">
+            <form method="GET" class="row mb-3 align-items-end">
+                <div class="col-md-3 mb-2">
+                    <input type="text" name="search" class="form-control form-control-sm" placeholder="Search adjustment no" value="{{ request('search') }}">
                 </div>
-                <div class="col-md-2">
-                    <select name="store_id" class="form-control inv-select2">
+                <div class="col-md-3 mb-2">
+                    <select name="store_id" class="form-control form-control-sm inv-select2">
                         <option value="">All Stores</option>
                         @foreach($stores as $store)
                             <option value="{{ $store->id }}" @selected(request('store_id') == $store->id)>{{ $store->name }}</option>
                         @endforeach
                     </select>
                 </div>
-                <div class="col-md-2">
-                    <select name="type" class="form-control inv-select2">
+                <div class="col-md-3 mb-2">
+                    <select name="type" class="form-control form-control-sm inv-select2">
                         <option value="">All Types</option>
                         <option value="damage" @selected(request('type') === 'damage')>Damage</option>
                         <option value="lost" @selected(request('type') === 'lost')>Lost</option>
@@ -45,32 +45,30 @@
                         <option value="physical_count" @selected(request('type') === 'physical_count')>Physical Count</option>
                     </select>
                 </div>
-                <div class="col-md-2">
-                    <select name="status" class="form-control inv-select2">
+                <div class="col-md-3 mb-2">
+                    <select name="status" class="form-control form-control-sm inv-select2">
                         <option value="">All Status</option>
                         <option value="pending" @selected(request('status') === 'pending')>Pending</option>
                         <option value="approved" @selected(request('status') === 'approved')>Approved</option>
                         <option value="rejected" @selected(request('status') === 'rejected')>Rejected</option>
                     </select>
                 </div>
-                <div class="col-md-2">
-                    <input type="date" name="date_from" class="form-control" value="{{ request('date_from') }}" placeholder="From">
+                <div class="col-md-3 mb-2">
+                    <input type="date" name="date_from" class="form-control form-control-sm" value="{{ request('date_from') }}" placeholder="From">
                 </div>
-                <div class="col-md-2">
-                    <input type="date" name="date_to" class="form-control" value="{{ request('date_to') }}" placeholder="To">
+                <div class="col-md-3 mb-2">
+                    <input type="date" name="date_to" class="form-control form-control-sm" value="{{ request('date_to') }}" placeholder="To">
                 </div>
-                <div class="col-md-1">
-                    <button type="submit" class="btn btn-secondary w-100">Filter</button>
-                </div>
-                <div class="col-md-1">
-                    <a href="{{ route('inventory.adjustments.index') }}" class="btn btn-light w-100">Reset</a>
+                <div class="col-md-3 mb-2 d-flex align-items-end flex-wrap gap-1">
+                    <button type="submit" class="btn btn-secondary btn-sm">Filter</button>
+                    <a href="{{ route('inventory.adjustments.index') }}" class="btn btn-light btn-sm">Reset</a>
                 </div>
             </form>
 
             <div class="table-responsive">
-                <table class="table table-bordered table-striped align-middle">
+                <table class="table table-bordered table-sm align-middle">
                     <thead>
-                        <tr><th>#</th><th>Adjustment No</th><th>Store</th><th>Type</th><th>Date</th><th>Status</th><th class="text-end">Actions</th></tr>
+                        <tr><th>#</th><th>Adjustment No</th><th>Store</th><th>Type</th><th>Date</th><th>Status</th><th class="text-right">Actions</th></tr>
                     </thead>
                     <tbody>
                         @forelse($adjustments as $adjustment)
@@ -81,11 +79,11 @@
                                 <td>{{ ucwords(str_replace('_', ' ', $adjustment->type)) }}</td>
                                 <td>{{ $adjustment->adjustment_date?->format('d M Y') }}</td>
                                 <td>
-                                    <span class="badge p-1 text-white bg-{{ ['approved' => 'success', 'rejected' => 'danger'][$adjustment->status] ?? 'secondary' }}">
+                                    <span class="badge badge-{{ ['approved' => 'success', 'rejected' => 'danger'][$adjustment->status] ?? 'secondary' }}">
                                         {{ ucfirst($adjustment->status) }}
                                     </span>
                                 </td>
-                                <td class="text-end">
+                                <td class="text-right">
                                     @if($adjustment->status === 'pending')
                                         @can('inv_adjustment.approve')
                                             <form method="POST" action="{{ route('inventory.adjustments.approve', $adjustment) }}" class="d-inline">
@@ -99,9 +97,7 @@
                                         @endcan
                                     @endif
                                     @can('inv_adjustment.delete')
-                                        <button type="button" class="btn btn-sm btn-outline-danger" data-toggle="modal" data-target="#deleteAdjustmentModal" data-action="{{ route('inventory.adjustments.destroy', $adjustment) }}">
-                                            <i class="fa-solid fa-trash"></i>
-                                        </button>
+                                        <button type="button" class="btn-custom danger" data-toggle="modal" data-target="#deleteAdjustmentModal" data-action="{{ route('inventory.adjustments.destroy', $adjustment) }}"><i class="fa-solid fa-trash"></i></button>
                                     @endcan
                                 </td>
                             </tr>

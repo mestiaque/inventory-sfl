@@ -20,30 +20,33 @@
 
     <div class="card">
         <div class="card-header d-flex justify-content-between align-items-center">
-            <h5 class="mb-0">Gate Pass Report</h5>
+            <h4 class="mb-0">Gate Pass Report</h4>
             @unless($printMode)
                 @include('sfl-inventory::admin.reports.partials.export-print-buttons', ['report' => 'gate-pass'])
             @endunless
         </div>
         <div class="card-body">
             @unless($printMode)
-                <form method="GET" class="row g-2 mb-3">
-                    <div class="col-md-3">
-                        <select name="status" class="form-control inv-select2">
+                <form method="GET" class="row mb-3 align-items-end">
+                    <div class="col-md-3 mb-2">
+                        <select name="status" class="form-control form-control-sm inv-select2">
                             <option value="">All Status</option>
                             <option value="pending" @selected(request('status') === 'pending')>Pending</option>
                             <option value="issued" @selected(request('status') === 'issued')>Issued</option>
                             <option value="cancelled" @selected(request('status') === 'cancelled')>Cancelled</option>
                         </select>
                     </div>
-                    <div class="col-md-3"><input type="date" name="date_from" class="form-control" value="{{ request('date_from') }}" placeholder="From"></div>
-                    <div class="col-md-3"><input type="date" name="date_to" class="form-control" value="{{ request('date_to') }}" placeholder="To"></div>
-                    <div class="col-md-3"><button type="submit" class="btn btn-secondary">Filter</button></div>
+                    <div class="col-md-3 mb-2"><input type="date" name="date_from" class="form-control form-control-sm" value="{{ request('date_from') }}" placeholder="From"></div>
+                    <div class="col-md-3 mb-2"><input type="date" name="date_to" class="form-control form-control-sm" value="{{ request('date_to') }}" placeholder="To"></div>
+                    <div class="col-md-3 mb-2 d-flex align-items-end flex-wrap gap-1">
+                        <button type="submit" class="btn btn-secondary btn-sm">Filter</button>
+                        <a href="{{ url()->current() }}" class="btn btn-light btn-sm">Reset</a>
+                    </div>
                 </form>
             @endunless
 
             <div class="table-responsive">
-                <table class="table table-bordered table-striped table-sm align-middle">
+                <table class="table table-bordered table-sm align-middle">
                     <thead><tr><th>Gate Pass No</th><th>Buyer</th><th>Store</th><th>Date</th><th>Status</th></tr></thead>
                     <tbody>
                         @forelse($gatePasses as $gatePass)

@@ -35,29 +35,30 @@
         </div>
         <div class="card-body">
             @unless($printMode)
-                <form method="GET" class="row g-2 mb-3">
-                    <div class="col-md-3">
-                        <select name="employee_id" class="form-control inv-select2">
+                <form method="GET" class="row mb-3 align-items-end">
+                    <div class="col-md-3 mb-2">
+                        <select name="employee_id" class="form-control form-control-sm inv-select2">
                             <option value="">All Employees</option>
                             @foreach($employees as $employee)
                                 <option value="{{ $employee->id }}" @selected($employeeId == $employee->id)>{{ $employee->name }} ({{ $employee->employee_id }})</option>
                             @endforeach
                         </select>
                     </div>
-                    <div class="col-md-2">
-                        <input type="date" name="date_from" class="form-control" value="{{ $from }}" placeholder="From">
+                    <div class="col-md-3 mb-2">
+                        <input type="date" name="date_from" class="form-control form-control-sm" value="{{ $from }}" placeholder="From">
                     </div>
-                    <div class="col-md-2">
-                        <input type="date" name="date_to" class="form-control" value="{{ $to }}" placeholder="To">
+                    <div class="col-md-3 mb-2">
+                        <input type="date" name="date_to" class="form-control form-control-sm" value="{{ $to }}" placeholder="To">
                     </div>
-                    <div class="col-md-3">
-                        <select name="sort" class="form-control inv-select2">
+                    <div class="col-md-3 mb-2">
+                        <select name="sort" class="form-control form-control-sm inv-select2">
                             <option value="desc" @selected($sort === 'desc')>Qty: High to Low</option>
                             <option value="asc" @selected($sort === 'asc')>Qty: Low to High</option>
                         </select>
                     </div>
-                    <div class="col-md-2">
-                        <button type="submit" class="btn btn-secondary w-100">Filter</button>
+                    <div class="col-md-3 mb-2 d-flex align-items-end flex-wrap gap-1">
+                        <button type="submit" class="btn btn-secondary btn-sm">Filter</button>
+                        <a href="{{ url()->current() }}" class="btn btn-light btn-sm">Reset</a>
                     </div>
                 </form>
                 @if($employeeId)
@@ -68,9 +69,9 @@
             @endunless
 
             <div class="table-responsive">
-                <table class="table table-bordered table-striped table-sm align-middle">
+                <table class="table table-bordered table-sm align-middle">
                     <thead>
-                        <tr><th>#</th><th>Employee ID</th><th>Employee Name</th><th class="text-end">Incidents</th><th class="text-end">Total Broken Needle Qty</th></tr>
+                        <tr><th>#</th><th>Employee ID</th><th>Employee Name</th><th class="text-right">Incidents</th><th class="text-right">Total Broken Needle Qty</th></tr>
                     </thead>
                     <tbody>
                         @forelse($rows as $row)
@@ -78,8 +79,8 @@
                                 <td>{{ $loop->iteration }}</td>
                                 <td>{{ $row->employee?->employee_id ?? $row->employee_id }}</td>
                                 <td>{{ $row->employee?->name ?? '—' }}</td>
-                                <td class="text-end">{{ $row->incidents }}</td>
-                                <td class="text-end fw-bold">{{ $row->total_qty }}</td>
+                                <td class="text-right">{{ $row->incidents }}</td>
+                                <td class="text-right font-weight-bold">{{ $row->total_qty }}</td>
                             </tr>
                         @empty
                             <tr><td colspan="5" class="text-center text-muted">No broken needle entries for this period.</td></tr>
@@ -87,7 +88,7 @@
                     </tbody>
                     @if($rows->isNotEmpty())
                         <tfoot>
-                            <tr class="fw-bold"><td colspan="3" class="text-end">Grand Total</td><td class="text-end">{{ $rows->sum('incidents') }}</td><td class="text-end">{{ $rows->sum('total_qty') }}</td></tr>
+                            <tr class="font-weight-bold"><td colspan="3" class="text-right">Grand Total</td><td class="text-right">{{ $rows->sum('incidents') }}</td><td class="text-right">{{ $rows->sum('total_qty') }}</td></tr>
                         </tfoot>
                     @endif
                 </table>

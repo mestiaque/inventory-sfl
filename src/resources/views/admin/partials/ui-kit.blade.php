@@ -1,98 +1,29 @@
-
+{{--
+    Shared UI for SFL Inventory pages — matches the HR module on the host's
+    Bootstrap 4 theme: plain .card, .table-bordered.table-sm, small buttons,
+    and icon-only row actions as .btn-custom (yellow = edit, danger = delete,
+    success = view/approve, primary = print/label) from admin/assets/css/custom.css.
+--}}
 <style>
-.inv-module { --inv-accent: #f97316; --inv-accent-dark: #ea580c; --inv-ink: #1f2937; }
-
-/* Cards */
-.inv-module .card { border: none; border-radius: 14px; box-shadow: 0 2px 14px rgba(0,0,0,.07); margin-bottom: 1.25rem; }
-.inv-module .card-header {
-    background: #fff; border-bottom: 2px solid #fef3e8; border-radius: 14px 14px 0 0 !important;
-    padding: 16px 20px; display: flex; flex-wrap: wrap; gap: 10px;
-}
-.inv-module .card-header h5, .inv-module .card-header h6 {
-    font-weight: 800; color: var(--inv-ink); border-left: 4px solid var(--inv-accent); padding-left: 12px; margin: 0;
-}
-.inv-module .card-body { padding: 20px; }
-
-/* Filter bar */
-.inv-module form.row.g-2 {
-    background: #fbfbfc; border: 1px solid #f0f0f2; border-radius: 10px; margin: 0 0 18px; padding: 14px 12px 4px;
-}
-.inv-module form.row.g-2 .form-control, .inv-module form.row.g-2 select { border-radius: 8px; }
-
-/* Forms (create/edit) */
-.inv-module .form-label { font-weight: 700; font-size: 12.5px; text-transform: uppercase; letter-spacing: .4px; color: #52525b; margin-bottom: 6px; }
-.inv-module .form-control, .inv-module select.form-control, .inv-module textarea.form-control {
-    border-radius: 8px; border-color: #e4e4e7;
-}
-.inv-module .form-control:focus, .inv-module select.form-control:focus {
-    border-color: var(--inv-accent); box-shadow: 0 0 0 .2rem rgba(249,115,22,.15);
-}
-.inv-module .form-text { font-size: 12px; color: #9ca3af; }
-.inv-module hr { border-top: 2px dashed #f0f0f2; margin: 22px 0; }
-
-/* Tables */
-.inv-module .table-responsive { border-radius: 10px; border: 1px solid #f0f0f2; }
-.inv-module .table { margin-bottom: 0; }
-.inv-module .table thead th {
-    background: #fff8ed; color: #9a3412; font-size: 11.5px; text-transform: uppercase; letter-spacing: .4px;
-    font-weight: 800; border-bottom: none; padding: 12px 14px; white-space: nowrap;
-}
-.inv-module .table tbody td { padding: 12px 14px; vertical-align: middle; font-size: 13.5px; color: #374151; border-color: #f4f4f5; }
-.inv-module .table-striped tbody tr:nth-of-type(odd) { background-color: #fafafa; }
-.inv-module .table tbody tr:hover { background-color: #fff8ed; }
-.inv-module .table tbody tr td.text-center.text-muted { padding: 34px 14px; font-size: 13.5px; }
-
-/* Badges */
-.inv-module .badge { border-radius: 999px; padding: 5px 12px; font-size: 11px; font-weight: 700; letter-spacing: .2px; }
-
-/* Buttons */
-.inv-module .btn { border-radius: 8px; font-weight: 600; }
-.inv-module .btn-sm { border-radius: 7px; padding: .3rem .65rem; font-size: 12.5px; }
-.inv-module .btn-primary { background: var(--inv-accent); border-color: var(--inv-accent); }
-.inv-module .btn-primary:hover, .inv-module .btn-primary:focus { background: var(--inv-accent-dark); border-color: var(--inv-accent-dark); }
-.inv-module .btn-outline-primary { color: var(--inv-accent-dark); border-color: var(--inv-accent); }
-.inv-module .btn-outline-primary:hover { background: var(--inv-accent); border-color: var(--inv-accent); }
-.inv-module td.text-end .btn, .inv-module td.text-end form { margin-left: 4px; }
-.inv-module td.text-end { white-space: nowrap; }
-
-/* Pagination */
-.inv-module .pagination { margin-top: 14px; }
-.inv-module .page-link { border-radius: 8px; margin: 0 2px; border-color: #f0f0f2; color: var(--inv-ink); }
-.inv-module .page-item.active .page-link { background: var(--inv-accent); border-color: var(--inv-accent); }
-
-/* Modals (master CRUD add/edit/delete popups) */
-.inv-module .modal-content { border: none; border-radius: 14px; overflow: hidden; }
-.inv-module .modal-header { background: #fff8ed; border-bottom: 1px solid #fde9d4; padding: 16px 20px; }
-.inv-module .modal-header .modal-title { font-weight: 800; color: var(--inv-ink); }
-.inv-module .modal-body { padding: 20px; }
-.inv-module .modal-footer { border-top: 1px solid #f4f4f5; padding: 14px 20px; }
-
-/* Alerts */
-.inv-module .alert { border: none; border-radius: 10px; font-size: 13.5px; }
-
-/* Select2 tweaks to match rounded inputs */
-.inv-module .select2-container--default .select2-selection--single { border-radius: 8px !important; border-color: #e4e4e7 !important; height: auto !important; }
-
-/* Active toggle switch — this theme bundles Bootstrap 4, which has no native
-   .form-switch (that's Bootstrap 5 only), so plain `form-check form-switch`
-   renders as a bare checkbox. This draws a real switch by hand. */
-.inv-module .form-switch { position: relative; padding-left: 3.25rem; min-height: 1.6rem; display: flex; align-items: center; }
-.inv-module .form-switch .form-check-input {
-    -webkit-appearance: none; appearance: none; position: absolute; left: 0; top: 0;
-    width: 2.75rem; height: 1.5rem; margin: 0; border: none; border-radius: 999px;
-    background: #d1d5db; cursor: pointer; transition: background-color .2s ease; outline: none;
-}
-.inv-module .form-switch .form-check-input::after {
-    content: ''; position: absolute; top: 2px; left: 2px; width: 20px; height: 20px;
-    background: #fff; border-radius: 50%; box-shadow: 0 1px 3px rgba(0,0,0,.35); transition: transform .2s ease;
-}
-.inv-module .form-switch .form-check-input:checked { background: var(--inv-accent); }
-.inv-module .form-switch .form-check-input:checked::after { transform: translateX(20px); }
-.inv-module .form-switch .form-check-input:focus { box-shadow: 0 0 0 .2rem rgba(249,115,22,.2); }
-.inv-module .form-switch .form-check-label { font-weight: 700; color: var(--inv-ink); cursor: pointer; margin-bottom: 0; }
-
-/* Submit-guard visual state — see the script below. */
-.inv-module .btn.inv-submitting { opacity: .65; cursor: progress; pointer-events: none; }
+    /* Same sizing HR applies to its row-action buttons. */
+    .btn-custom { padding: 0 3px !important; height: auto !important; }
+    /* Bootstrap-5 utilities still used by a few layouts, not in BS 4.4. */
+    .gap-1 { gap: .25rem; } .gap-2 { gap: .5rem; } .gap-3 { gap: 1rem; }
+    .form-label { margin-bottom: .25rem; }
+    .inv-module .table td, .inv-module .table th { vertical-align: middle; }
+    /* Table headers: black text on light grey (host layout sets white-on-grey). */
+    table.table thead { background: #e9ecef !important; color: #000 !important; }
+    table.table thead th { color: #000 !important; }
+    /* Select2 at the same height as .form-control-sm inputs. */
+    .select2-container .select2-selection--single { height: calc(1.5em + .5rem + 2px) !important; font-size: .875rem; }
+    .select2-container .select2-selection--single .select2-selection__rendered { line-height: calc(1.5em + .5rem) !important; }
+    .select2-container .select2-selection--single .select2-selection__arrow { height: calc(1.5em + .5rem) !important; }
+    .select2-container .select2-selection--multiple { min-height: calc(1.5em + .5rem + 2px) !important; font-size: .875rem; }
+    /* Row-action cells stay on one line. */
+    .inv-module .table td.text-right:last-child { white-space: nowrap; }
+    .inv-module .table td:last-child > form { display: inline-block; }
+    /* Submit-guard visual state — see the script below. */
+    .inv-module .btn.inv-submitting, .inv-module .inv-submitting { opacity: .65; cursor: progress; pointer-events: none; }
 </style>
 
 {{--

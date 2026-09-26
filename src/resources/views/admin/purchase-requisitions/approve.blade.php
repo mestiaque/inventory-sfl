@@ -11,7 +11,7 @@
 
     <div class="card">
         <div class="card-header d-flex justify-content-between align-items-center">
-            <h5 class="mb-0">Approve / Reject — {{ $purchaseRequisition->requisition_no }}</h5>
+            <h4 class="mb-0">Approve / Reject — {{ $purchaseRequisition->requisition_no }}</h4>
             <a href="{{ route('inventory.purchase-requisitions.index') }}" class="btn btn-light btn-sm"><i class="fa-solid fa-arrow-left"></i> Back</a>
         </div>
         <div class="card-body">
@@ -38,10 +38,10 @@
                                     <td>{{ $item->requested_qty }}</td>
                                     <td>
                                         <input type="hidden" name="items[{{ $loop->index }}][id]" value="{{ $item->id }}">
-                                        <input type="number" step="0.0001" min="0" class="form-control"
+                                        <input type="number" step="0.0001" min="0" class="form-control form-control-sm"
                                             name="items[{{ $loop->index }}][approved_qty]" value="{{ $item->requested_qty }}">
                                     </td>
-                                    <td><button type="button" class="btn btn-sm btn-outline-danger" data-line-items-remove title="Remove — don't approve this item"><i class="fa-solid fa-xmark"></i></button></td>
+                                    <td><button type="button" class="btn-custom danger" data-line-items-remove title="Remove — don't approve this item"><i class="fa-solid fa-xmark"></i></button></td>
                                 </tr>
                             @endforeach
                         </tbody>
@@ -51,7 +51,7 @@
                 <template id="preqApproveRowTemplate">
                     <tr>
                         <td>
-                            <select name="items[__INDEX__][item_id]" class="form-control inv-select2" required>
+                            <select name="items[__INDEX__][item_id]" class="form-control form-control-sm inv-select2" required>
                                 <option value="">— Select —</option>
                                 @foreach($items as $item)
                                     <option value="{{ $item->id }}" data-color-id="{{ $item->color_id }}" data-size-id="{{ $item->size_id }}">{{ $item->item_code }} — {{ $item->item_name }}</option>
@@ -59,7 +59,7 @@
                             </select>
                         </td>
                         <td>
-                            <select name="items[__INDEX__][color_id]" class="form-control">
+                            <select name="items[__INDEX__][color_id]" class="form-control form-control-sm">
                                 <option value="">— Select —</option>
                                 @foreach($colors as $color)
                                     <option value="{{ $color->id }}">{{ $color->name }}</option>
@@ -67,7 +67,7 @@
                             </select>
                         </td>
                         <td>
-                            <select name="items[__INDEX__][size_id]" class="form-control">
+                            <select name="items[__INDEX__][size_id]" class="form-control form-control-sm">
                                 <option value="">— Select —</option>
                                 @foreach($sizes as $size)
                                     <option value="{{ $size->id }}">{{ $size->name }}</option>
@@ -75,19 +75,19 @@
                             </select>
                         </td>
                         <td class="text-muted">— (new) —</td>
-                        <td><input type="number" step="0.0001" min="0.0001" class="form-control" name="items[__INDEX__][approved_qty]" required></td>
-                        <td><button type="button" class="btn btn-sm btn-outline-danger" data-line-items-remove><i class="fa-solid fa-xmark"></i></button></td>
+                        <td><input type="number" step="0.0001" min="0.0001" class="form-control form-control-sm" name="items[__INDEX__][approved_qty]" required></td>
+                        <td><button type="button" class="btn-custom danger" data-line-items-remove><i class="fa-solid fa-xmark"></i></button></td>
                     </tr>
                 </template>
 
                 <div class="mb-3">
                     <label class="form-label">Remarks</label>
-                    <textarea name="approval_remarks" class="form-control" rows="2"></textarea>
+                    <textarea name="approval_remarks" class="form-control form-control-sm" rows="2"></textarea>
                 </div>
 
-                <button type="submit" name="decision" value="approve" class="btn btn-success">Approve</button>
-                <button type="submit" name="decision" value="reject" class="btn btn-danger" onclick="return confirm('Reject this purchase requisition?')">Reject</button>
-                <a href="{{ route('inventory.purchase-requisitions.index') }}" class="btn btn-light">Cancel</a>
+                <button type="submit" name="decision" value="approve" class="btn btn-success btn-sm">Approve</button>
+                <button type="submit" name="decision" value="reject" class="btn btn-danger btn-sm" onclick="return confirm('Reject this purchase requisition?')">Reject</button>
+                <a href="{{ route('inventory.purchase-requisitions.index') }}" class="btn btn-light btn-sm">Cancel</a>
             </form>
         </div>
     </div>

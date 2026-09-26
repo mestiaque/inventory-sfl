@@ -40,17 +40,17 @@
 {{-- ── Section Header ── --}}
 <div class="d-flex align-items-center justify-content-between mb-3 mt-1">
     <h4 class="mb-0" style="font-size:17px;font-weight:700;">
-        <i class="fa-solid fa-boxes-stacked me-2" style="color:#f97316;"></i> Inventory Overview
+        <i class="fa-solid fa-boxes-stacked mr-2" style="color:#f97316;"></i> Inventory Overview
     </h4>
     @if(\Illuminate\Support\Facades\Route::has('inventory.dashboard'))
         <a href="{{ route('inventory.dashboard') }}" class="btn btn-sm btn-outline-secondary" style="font-size:12px;">
-            <i class="fa-solid fa-gauge me-1"></i> Inventory Dashboard
+            <i class="fa-solid fa-gauge mr-1"></i> Inventory Dashboard
         </a>
     @endif
 </div>
 
 {{-- ── Stat Cards ── --}}
-<div class="row g-3 mb-4">
+<div class="row mb-4">
     <div class="col-6 col-md-4 col-lg">
         @if(\Illuminate\Support\Facades\Route::has('inventory.stock-overview.index'))<a href="{{ route('inventory.stock-overview.index') }}" class="inv-stat-card-link">@endif
         <div class="inv-stat-card">
@@ -111,7 +111,7 @@
 </div>
 
 {{-- ── Pending Approvals Row ── --}}
-<div class="row g-3 mb-4">
+<div class="row mb-4">
     <div class="col-lg-8">
         <div class="inv-chart-card">
             <div class="inv-section-title">Stock Movement – Last 30 Days</div>
@@ -121,7 +121,7 @@
     <div class="col-lg-4">
         <div class="inv-chart-card h-100">
             <div class="inv-section-title">Pending Approvals</div>
-            <div class="row g-2 text-center">
+            <div class="row text-center">
                 <div class="col-6">
                     <div class="inv-stat-val" style="color:#f59e0b;font-size:20px;">{{ $s['pendingRequisitions'] }}</div>
                     <div class="inv-stat-lbl">Requisitions</div>
@@ -144,7 +144,7 @@
 </div>
 
 {{-- ── Charts Row 2 ── --}}
-<div class="row g-3 mb-4">
+<div class="row mb-4">
     <div class="col-lg-5">
         <div class="inv-chart-card">
             <div class="inv-section-title">Stock Value by Category</div>
@@ -171,7 +171,7 @@
 </div>
 
 {{-- ── Insights Row ── --}}
-<div class="row g-3 mb-4">
+<div class="row mb-4">
     <div class="col-lg-4">
         <div class="inv-chart-card h-100">
             <div class="inv-section-title">Stock by Store (Top 8)</div>
@@ -215,7 +215,7 @@
 </div>
 
 {{-- ── Recent Activity & Recent GRNs ── --}}
-<div class="row g-3 mb-4">
+<div class="row mb-4">
     <div class="col-lg-7">
         <div class="inv-chart-card">
             <div class="d-flex align-items-center justify-content-between mb-2">
@@ -225,7 +225,7 @@
                 @endif
             </div>
             <div class="table-responsive">
-                <table class="table table-hover mb-0">
+                <table class="table table-hover mb-0 table-sm">
                     <thead style="background:#f8f9ff;">
                         <tr>
                             <th style="font-size:12px;color:#888;font-weight:600;border:none;padding:8px 10px;">Date</th>
@@ -263,7 +263,7 @@
                 @endif
             </div>
             <div class="table-responsive">
-                <table class="table table-hover mb-0">
+                <table class="table table-hover mb-0 table-sm">
                     <thead style="background:#f8f9ff;">
                         <tr>
                             <th style="font-size:12px;color:#888;font-weight:600;border:none;padding:8px 10px;">GRN No</th>

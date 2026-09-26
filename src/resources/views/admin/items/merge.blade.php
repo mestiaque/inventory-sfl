@@ -11,7 +11,7 @@
 
     <div class="card">
         <div class="card-header d-flex justify-content-between align-items-center">
-            <h5 class="mb-0">Merge Duplicate Items</h5>
+            <h4 class="mb-0">Merge Duplicate Items</h4>
             <a href="{{ route('inventory.items.index') }}" class="btn btn-light btn-sm"><i class="fa-solid fa-arrow-left"></i> Back</a>
         </div>
         <div class="card-body">
@@ -27,9 +27,9 @@
                 @csrf
 
                 <div class="row">
-                    <div class="col-md-6 mb-3">
+                    <div class="col-md-3 mb-3">
                         <label class="form-label">Keep this item <span class="text-danger">*</span></label>
-                        <select name="keep_item_id" id="keepItemSelect" class="form-control inv-select2" required>
+                        <select name="keep_item_id" id="keepItemSelect" class="form-control form-control-sm inv-select2" required>
                             <option value="">— Select the item to keep —</option>
                             @foreach($items as $item)
                                 <option value="{{ $item->id }}" data-unit="{{ $item->unit_id }}" @selected(old('keep_item_id') == $item->id)>
@@ -39,9 +39,9 @@
                         </select>
                         <div class="form-text">This item's code, stores and history stay exactly as they are.</div>
                     </div>
-                    <div class="col-md-6 mb-3">
+                    <div class="col-md-3 mb-3">
                         <label class="form-label">Duplicate item(s) to merge away <span class="text-danger">*</span></label>
-                        <select name="duplicate_item_ids[]" id="duplicateItemsSelect" class="form-control inv-select2" multiple required>
+                        <select name="duplicate_item_ids[]" id="duplicateItemsSelect" class="form-control form-control-sm inv-select2" multiple required>
                             @foreach($items as $item)
                                 <option value="{{ $item->id }}" data-unit="{{ $item->unit_id }}" @selected(collect(old('duplicate_item_ids', []))->contains($item->id))>
                                     {{ $item->item_code }} — {{ $item->item_name }} ({{ $item->unit?->short_name ?? 'no unit' }})
@@ -59,10 +59,10 @@
                     </label>
                 </div>
 
-                <button type="submit" class="btn btn-danger">
+                <button type="submit" class="btn btn-danger btn-sm">
                     <i class="fa-solid fa-code-merge"></i> Merge &amp; Delete Duplicate(s)
                 </button>
-                <a href="{{ route('inventory.items.index') }}" class="btn btn-light">Cancel</a>
+                <a href="{{ route('inventory.items.index') }}" class="btn btn-light btn-sm">Cancel</a>
             </form>
         </div>
     </div>

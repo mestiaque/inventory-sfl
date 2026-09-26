@@ -45,48 +45,49 @@
                         <i class="fa-solid fa-arrow-left"></i> Back to all machines
                     </a>
                 @endif
-                <form method="GET" class="row g-2 mb-3">
-                    <div class="col-md-2">
-                        <input type="date" name="date_from" class="form-control" value="{{ $from }}" placeholder="From">
+                <form method="GET" class="row mb-3 align-items-end">
+                    <div class="col-md-3 mb-2">
+                        <input type="date" name="date_from" class="form-control form-control-sm" value="{{ $from }}" placeholder="From">
                     </div>
-                    <div class="col-md-2">
-                        <input type="date" name="date_to" class="form-control" value="{{ $to }}" placeholder="To">
+                    <div class="col-md-3 mb-2">
+                        <input type="date" name="date_to" class="form-control form-control-sm" value="{{ $to }}" placeholder="To">
                     </div>
-                    <div class="col-md-2">
-                        <select name="department_id" class="form-control inv-select2">
+                    <div class="col-md-3 mb-2">
+                        <select name="department_id" class="form-control form-control-sm inv-select2">
                             <option value="">All Departments</option>
                             @foreach($departments as $department)
                                 <option value="{{ $department->id }}" @selected($departmentId == $department->id)>{{ $department->name }}</option>
                             @endforeach
                         </select>
                     </div>
-                    <div class="col-md-3">
-                        <select name="machine_id" class="form-control inv-select2">
+                    <div class="col-md-3 mb-2">
+                        <select name="machine_id" class="form-control form-control-sm inv-select2">
                             <option value="">All Machines (overview)</option>
                             @foreach($machines as $m)
                                 <option value="{{ $m->id }}" @selected($machineId == $m->id)>{{ $m->name }} ({{ $m->code }})</option>
                             @endforeach
                         </select>
                     </div>
-                    <div class="col-md-2">
-                        <select name="sort" class="form-control inv-select2">
+                    <div class="col-md-3 mb-2">
+                        <select name="sort" class="form-control form-control-sm inv-select2">
                             <option value="desc" @selected($sort === 'desc')>Qty: High to Low</option>
                             <option value="asc" @selected($sort === 'asc')>Qty: Low to High</option>
                         </select>
                     </div>
-                    <div class="col-md-1">
-                        <button type="submit" class="btn btn-secondary w-100">Filter</button>
+                    <div class="col-md-3 mb-2 d-flex align-items-end flex-wrap gap-1">
+                        <button type="submit" class="btn btn-secondary btn-sm">Filter</button>
+                        <a href="{{ url()->current() }}" class="btn btn-light btn-sm">Reset</a>
                     </div>
                 </form>
             @endunless
 
             <div class="table-responsive">
-                <table class="table table-bordered table-striped table-sm align-middle">
+                <table class="table table-bordered table-sm align-middle">
                     <thead>
                         @if($machine)
-                            <tr><th>#</th><th>Employee ID</th><th>Employee Name</th><th class="text-end">Incidents</th><th class="text-end">Total Broken Needle Qty</th></tr>
+                            <tr><th>#</th><th>Employee ID</th><th>Employee Name</th><th class="text-right">Incidents</th><th class="text-right">Total Broken Needle Qty</th></tr>
                         @else
-                            <tr><th>#</th><th>Machine</th><th>Code</th><th>Department</th><th>Section</th><th>Line</th><th class="text-end">Incidents</th><th class="text-end">Total Broken Needle Qty</th></tr>
+                            <tr><th>#</th><th>Machine</th><th>Code</th><th>Department</th><th>Section</th><th>Line</th><th class="text-right">Incidents</th><th class="text-right">Total Broken Needle Qty</th></tr>
                         @endif
                     </thead>
                     <tbody>
@@ -96,8 +97,8 @@
                                     <td>{{ $loop->iteration }}</td>
                                     <td>{{ $row->employee?->employee_id ?? $row->employee_id }}</td>
                                     <td>{{ $row->employee?->name ?? '—' }}</td>
-                                    <td class="text-end">{{ $row->incidents }}</td>
-                                    <td class="text-end fw-bold">{{ $row->total_qty }}</td>
+                                    <td class="text-right">{{ $row->incidents }}</td>
+                                    <td class="text-right font-weight-bold">{{ $row->total_qty }}</td>
                                 </tr>
                             @else
                                 <tr>
@@ -117,8 +118,8 @@
                                     <td>{{ $row->machine?->department?->name ?? '—' }}</td>
                                     <td>{{ $row->machine?->section ?? '—' }}</td>
                                     <td>{{ $row->machine?->line ?? '—' }}</td>
-                                    <td class="text-end">{{ $row->incidents }}</td>
-                                    <td class="text-end fw-bold">{{ $row->total_qty }}</td>
+                                    <td class="text-right">{{ $row->incidents }}</td>
+                                    <td class="text-right font-weight-bold">{{ $row->total_qty }}</td>
                                 </tr>
                             @endif
                         @empty
@@ -127,10 +128,10 @@
                     </tbody>
                     @if($rows->isNotEmpty())
                         <tfoot>
-                            <tr class="fw-bold">
-                                <td colspan="{{ $machine ? 3 : 6 }}" class="text-end">Grand Total</td>
-                                <td class="text-end">{{ $rows->sum('incidents') }}</td>
-                                <td class="text-end">{{ $rows->sum('total_qty') }}</td>
+                            <tr class="font-weight-bold">
+                                <td colspan="{{ $machine ? 3 : 6 }}" class="text-right">Grand Total</td>
+                                <td class="text-right">{{ $rows->sum('incidents') }}</td>
+                                <td class="text-right">{{ $rows->sum('total_qty') }}</td>
                             </tr>
                         </tfoot>
                     @endif

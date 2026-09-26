@@ -39,7 +39,7 @@
 
     <div class="card">
         <div class="card-header d-flex flex-wrap justify-content-between align-items-center gap-2">
-            <h5 class="mb-0">Store Overview — {{ $store?->name ?? 'All Stores' }}</h5>
+            <h4 class="mb-0">Store Overview — {{ $store?->name ?? 'All Stores' }}</h4>
             <div>
                 <span class="status-indicator"><span class="dot active"></span> Stocked: {{ $counts['active'] }}</span>
                 <span class="status-indicator"><span class="dot empty"></span> Empty: {{ $counts['empty'] }}</span>
@@ -47,31 +47,29 @@
             </div>
         </div>
         <div class="card-body">
-            <form method="GET" class="row g-2 mb-4">
-                <div class="col-md-2">
-                    <input type="text" name="search" class="form-control" placeholder="Search item code or name" value="{{ request('search') }}">
+            <form method="GET" class="row mb-4 align-items-end">
+                <div class="col-md-3 mb-2">
+                    <input type="text" name="search" class="form-control form-control-sm" placeholder="Search item code or name" value="{{ request('search') }}">
                 </div>
-                <div class="col-md-2">
-                    <select name="store_id" class="form-control inv-select2">
+                <div class="col-md-3 mb-2">
+                    <select name="store_id" class="form-control form-control-sm inv-select2">
                         <option value="" @selected(! $store)>All Stores</option>
                         @foreach($stores as $s)
                             <option value="{{ $s->id }}" @selected($store?->id == $s->id)>{{ $s->name }}</option>
                         @endforeach
                     </select>
                 </div>
-                <div class="col-md-2">
-                    <select name="category_id" class="form-control inv-select2">
+                <div class="col-md-3 mb-2">
+                    <select name="category_id" class="form-control form-control-sm inv-select2">
                         <option value="">All Categories</option>
                         @foreach($categories as $category)
                             <option value="{{ $category->id }}" @selected(request('category_id') == $category->id)>{{ $category->name }}</option>
                         @endforeach
                     </select>
                 </div>
-                <div class="col-md-2">
-                    <button type="submit" class="btn btn-secondary w-100">Filter</button>
-                </div>
-                <div class="col-md-2">
-                    <a href="{{ route('inventory.stock-overview.cards') }}" class="btn btn-light w-100">Reset</a>
+                <div class="col-md-3 mb-2 d-flex align-items-end flex-wrap gap-1">
+                    <button type="submit" class="btn btn-secondary btn-sm">Filter</button>
+                    <a href="{{ route('inventory.stock-overview.cards') }}" class="btn btn-light btn-sm">Reset</a>
                 </div>
             </form>
 

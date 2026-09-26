@@ -30,17 +30,18 @@
         </div>
         <div class="card-body">
             @unless($printMode)
-                <form method="GET" class="row g-2 mb-3">
-                    <div class="col-md-6">
-                        <select name="item_id" class="form-control inv-select2" required>
+                <form method="GET" class="row mb-3 align-items-end">
+                    <div class="col-md-3 mb-2">
+                        <select name="item_id" class="form-control form-control-sm inv-select2" required>
                             <option value="">— Select an item —</option>
                             @foreach($items as $item)
                                 <option value="{{ $item->id }}" @selected(request('item_id') == $item->id)>{{ $item->item_code }} — {{ $item->item_name }}</option>
                             @endforeach
                         </select>
                     </div>
-                    <div class="col-md-2">
-                        <button type="submit" class="btn btn-secondary w-100">Show</button>
+                    <div class="col-md-3 mb-2 d-flex align-items-end flex-wrap gap-1">
+                        <button type="submit" class="btn btn-secondary btn-sm">Show</button>
+                        <a href="{{ url()->current() }}" class="btn btn-light btn-sm">Reset</a>
                     </div>
                 </form>
             @endunless
@@ -49,13 +50,13 @@
                 <div class="text-center text-muted py-4">Select an item above to see its full purchase → receive → requisition → issue trail.</div>
             @else
                 <div class="table-responsive">
-                    <table class="table table-bordered table-striped table-sm align-middle">
+                    <table class="table table-bordered table-sm align-middle">
                         <thead>
                             <tr>
                                 <th>Date</th>
                                 <th>Document Type</th>
                                 <th>Document No</th>
-                                <th class="text-end">Qty</th>
+                                <th class="text-right">Qty</th>
                                 <th>Color</th>
                                 <th>Size</th>
                                 <th>Done By</th>
@@ -68,12 +69,12 @@
                                 <tr>
                                     <td>{{ \Carbon\Carbon::parse($row->txn_date)->format('d M Y') }}</td>
                                     <td>
-                                        <span class="badge bg-{{ ['Purchase Order' => 'primary', 'GRN' => 'success', 'Requisition' => 'warning', 'Issue' => 'danger'][$row->document_type] ?? 'secondary' }}">
+                                        <span class="badge badge-{{ ['Purchase Order' => 'primary', 'GRN' => 'success', 'Requisition' => 'warning', 'Issue' => 'danger'][$row->document_type] ?? 'secondary' }}">
                                             {{ $row->document_type }}
                                         </span>
                                     </td>
                                     <td>{{ $row->document_no }}</td>
-                                    <td class="text-end">{{ inv_qty($row->qty) }}</td>
+                                    <td class="text-right">{{ inv_qty($row->qty) }}</td>
                                     <td>{{ $row->color_name ?? '—' }}</td>
                                     <td>{{ $row->size_name ?? '—' }}</td>
                                     <td>{{ $row->person_name ?? '—' }}</td>

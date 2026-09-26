@@ -11,7 +11,7 @@
 
     <div class="card">
         <div class="card-header d-flex justify-content-between align-items-center">
-            <h5 class="mb-0">Internal Stock Transfer</h5>
+            <h4 class="mb-0">Internal Stock Transfer</h4>
             <div>
                 @can('inv_transfer.delete')
                     <button type="button" class="btn btn-outline-secondary btn-sm" data-toggle="modal" data-target="#transferTrashModal">
@@ -24,52 +24,50 @@
             </div>
         </div>
         <div class="card-body">
-            <form method="GET" class="row g-2 mb-3">
-                <div class="col-md-2">
-                    <input type="text" name="search" class="form-control" placeholder="Search transfer no" value="{{ request('search') }}">
+            <form method="GET" class="row mb-3 align-items-end">
+                <div class="col-md-3 mb-2">
+                    <input type="text" name="search" class="form-control form-control-sm" placeholder="Search transfer no" value="{{ request('search') }}">
                 </div>
-                <div class="col-md-2">
-                    <select name="from_store_id" class="form-control inv-select2">
+                <div class="col-md-3 mb-2">
+                    <select name="from_store_id" class="form-control form-control-sm inv-select2">
                         <option value="">All From Stores</option>
                         @foreach($stores as $store)
                             <option value="{{ $store->id }}" @selected(request('from_store_id') == $store->id)>{{ $store->name }}</option>
                         @endforeach
                     </select>
                 </div>
-                <div class="col-md-2">
-                    <select name="to_store_id" class="form-control inv-select2">
+                <div class="col-md-3 mb-2">
+                    <select name="to_store_id" class="form-control form-control-sm inv-select2">
                         <option value="">All To Stores</option>
                         @foreach($stores as $store)
                             <option value="{{ $store->id }}" @selected(request('to_store_id') == $store->id)>{{ $store->name }}</option>
                         @endforeach
                     </select>
                 </div>
-                <div class="col-md-2">
-                    <select name="status" class="form-control inv-select2">
+                <div class="col-md-3 mb-2">
+                    <select name="status" class="form-control form-control-sm inv-select2">
                         <option value="">All Status</option>
                         @foreach(['pending' => 'Pending', 'approved' => 'Approved', 'in_transit' => 'In Transit', 'received' => 'Received', 'rejected' => 'Rejected'] as $value => $label)
                             <option value="{{ $value }}" @selected(request('status') === $value)>{{ $label }}</option>
                         @endforeach
                     </select>
                 </div>
-                <div class="col-md-2">
-                    <input type="date" name="date_from" class="form-control" value="{{ request('date_from') }}" placeholder="From">
+                <div class="col-md-3 mb-2">
+                    <input type="date" name="date_from" class="form-control form-control-sm" value="{{ request('date_from') }}" placeholder="From">
                 </div>
-                <div class="col-md-2">
-                    <input type="date" name="date_to" class="form-control" value="{{ request('date_to') }}" placeholder="To">
+                <div class="col-md-3 mb-2">
+                    <input type="date" name="date_to" class="form-control form-control-sm" value="{{ request('date_to') }}" placeholder="To">
                 </div>
-                <div class="col-md-2 mt-2">
-                    <button type="submit" class="btn btn-secondary w-100">Filter</button>
-                </div>
-                <div class="col-md-2 mt-2">
-                    <a href="{{ route('inventory.transfers.index') }}" class="btn btn-light w-100">Reset</a>
+                <div class="col-md-3 mb-2 d-flex align-items-end flex-wrap gap-1">
+                    <button type="submit" class="btn btn-secondary btn-sm">Filter</button>
+                    <a href="{{ route('inventory.transfers.index') }}" class="btn btn-light btn-sm">Reset</a>
                 </div>
             </form>
 
             <div class="table-responsive">
-                <table class="table table-bordered table-striped align-middle">
+                <table class="table table-bordered table-sm align-middle">
                     <thead>
-                        <tr><th>#</th><th>Transfer No</th><th>From</th><th>To</th><th>Date</th><th>Status</th><th class="text-end">Actions</th></tr>
+                        <tr><th>#</th><th>Transfer No</th><th>From</th><th>To</th><th>Date</th><th>Status</th><th class="text-right">Actions</th></tr>
                     </thead>
                     <tbody>
                         @forelse($transfers as $transfer)
@@ -80,12 +78,12 @@
                                 <td>{{ $transfer->toStore?->name }}</td>
                                 <td>{{ $transfer->transfer_date?->format('d M Y') }}</td>
                                 <td>
-                                    <span class="badge p-1 text-white bg-{{ ['pending' => 'secondary', 'approved' => 'info', 'in_transit' => 'warning', 'received' => 'success', 'rejected' => 'danger'][$transfer->status] ?? 'secondary' }}">
+                                    <span class="badge badge-{{ ['pending' => 'secondary', 'approved' => 'info', 'in_transit' => 'warning', 'received' => 'success', 'rejected' => 'danger'][$transfer->status] ?? 'secondary' }}">
                                         {{ ucwords(str_replace('_', ' ', $transfer->status)) }}
                                     </span>
                                 </td>
-                                <td class="text-end">
-                                    <a href="{{ route('inventory.transfers.show', $transfer) }}" class="btn btn-sm btn-outline-secondary"><i class="fa-solid fa-eye"></i></a>
+                                <td class="text-right">
+                                    <a href="{{ route('inventory.transfers.show', $transfer) }}" class="btn-custom success"><i class="fa-solid fa-eye"></i></a>
                                     @if($transfer->status === 'pending')
                                         @can('inv_transfer.approve')
                                             <form method="POST" action="{{ route('inventory.transfers.approve', $transfer) }}" class="d-inline">
@@ -98,7 +96,7 @@
                                             </form>
                                         @endcan
                                         @can('inv_transfer.edit')
-                                            <a href="{{ route('inventory.transfers.edit', $transfer) }}" class="btn btn-sm btn-outline-primary"><i class="fa-solid fa-pen"></i></a>
+                                            <a href="{{ route('inventory.transfers.edit', $transfer) }}" class="btn-custom yellow"><i class="fa-solid fa-pen"></i></a>
                                         @endcan
                                     @elseif($transfer->status === 'in_transit')
                                         @can('inv_transfer.receive')
@@ -106,9 +104,7 @@
                                         @endcan
                                     @endif
                                     @can('inv_transfer.delete')
-                                        <button type="button" class="btn btn-sm btn-outline-danger" data-toggle="modal" data-target="#deleteTransferModal" data-action="{{ route('inventory.transfers.destroy', $transfer) }}">
-                                            <i class="fa-solid fa-trash"></i>
-                                        </button>
+                                        <button type="button" class="btn-custom danger" data-toggle="modal" data-target="#deleteTransferModal" data-action="{{ route('inventory.transfers.destroy', $transfer) }}"><i class="fa-solid fa-trash"></i></button>
                                     @endcan
                                 </td>
                             </tr>

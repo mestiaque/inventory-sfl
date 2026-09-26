@@ -11,62 +11,60 @@
 
     <div class="card">
         <div class="card-header">
-            <h5 class="mb-0">Main Store Inventory</h5>
+            <h4 class="mb-0">Main Store Inventory</h4>
         </div>
         <div class="card-body">
-            <form method="GET" class="row g-2 mb-3">
-                <div class="col-md-2">
-                    <select name="item_id" class="form-control inv-select2">
+            <form method="GET" class="row mb-3 align-items-end">
+                <div class="col-md-3 mb-2">
+                    <select name="item_id" class="form-control form-control-sm inv-select2">
                         <option value="">All Items</option>
                         @foreach($allItems as $item)
                             <option value="{{ $item->id }}" @selected(request('item_id') == $item->id)>{{ $item->item_code }} — {{ $item->item_name }}</option>
                         @endforeach
                     </select>
                 </div>
-                <div class="col-md-2">
-                    <select name="store_id" class="form-control inv-select2">
+                <div class="col-md-3 mb-2">
+                    <select name="store_id" class="form-control form-control-sm inv-select2">
                         <option value="">All Stores</option>
                         @foreach($allStores as $store)
                             <option value="{{ $store->id }}" @selected(request('store_id') == $store->id)>{{ $store->name }}</option>
                         @endforeach
                     </select>
                 </div>
-                <div class="col-md-2">
-                    <select name="category_id" class="form-control inv-select2">
+                <div class="col-md-3 mb-2">
+                    <select name="category_id" class="form-control form-control-sm inv-select2">
                         <option value="">All Categories</option>
                         @foreach($categories as $category)
                             <option value="{{ $category->id }}" @selected(request('category_id') == $category->id)>{{ $category->name }}</option>
                         @endforeach
                     </select>
                 </div>
-                <div class="col-md-2">
-                    <select name="color_id" class="form-control inv-select2">
+                <div class="col-md-3 mb-2">
+                    <select name="color_id" class="form-control form-control-sm inv-select2">
                         <option value="">All Colors</option>
                         @foreach($allColors as $color)
                             <option value="{{ $color->id }}" @selected(request('color_id') == $color->id)>{{ $color->name }}</option>
                         @endforeach
                     </select>
                 </div>
-                <div class="col-md-2">
-                    <select name="size_id" class="form-control inv-select2">
+                <div class="col-md-3 mb-2">
+                    <select name="size_id" class="form-control form-control-sm inv-select2">
                         <option value="">All Sizes</option>
                         @foreach($allSizes as $size)
                             <option value="{{ $size->id }}" @selected(request('size_id') == $size->id)>{{ $size->name }}</option>
                         @endforeach
                     </select>
                 </div>
-                <div class="col-md-2">
-                    <button type="submit" class="btn btn-secondary w-100">Filter</button>
-                </div>
-                <div class="col-md-2">
-                    <a href="{{ route('inventory.stock-overview.index') }}" class="btn btn-light w-100">Reset</a>
+                <div class="col-md-3 mb-2 d-flex align-items-end flex-wrap gap-1">
+                    <button type="submit" class="btn btn-secondary btn-sm">Filter</button>
+                    <a href="{{ route('inventory.stock-overview.index') }}" class="btn btn-light btn-sm">Reset</a>
                 </div>
             </form>
 
             <div class="table-responsive">
-                <table class="table table-bordered table-striped table-sm align-middle">
+                <table class="table table-bordered table-sm align-middle">
                     <thead>
-                        <tr><th>Item</th><th>Category</th><th>Color</th><th>Size</th><th>Store</th><th class="text-end">Current Stock</th><th class="text-end">Reserved</th><th class="text-end">Available</th><th class="text-end">Value</th></tr>
+                        <tr><th>Item</th><th>Category</th><th>Color</th><th>Size</th><th>Store</th><th class="text-right">Current Stock</th><th class="text-right">Reserved</th><th class="text-right">Available</th><th class="text-right">Value</th></tr>
                     </thead>
                     <tbody>
                         @forelse($rows as $row)
@@ -77,10 +75,10 @@
                                 <td>{{ $color?->name ?? '—' }}</td>
                                 <td>{{ $size?->name ?? '—' }}</td>
                                 <td>{{ $store?->name }}</td>
-                                <td class="text-end">{{ inv_qty($row->current) }} {{ $item?->unit?->short_name }}</td>
-                                <td class="text-end">{{ inv_qty($row->reserved) }}</td>
-                                <td class="text-end">{{ inv_qty($row->available) }}</td>
-                                <td class="text-end">{{ inv_qty($row->value) }}</td>
+                                <td class="text-right">{{ inv_qty($row->current) }} {{ $item?->unit?->short_name }}</td>
+                                <td class="text-right">{{ inv_qty($row->reserved) }}</td>
+                                <td class="text-right">{{ inv_qty($row->available) }}</td>
+                                <td class="text-right">{{ inv_qty($row->value) }}</td>
                             </tr>
                         @empty
                             <tr><td colspan="9" class="text-center text-muted">No stock records found.</td></tr>
@@ -88,9 +86,9 @@
                     </tbody>
                     @if($rows->isNotEmpty())
                         <tfoot>
-                            <tr class="fw-bold">
-                                <td colspan="8" class="text-end">Total Stock Value</td>
-                                <td class="text-end">{{ inv_qty($rows->sum('value')) }}</td>
+                            <tr class="font-weight-bold">
+                                <td colspan="8" class="text-right">Total Stock Value</td>
+                                <td class="text-right">{{ inv_qty($rows->sum('value')) }}</td>
                             </tr>
                         </tfoot>
                     @endif

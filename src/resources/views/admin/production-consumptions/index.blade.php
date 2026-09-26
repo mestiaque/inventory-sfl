@@ -11,7 +11,7 @@
 
     <div class="card">
         <div class="card-header d-flex justify-content-between align-items-center">
-            <h5 class="mb-0">Production Consumption</h5>
+            <h4 class="mb-0">Production Consumption</h4>
             <div>
                 @can('inv_production.delete')
                     <button type="button" class="btn btn-outline-secondary btn-sm" data-toggle="modal" data-target="#consumptionTrashModal">
@@ -24,44 +24,42 @@
             </div>
         </div>
         <div class="card-body">
-            <form method="GET" class="row g-2 mb-3">
-                <div class="col-md-2">
-                    <input type="text" name="search" class="form-control" placeholder="Search consumption no" value="{{ request('search') }}">
+            <form method="GET" class="row mb-3 align-items-end">
+                <div class="col-md-3 mb-2">
+                    <input type="text" name="search" class="form-control form-control-sm" placeholder="Search consumption no" value="{{ request('search') }}">
                 </div>
-                <div class="col-md-2">
-                    <select name="department_id" class="form-control inv-select2">
+                <div class="col-md-3 mb-2">
+                    <select name="department_id" class="form-control form-control-sm inv-select2">
                         <option value="">All Departments</option>
                         @foreach($departments as $department)
                             <option value="{{ $department->id }}" @selected(request('department_id') == $department->id)>{{ $department->name }}</option>
                         @endforeach
                     </select>
                 </div>
-                <div class="col-md-2">
-                    <select name="store_id" class="form-control inv-select2">
+                <div class="col-md-3 mb-2">
+                    <select name="store_id" class="form-control form-control-sm inv-select2">
                         <option value="">All Stores</option>
                         @foreach($stores as $store)
                             <option value="{{ $store->id }}" @selected(request('store_id') == $store->id)>{{ $store->name }}</option>
                         @endforeach
                     </select>
                 </div>
-                <div class="col-md-2">
-                    <input type="date" name="date_from" class="form-control" value="{{ request('date_from') }}" placeholder="From">
+                <div class="col-md-3 mb-2">
+                    <input type="date" name="date_from" class="form-control form-control-sm" value="{{ request('date_from') }}" placeholder="From">
                 </div>
-                <div class="col-md-2">
-                    <input type="date" name="date_to" class="form-control" value="{{ request('date_to') }}" placeholder="To">
+                <div class="col-md-3 mb-2">
+                    <input type="date" name="date_to" class="form-control form-control-sm" value="{{ request('date_to') }}" placeholder="To">
                 </div>
-                <div class="col-md-1">
-                    <button type="submit" class="btn btn-secondary w-100">Filter</button>
-                </div>
-                <div class="col-md-1">
-                    <a href="{{ route('inventory.production-consumptions.index') }}" class="btn btn-light w-100">Reset</a>
+                <div class="col-md-3 mb-2 d-flex align-items-end flex-wrap gap-1">
+                    <button type="submit" class="btn btn-secondary btn-sm">Filter</button>
+                    <a href="{{ route('inventory.production-consumptions.index') }}" class="btn btn-light btn-sm">Reset</a>
                 </div>
             </form>
 
             <div class="table-responsive">
-                <table class="table table-bordered table-striped align-middle">
+                <table class="table table-bordered table-sm align-middle">
                     <thead>
-                        <tr><th>#</th><th>Consumption No</th><th>Department</th><th>Store</th><th>Style</th><th>Order Ref</th><th>Date</th><th class="text-end">Actions</th></tr>
+                        <tr><th>#</th><th>Consumption No</th><th>Department</th><th>Store</th><th>Style</th><th>Order Ref</th><th>Date</th><th class="text-right">Actions</th></tr>
                     </thead>
                     <tbody>
                         @forelse($consumptions as $consumption)
@@ -73,14 +71,10 @@
                                 <td>{{ $consumption->style }}</td>
                                 <td>{{ $consumption->order_ref }}</td>
                                 <td>{{ $consumption->consumption_date?->format('d M Y') }}</td>
-                                <td class="text-end">
-                                    <button type="button" class="btn btn-sm btn-outline-secondary" data-toggle="modal" data-target="#viewConsModal{{ $consumption->id }}">
-                                        <i class="fa-solid fa-eye"></i>
-                                    </button>
+                                <td class="text-right">
+                                    <button type="button" class="btn-custom success" data-toggle="modal" data-target="#viewConsModal{{ $consumption->id }}"><i class="fa-solid fa-eye"></i></button>
                                     @can('inv_production.delete')
-                                        <button type="button" class="btn btn-sm btn-outline-danger" data-toggle="modal" data-target="#deleteConsModal" data-action="{{ route('inventory.production-consumptions.destroy', $consumption) }}">
-                                            <i class="fa-solid fa-trash"></i>
-                                        </button>
+                                        <button type="button" class="btn-custom danger" data-toggle="modal" data-target="#deleteConsModal" data-action="{{ route('inventory.production-consumptions.destroy', $consumption) }}"><i class="fa-solid fa-trash"></i></button>
                                     @endcan
                                 </td>
                             </tr>
@@ -121,9 +115,9 @@
                             <thead>
                                 <tr>
                                     <th>#</th><th>Item</th><th>Unit</th>
-                                    <th class="text-end">Consumed</th>
-                                    <th class="text-end">Waste</th>
-                                    <th class="text-end">Total Out</th>
+                                    <th class="text-right">Consumed</th>
+                                    <th class="text-right">Waste</th>
+                                    <th class="text-right">Total Out</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -132,9 +126,9 @@
                                         <td>{{ $loop->iteration }}</td>
                                         <td>{{ $line->item?->item_code }} — {{ $line->item?->item_name }}</td>
                                         <td>{{ $line->item?->unit?->short_name ?? '—' }}</td>
-                                        <td class="text-end">{{ inv_qty($line->consumed_qty) }}</td>
-                                        <td class="text-end">{{ inv_qty($line->waste_qty) }}</td>
-                                        <td class="text-end">{{ inv_qty($line->consumed_qty + $line->waste_qty) }}</td>
+                                        <td class="text-right">{{ inv_qty($line->consumed_qty) }}</td>
+                                        <td class="text-right">{{ inv_qty($line->waste_qty) }}</td>
+                                        <td class="text-right">{{ inv_qty($line->consumed_qty + $line->waste_qty) }}</td>
                                     </tr>
                                 @endforeach
                             </tbody>
@@ -142,7 +136,7 @@
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-light" data-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-light btn-sm" data-dismiss="modal">Close</button>
                 </div>
             </div>
         </div>

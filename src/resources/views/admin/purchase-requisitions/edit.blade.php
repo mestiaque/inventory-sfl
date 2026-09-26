@@ -11,7 +11,7 @@
 
     <div class="card">
         <div class="card-header d-flex justify-content-between align-items-center">
-            <h5 class="mb-0">Edit Purchase Requisition — {{ $purchaseRequisition->requisition_no }}</h5>
+            <h4 class="mb-0">Edit Purchase Requisition — {{ $purchaseRequisition->requisition_no }}</h4>
             <a href="{{ route('inventory.purchase-requisitions.index') }}" class="btn btn-light btn-sm"><i class="fa-solid fa-arrow-left"></i> Back</a>
         </div>
         <div class="card-body">
@@ -19,8 +19,8 @@
                 @csrf
                 @method('PUT')
                 @include('sfl-inventory::admin.purchase-requisitions.partials.form')
-                <button type="submit" class="btn btn-primary mt-3">Update Purchase Requisition</button>
-                <a href="{{ route('inventory.purchase-requisitions.index') }}" class="btn btn-light mt-3">Cancel</a>
+                <button type="submit" class="btn btn-primary mt-3 btn-sm">Update Purchase Requisition</button>
+                <a href="{{ route('inventory.purchase-requisitions.index') }}" class="btn btn-light mt-3 btn-sm">Cancel</a>
             </form>
         </div>
     </div>

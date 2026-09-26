@@ -11,7 +11,7 @@
 
     <div class="card">
         <div class="card-header d-flex justify-content-between align-items-center">
-            <h5 class="mb-0">New Stock Adjustment</h5>
+            <h4 class="mb-0">New Stock Adjustment</h4>
             <a href="{{ route('inventory.adjustments.index') }}" class="btn btn-light btn-sm"><i class="fa-solid fa-arrow-left"></i> Back</a>
         </div>
         <div class="card-body">
@@ -20,30 +20,30 @@
             <form method="POST" action="{{ route('inventory.adjustments.store') }}">
                 @csrf
                 <div class="row">
-                    <div class="col-md-4 mb-3">
+                    <div class="col-md-3 mb-3">
                         <label class="form-label">Store <span class="text-danger">*</span></label>
-                        <select name="store_id" class="form-control inv-select2" required>
+                        <select name="store_id" class="form-control form-control-sm inv-select2" required>
                             <option value="">— Select —</option>
                             @foreach($stores as $store)
                                 <option value="{{ $store->id }}" @selected(old('store_id') == $store->id)>{{ $store->name }}</option>
                             @endforeach
                         </select>
                     </div>
-                    <div class="col-md-4 mb-3">
+                    <div class="col-md-3 mb-3">
                         <label class="form-label">Type <span class="text-danger">*</span></label>
-                        <select name="type" class="form-control inv-select2" required>
+                        <select name="type" class="form-control form-control-sm inv-select2" required>
                             @foreach(['physical_count' => 'Physical Count', 'damage' => 'Damage', 'lost' => 'Lost', 'excess' => 'Excess'] as $value => $label)
                                 <option value="{{ $value }}" @selected(old('type', 'physical_count') === $value)>{{ $label }}</option>
                             @endforeach
                         </select>
                     </div>
-                    <div class="col-md-4 mb-3">
+                    <div class="col-md-3 mb-3">
                         <label class="form-label">Adjustment Date <span class="text-danger">*</span></label>
-                        <input type="date" name="adjustment_date" class="form-control" value="{{ old('adjustment_date', now()->toDateString()) }}" required>
+                        <input type="date" name="adjustment_date" class="form-control form-control-sm" value="{{ old('adjustment_date', now()->toDateString()) }}" required>
                     </div>
                     <div class="col-12 mb-3">
                         <label class="form-label">Remarks</label>
-                        <textarea name="remarks" class="form-control" rows="2">{{ old('remarks') }}</textarea>
+                        <textarea name="remarks" class="form-control form-control-sm" rows="2">{{ old('remarks') }}</textarea>
                     </div>
                 </div>
 
@@ -58,7 +58,7 @@
                         <tbody id="adjRowsBody">
                             <tr>
                                 <td>
-                                    <select name="items[0][item_id]" class="form-control inv-select2" required>
+                                    <select name="items[0][item_id]" class="form-control form-control-sm inv-select2" required>
                                         <option value="">— Select —</option>
                                         @foreach($items as $item)
                                             <option value="{{ $item->id }}" data-store="{{ $item->opening_store_id }}" data-color-id="{{ $item->color_id }}" data-size-id="{{ $item->size_id }}">{{ $item->item_code }} — {{ $item->item_name }}</option>
@@ -66,7 +66,7 @@
                                     </select>
                                 </td>
                                 <td>
-                                    <select name="items[0][color_id]" class="form-control">
+                                    <select name="items[0][color_id]" class="form-control form-control-sm">
                                         <option value="">— Select —</option>
                                         @foreach($colors as $color)
                                             <option value="{{ $color->id }}">{{ $color->name }}</option>
@@ -74,15 +74,15 @@
                                     </select>
                                 </td>
                                 <td>
-                                    <select name="items[0][size_id]" class="form-control">
+                                    <select name="items[0][size_id]" class="form-control form-control-sm">
                                         <option value="">— Select —</option>
                                         @foreach($sizes as $size)
                                             <option value="{{ $size->id }}">{{ $size->name }}</option>
                                         @endforeach
                                     </select>
                                 </td>
-                                <td><input type="number" step="0.0001" min="0" name="items[0][physical_qty]" class="form-control" required></td>
-                                <td><button type="button" class="btn btn-sm btn-outline-danger" data-line-items-remove><i class="fa-solid fa-xmark"></i></button></td>
+                                <td><input type="number" step="0.0001" min="0" name="items[0][physical_qty]" class="form-control form-control-sm" required></td>
+                                <td><button type="button" class="btn-custom danger" data-line-items-remove><i class="fa-solid fa-xmark"></i></button></td>
                             </tr>
                         </tbody>
                     </table>
@@ -91,7 +91,7 @@
                 <template id="adjRowTemplate">
                     <tr>
                         <td>
-                            <select name="items[__INDEX__][item_id]" class="form-control inv-select2" required>
+                            <select name="items[__INDEX__][item_id]" class="form-control form-control-sm inv-select2" required>
                                 <option value="">— Select —</option>
                                 @foreach($items as $item)
                                     <option value="{{ $item->id }}" data-store="{{ $item->opening_store_id }}" data-color-id="{{ $item->color_id }}" data-size-id="{{ $item->size_id }}">{{ $item->item_code }} — {{ $item->item_name }}</option>
@@ -99,7 +99,7 @@
                             </select>
                         </td>
                         <td>
-                            <select name="items[__INDEX__][color_id]" class="form-control">
+                            <select name="items[__INDEX__][color_id]" class="form-control form-control-sm">
                                 <option value="">— Select —</option>
                                 @foreach($colors as $color)
                                     <option value="{{ $color->id }}">{{ $color->name }}</option>
@@ -107,20 +107,20 @@
                             </select>
                         </td>
                         <td>
-                            <select name="items[__INDEX__][size_id]" class="form-control">
+                            <select name="items[__INDEX__][size_id]" class="form-control form-control-sm">
                                 <option value="">— Select —</option>
                                 @foreach($sizes as $size)
                                     <option value="{{ $size->id }}">{{ $size->name }}</option>
                                 @endforeach
                             </select>
                         </td>
-                        <td><input type="number" step="0.0001" min="0" name="items[__INDEX__][physical_qty]" class="form-control" required></td>
-                        <td><button type="button" class="btn btn-sm btn-outline-danger" data-line-items-remove><i class="fa-solid fa-xmark"></i></button></td>
+                        <td><input type="number" step="0.0001" min="0" name="items[__INDEX__][physical_qty]" class="form-control form-control-sm" required></td>
+                        <td><button type="button" class="btn-custom danger" data-line-items-remove><i class="fa-solid fa-xmark"></i></button></td>
                     </tr>
                 </template>
 
-                <button type="submit" class="btn btn-primary mt-3">Submit for Approval</button>
-                <a href="{{ route('inventory.adjustments.index') }}" class="btn btn-light mt-3">Cancel</a>
+                <button type="submit" class="btn btn-primary mt-3 btn-sm">Submit for Approval</button>
+                <a href="{{ route('inventory.adjustments.index') }}" class="btn btn-light mt-3 btn-sm">Cancel</a>
             </form>
         </div>
     </div>

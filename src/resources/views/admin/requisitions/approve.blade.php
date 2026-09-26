@@ -11,7 +11,7 @@
 
     <div class="card">
         <div class="card-header d-flex justify-content-between align-items-center">
-            <h5 class="mb-0">Approve / Reject — {{ $requisition->requisition_no }}</h5>
+            <h4 class="mb-0">Approve / Reject — {{ $requisition->requisition_no }}</h4>
             <a href="{{ route('inventory.requisitions.index') }}" class="btn btn-light btn-sm"><i class="fa-solid fa-arrow-left"></i> Back</a>
         </div>
         <div class="card-body">
@@ -40,7 +40,7 @@
                                     <td>{{ $item->requested_qty }}</td>
                                     <td>
                                         <input type="hidden" name="items[{{ $loop->index }}][id]" value="{{ $item->id }}">
-                                        <input type="number" step="0.0001" min="0" class="form-control"
+                                        <input type="number" step="0.0001" min="0" class="form-control form-control-sm"
                                             name="items[{{ $loop->index }}][approved_qty]" value="{{ $item->requested_qty }}">
                                     </td>
                                 </tr>
@@ -51,12 +51,12 @@
 
                 <div class="mb-3">
                     <label class="form-label">Remarks</label>
-                    <textarea name="approval_remarks" class="form-control" rows="2"></textarea>
+                    <textarea name="approval_remarks" class="form-control form-control-sm" rows="2"></textarea>
                 </div>
 
-                <button type="submit" name="decision" value="approve" class="btn btn-success">Approve</button>
-                <button type="submit" name="decision" value="reject" class="btn btn-danger" onclick="return confirm('Reject this requisition?')">Reject</button>
-                <a href="{{ route('inventory.requisitions.index') }}" class="btn btn-light">Cancel</a>
+                <button type="submit" name="decision" value="approve" class="btn btn-success btn-sm">Approve</button>
+                <button type="submit" name="decision" value="reject" class="btn btn-danger btn-sm" onclick="return confirm('Reject this requisition?')">Reject</button>
+                <a href="{{ route('inventory.requisitions.index') }}" class="btn btn-light btn-sm">Cancel</a>
             </form>
         </div>
     </div>

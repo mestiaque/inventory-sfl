@@ -11,7 +11,7 @@
 
     <div class="card">
         <div class="card-header d-flex justify-content-between align-items-center">
-            <h5 class="mb-0">Receive Approval — {{ $grn->grn_number }}</h5>
+            <h4 class="mb-0">Receive Approval — {{ $grn->grn_number }}</h4>
             <a href="{{ route('inventory.grns.index') }}" class="btn btn-light btn-sm"><i class="fa-solid fa-arrow-left"></i> Back</a>
         </div>
         <div class="card-body">
@@ -30,8 +30,8 @@
                     <table class="table table-bordered table-sm align-middle">
                         <thead>
                             <tr>
-                                <th>Item</th><th>Unit</th><th>Color</th><th>Size</th><th class="text-end">Received Qty</th>
-                                <th class="text-end">Rate</th><th class="text-end">Amount</th><th>Lot No</th><th>Batch No</th><th>Expiry Date</th>
+                                <th>Item</th><th>Unit</th><th>Color</th><th>Size</th><th class="text-right">Received Qty</th>
+                                <th class="text-right">Rate</th><th class="text-right">Amount</th><th>Lot No</th><th>Batch No</th><th>Expiry Date</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -41,9 +41,9 @@
                                     <td>{{ $item->item?->unit?->short_name }}</td>
                                     <td>{{ $item->color?->name ?? '—' }}</td>
                                     <td>{{ $item->size?->name ?? '—' }}</td>
-                                    <td class="text-end">{{ inv_qty($item->received_qty) }}</td>
-                                    <td class="text-end">{{ inv_qty($item->rate) }}</td>
-                                    <td class="text-end">{{ inv_qty($item->amount) }}</td>
+                                    <td class="text-right">{{ inv_qty($item->received_qty) }}</td>
+                                    <td class="text-right">{{ inv_qty($item->rate) }}</td>
+                                    <td class="text-right">{{ inv_qty($item->amount) }}</td>
                                     <td>{{ $item->lot_no ?? '—' }}</td>
                                     <td>{{ $item->batch_no ?? '—' }}</td>
                                     <td>{{ optional($item->expiry_date)->format('d M Y') ?? '—' }}</td>
@@ -51,23 +51,23 @@
                             @endforeach
                         </tbody>
                         <tfoot>
-                            <tr class="fw-bold"><td colspan="6" class="text-end">Total</td><td class="text-end">{{ inv_qty($grn->total_amount) }}</td><td colspan="3"></td></tr>
+                            <tr class="font-weight-bold"><td colspan="6" class="text-right">Total</td><td class="text-right">{{ inv_qty($grn->total_amount) }}</td><td colspan="3"></td></tr>
                         </tfoot>
                     </table>
                 </div>
 
                 <div class="mb-3">
                     <label class="form-label">Remarks</label>
-                    <textarea name="approval_remarks" class="form-control" rows="2"></textarea>
+                    <textarea name="approval_remarks" class="form-control form-control-sm" rows="2"></textarea>
                 </div>
 
                 @can('inv_grn.approve')
-                    <button type="submit" name="decision" value="approve" class="btn btn-success">Approve</button>
+                    <button type="submit" name="decision" value="approve" class="btn btn-success btn-sm">Approve</button>
                 @endcan
                 @can('inv_grn.reject')
-                    <button type="submit" name="decision" value="reject" class="btn btn-danger" onclick="return confirm('Reject this GRN? The claimed quantity on its Purchase Order will be released.')">Reject</button>
+                    <button type="submit" name="decision" value="reject" class="btn btn-danger btn-sm" onclick="return confirm('Reject this GRN? The claimed quantity on its Purchase Order will be released.')">Reject</button>
                 @endcan
-                <a href="{{ route('inventory.grns.index') }}" class="btn btn-light">Cancel</a>
+                <a href="{{ route('inventory.grns.index') }}" class="btn btn-light btn-sm">Cancel</a>
             </form>
         </div>
     </div>

@@ -11,7 +11,7 @@
 
     <div class="card" style="max-width:520px;">
         <div class="card-header">
-            <h5 class="mb-0">My Signature</h5>
+            <h4 class="mb-0">My Signature</h4>
         </div>
         <div class="card-body">
             <p class="text-muted" style="font-size:13px;">
@@ -34,10 +34,10 @@
                 @csrf
                 <div class="mb-3">
                     <label class="form-label">Upload New Signature <span class="text-danger">*</span></label>
-                    <input type="file" name="signature" class="form-control" accept="image/*" required>
+                    <input type="file" name="signature" class="form-control form-control-sm" accept="image/*" required>
                     <div class="form-text">PNG with a transparent background works best. Max 1MB.</div>
                 </div>
-                <button type="submit" class="btn btn-primary">Save Signature</button>
+                <button type="submit" class="btn btn-primary btn-sm">Save Signature</button>
             </form>
 
             @if($user->signature)

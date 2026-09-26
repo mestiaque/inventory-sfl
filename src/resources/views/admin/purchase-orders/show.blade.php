@@ -11,7 +11,7 @@
 
     <div class="card mb-3">
         <div class="card-header d-flex justify-content-between align-items-center">
-            <h5 class="mb-0">Store Order {{ $purchaseOrder->po_number }}</h5>
+            <h4 class="mb-0">Store Order {{ $purchaseOrder->po_number }}</h4>
             <div>
                 @can('inv_grn.add')
                     @if(in_array($purchaseOrder->status, ['approved', 'received']))
@@ -19,7 +19,7 @@
                             <i class="fa-solid fa-truck-ramp-box"></i> Receive (New Challan / GRN)
                         </a>
                     @elseif($purchaseOrder->status === 'draft')
-                        <span class="badge p-2 text-white bg-secondary" title="Approve this store order first before a challan can be received against it.">
+                        <span class="badge p-2 badge-secondary" title="Approve this store order first before a challan can be received against it.">
                             <i class="fa-solid fa-lock"></i> Approve first to receive
                         </span>
                     @endif
@@ -35,7 +35,7 @@
                 <div class="col-md-3 mb-2"><strong>Expected Date:</strong> {{ $purchaseOrder->expected_date?->format('d M Y') ?? '—' }}</div>
                 <div class="col-md-3 mb-2">
                     <strong>Status:</strong>
-                    <span class="badge p-1 text-white bg-{{ ['draft' => 'secondary', 'approved' => 'info', 'received' => 'warning', 'closed' => 'success'][$purchaseOrder->status] ?? 'secondary' }}">
+                    <span class="badge badge-{{ ['draft' => 'secondary', 'approved' => 'info', 'received' => 'warning', 'closed' => 'success'][$purchaseOrder->status] ?? 'secondary' }}">
                         {{ ucfirst($purchaseOrder->status) }}
                     </span>
                 </div>
@@ -57,7 +57,7 @@
             <div class="table-responsive mb-4">
                 <table class="table table-bordered table-sm align-middle">
                     <thead>
-                        <tr><th>Item</th><th>Unit</th><th>Color</th><th>Size</th><th class="text-end">Ordered</th><th class="text-end">Received (so far)</th><th class="text-end">Remaining</th><th class="text-end">Rate (at order)</th></tr>
+                        <tr><th>Item</th><th>Unit</th><th>Color</th><th>Size</th><th class="text-right">Ordered</th><th class="text-right">Received (so far)</th><th class="text-right">Remaining</th><th class="text-right">Rate (at order)</th></tr>
                     </thead>
                     <tbody>
                         @foreach($purchaseOrder->items as $line)
@@ -67,12 +67,12 @@
                                 <td>{{ $line->item?->unit?->short_name }}</td>
                                 <td>{{ $line->color?->name ?? '—' }}</td>
                                 <td>{{ $line->size?->name ?? '—' }}</td>
-                                <td class="text-end">{{ inv_qty($line->quantity) }}</td>
-                                <td class="text-end">{{ inv_qty($line->received_qty) }}</td>
-                                <td class="text-end">
-                                    <span class="badge p-1 text-white bg-{{ $remaining <= 0 ? 'success' : 'warning' }}">{{ inv_qty($remaining) }}</span>
+                                <td class="text-right">{{ inv_qty($line->quantity) }}</td>
+                                <td class="text-right">{{ inv_qty($line->received_qty) }}</td>
+                                <td class="text-right">
+                                    <span class="badge badge-{{ $remaining <= 0 ? 'success' : 'warning' }}">{{ inv_qty($remaining) }}</span>
                                 </td>
-                                <td class="text-end">{{ (float) $line->rate > 0 ? inv_qty($line->rate) : '—' }}</td>
+                                <td class="text-right">{{ (float) $line->rate > 0 ? inv_qty($line->rate) : '—' }}</td>
                             </tr>
                         @endforeach
                     </tbody>
@@ -89,38 +89,38 @@
                     <div class="card mb-3 border-{{ $loop->first ? 'primary' : 'secondary' }}">
                         <div class="card-header d-flex justify-content-between align-items-center bg-light">
                             <div>
-                                <span class="badge p-1 text-white bg-dark me-2">Challan #{{ $loop->iteration }}</span>
+                                <span class="badge badge-dark mr-2">Challan #{{ $loop->iteration }}</span>
                                 <strong>{{ $grn->grn_number }}</strong>
                                 <span class="text-muted">— Challan/Invoice No: {{ $grn->challan_invoice_no ?? '—' }}</span>
                             </div>
-                            <div class="text-end">
-                                <span class="badge p-1 text-white bg-{{ ['pending' => 'warning', 'posted' => 'success', 'rejected' => 'danger', 'cancelled' => 'secondary'][$grn->status] ?? 'secondary' }}">
+                            <div class="text-right">
+                                <span class="badge badge-{{ ['pending' => 'warning', 'posted' => 'success', 'rejected' => 'danger', 'cancelled' => 'secondary'][$grn->status] ?? 'secondary' }}">
                                     {{ $grn->status === 'pending' ? 'Pending Approval' : ucfirst($grn->status) }}
                                 </span>
-                                <span class="badge p-1 text-white bg-info">{{ $grn->receive_date?->format('d M Y') }}</span>
+                                <span class="badge badge-info">{{ $grn->receive_date?->format('d M Y') }}</span>
                             </div>
                         </div>
                         <div class="card-body">
                             <div class="table-responsive">
                                 <table class="table table-bordered table-sm align-middle mb-2">
                                     <thead>
-                                        <tr><th>Item Code</th><th>Item Name</th><th class="text-end">Received Qty</th><th class="text-end">Rejected Qty</th><th class="text-end">Rate</th><th class="text-end">Amount</th><th>Lot/Batch</th></tr>
+                                        <tr><th>Item Code</th><th>Item Name</th><th class="text-right">Received Qty</th><th class="text-right">Rejected Qty</th><th class="text-right">Rate</th><th class="text-right">Amount</th><th>Lot/Batch</th></tr>
                                     </thead>
                                     <tbody>
                                         @foreach($grn->items as $gi)
                                             <tr>
                                                 <td>{{ $gi->item?->item_code }}</td>
                                                 <td>{{ $gi->item?->item_name }}</td>
-                                                <td class="text-end">{{ inv_qty($gi->received_qty) }}</td>
-                                                <td class="text-end">{{ inv_qty($gi->rejected_qty) }}</td>
-                                                <td class="text-end">{{ inv_qty($gi->rate) }}</td>
-                                                <td class="text-end">{{ inv_qty($gi->amount) }}</td>
+                                                <td class="text-right">{{ inv_qty($gi->received_qty) }}</td>
+                                                <td class="text-right">{{ inv_qty($gi->rejected_qty) }}</td>
+                                                <td class="text-right">{{ inv_qty($gi->rate) }}</td>
+                                                <td class="text-right">{{ inv_qty($gi->amount) }}</td>
                                                 <td>{{ collect([$gi->lot_no, $gi->batch_no])->filter()->implode(' / ') ?: '—' }}</td>
                                             </tr>
                                         @endforeach
                                     </tbody>
                                     <tfoot>
-                                        <tr class="fw-bold"><td colspan="5" class="text-end">Challan Total</td><td class="text-end">{{ inv_qty($grn->total_amount) }}</td><td></td></tr>
+                                        <tr class="font-weight-bold"><td colspan="5" class="text-right">Challan Total</td><td class="text-right">{{ inv_qty($grn->total_amount) }}</td><td></td></tr>
                                     </tfoot>
                                 </table>
                             </div>

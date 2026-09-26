@@ -13,8 +13,8 @@
                     <p class="mb-0">Are you sure you want to delete this {{ $label }}? It will be moved to Trash and can be restored later.</p>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-light" data-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-danger">Delete</button>
+                    <button type="button" class="btn btn-light btn-sm" data-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-danger btn-sm">Delete</button>
                 </div>
             </form>
         </div>

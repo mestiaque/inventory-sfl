@@ -11,7 +11,7 @@
 
     <div class="card">
         <div class="card-header d-flex justify-content-between align-items-center">
-            <h5 class="mb-0">Suppliers</h5>
+            <h4 class="mb-0">Suppliers</h4>
             <div>
                 @can('inv_supplier.delete')
                     <button type="button" class="btn btn-outline-secondary btn-sm" data-toggle="modal" data-target="#supplierTrashModal">
@@ -26,29 +26,27 @@
             </div>
         </div>
         <div class="card-body">
-            <form method="GET" class="row g-2 mb-3">
-                <div class="col-md-2">
-                    <input type="text" name="search" class="form-control" placeholder="Search name, code, phone" value="{{ request('search') }}">
+            <form method="GET" class="row mb-3 align-items-end">
+                <div class="col-md-3 mb-2">
+                    <input type="text" name="search" class="form-control form-control-sm" placeholder="Search name, code, phone" value="{{ request('search') }}">
                 </div>
-                <div class="col-md-2">
-                    <select name="status" class="form-control inv-select2">
+                <div class="col-md-3 mb-2">
+                    <select name="status" class="form-control form-control-sm inv-select2">
                         <option value="">All Status</option>
                         <option value="active" @selected(request('status') === 'active')>Active</option>
                         <option value="inactive" @selected(request('status') === 'inactive')>Inactive</option>
                     </select>
                 </div>
-                <div class="col-md-2">
-                    <button type="submit" class="btn btn-secondary w-100">Filter</button>
-                </div>
-                <div class="col-md-2">
-                    <a href="{{ route('inventory.suppliers.index') }}" class="btn btn-light w-100">Reset</a>
+                <div class="col-md-3 mb-2 d-flex align-items-end flex-wrap gap-1">
+                    <button type="submit" class="btn btn-secondary btn-sm">Filter</button>
+                    <a href="{{ route('inventory.suppliers.index') }}" class="btn btn-light btn-sm">Reset</a>
                 </div>
             </form>
 
             <div class="table-responsive">
-                <table class="table table-bordered table-striped align-middle">
+                <table class="table table-bordered table-sm align-middle">
                     <thead>
-                        <tr><th>#</th><th>Name</th><th>Code</th><th>Contact Person</th><th>Phone</th><th>Status</th><th class="text-end">Actions</th></tr>
+                        <tr><th>#</th><th>Name</th><th>Code</th><th>Contact Person</th><th>Phone</th><th>Status</th><th class="text-right">Actions</th></tr>
                     </thead>
                     <tbody>
                         @forelse($suppliers as $supplier)
@@ -59,23 +57,17 @@
                                 <td>{{ $supplier->contact_person }}</td>
                                 <td>{{ $supplier->phone }}</td>
                                 <td>
-                                    <span class="badge p-1 text-white bg-{{ $supplier->is_active ? 'success' : 'secondary' }}">
+                                    <span class="badge badge-{{ $supplier->is_active ? 'success' : 'secondary' }}">
                                         {{ $supplier->is_active ? 'Active' : 'Inactive' }}
                                     </span>
                                 </td>
-                                <td class="text-end">
-                                    <button type="button" class="btn btn-sm btn-outline-secondary" data-toggle="modal" data-target="#viewSupplierModal{{ $supplier->id }}">
-                                        <i class="fa-solid fa-eye"></i>
-                                    </button>
+                                <td class="text-right">
+                                    <button type="button" class="btn-custom success" data-toggle="modal" data-target="#viewSupplierModal{{ $supplier->id }}"><i class="fa-solid fa-eye"></i></button>
                                     @can('inv_supplier.edit')
-                                        <button type="button" class="btn btn-sm btn-outline-primary" data-toggle="modal" data-target="#editSupplierModal{{ $supplier->id }}">
-                                            <i class="fa-solid fa-pen"></i>
-                                        </button>
+                                        <button type="button" class="btn-custom yellow" data-toggle="modal" data-target="#editSupplierModal{{ $supplier->id }}"><i class="fa-solid fa-pen"></i></button>
                                     @endcan
                                     @can('inv_supplier.delete')
-                                        <button type="button" class="btn btn-sm btn-outline-danger" data-toggle="modal" data-target="#deleteSupplierModal" data-action="{{ route('inventory.suppliers.destroy', $supplier) }}">
-                                            <i class="fa-solid fa-trash"></i>
-                                        </button>
+                                        <button type="button" class="btn-custom danger" data-toggle="modal" data-target="#deleteSupplierModal" data-action="{{ route('inventory.suppliers.destroy', $supplier) }}"><i class="fa-solid fa-trash"></i></button>
                                     @endcan
                                 </td>
                             </tr>
@@ -102,14 +94,14 @@
                                                 <dt class="col-sm-3">Remarks</dt><dd class="col-sm-9">{{ $supplier->remarks ?: '—' }}</dd>
                                                 <dt class="col-sm-3">Status</dt>
                                                 <dd class="col-sm-9">
-                                                    <span class="badge p-1 text-white bg-{{ $supplier->is_active ? 'success' : 'secondary' }}">
+                                                    <span class="badge badge-{{ $supplier->is_active ? 'success' : 'secondary' }}">
                                                         {{ $supplier->is_active ? 'Active' : 'Inactive' }}
                                                     </span>
                                                 </dd>
                                             </dl>
                                         </div>
                                         <div class="modal-footer">
-                                            <button type="button" class="btn btn-light" data-dismiss="modal">Close</button>
+                                            <button type="button" class="btn btn-light btn-sm" data-dismiss="modal">Close</button>
                                         </div>
                                     </div>
                                 </div>
@@ -128,8 +120,8 @@
                                                     @include('sfl-inventory::admin.suppliers.partials.fields', ['supplier' => $supplier])
                                                 </div>
                                                 <div class="modal-footer">
-                                                    <button type="button" class="btn btn-light" data-dismiss="modal">Cancel</button>
-                                                    <button type="submit" class="btn btn-primary">Update</button>
+                                                    <button type="button" class="btn btn-light btn-sm" data-dismiss="modal">Cancel</button>
+                                                    <button type="submit" class="btn btn-primary btn-sm">Update</button>
                                                 </div>
                                             </form>
                                         </div>
@@ -162,8 +154,8 @@
                         @include('sfl-inventory::admin.suppliers.partials.fields', ['supplier' => null])
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-light" data-dismiss="modal">Cancel</button>
-                        <button type="submit" class="btn btn-primary">Save</button>
+                        <button type="button" class="btn btn-light btn-sm" data-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary btn-sm">Save</button>
                     </div>
                 </form>
             </div>

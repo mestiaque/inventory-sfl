@@ -11,13 +11,13 @@
 
     <div class="card">
         <div class="card-header d-flex justify-content-between align-items-center">
-            <h5 class="mb-0">Purchase Challan{{ $purchaseOrder ? ' — against ' . $purchaseOrder->po_number : '' }}</h5>
+            <h4 class="mb-0">Purchase Challan{{ $purchaseOrder ? ' — against ' . $purchaseOrder->po_number : '' }}</h4>
             <a href="{{ route('inventory.grns.create') }}" class="btn btn-light btn-sm"><i class="fa-solid fa-arrow-left"></i> Back</a>
         </div>
         <div class="card-body">
             @unless($purchaseOrder)
                 <label class="form-label">Store Order <span class="text-danger">*</span></label>
-                <select id="poPicker" class="form-control inv-select2" style="max-width:480px;">
+                <select id="poPicker" class="form-control form-control-sm inv-select2" style="max-width:480px;">
                     <option value="">— Select an Approved Store Order —</option>
                     @foreach($purchaseOrders as $po)
                         <option value="{{ $po->id }}">{{ $po->po_number }} — {{ $po->supplier?->name ?? 'No Supplier' }}</option>
@@ -36,7 +36,7 @@
                     <div class="row">
                         <div class="col-md-3 mb-3">
                             <label class="form-label">Store <span class="text-danger">*</span></label>
-                            <select name="{{ $accessoriesStore ? '' : 'store_id' }}" class="form-control inv-select2" required @disabled($accessoriesStore)>
+                            <select name="{{ $accessoriesStore ? '' : 'store_id' }}" class="form-control form-control-sm inv-select2" required @disabled($accessoriesStore)>
                                 <option value="">— Select —</option>
                                 @foreach($stores as $store)
                                     <option value="{{ $store->id }}" @selected(old('store_id', $accessoriesStore?->id) == $store->id)>{{ $store->name }}</option>
@@ -48,7 +48,7 @@
                         </div>
                         <div class="col-md-3 mb-3">
                             <label class="form-label">Supplier <span class="text-danger">*</span></label>
-                            <select name="supplier_id" class="form-control inv-select2" required>
+                            <select name="supplier_id" class="form-control form-control-sm inv-select2" required>
                                 <option value="">— Select —</option>
                                 @foreach($suppliers as $supplier)
                                     <option value="{{ $supplier->id }}" @selected(old('supplier_id', $purchaseOrder->supplier_id) == $supplier->id)>{{ $supplier->name }}</option>
@@ -60,12 +60,12 @@
                         </div>
                         <div class="col-md-3 mb-3">
                             <label class="form-label">Receive Date <span class="text-danger">*</span></label>
-                            <input type="date" name="receive_date" class="form-control" value="{{ old('receive_date', now()->toDateString()) }}" required>
+                            <input type="date" name="receive_date" class="form-control form-control-sm" value="{{ old('receive_date', now()->toDateString()) }}" required>
                         </div>
                         @if(($merStylesOptions ?? collect())->isNotEmpty())
                         <div class="col-md-3 mb-3">
                             <label class="form-label">Merchandising Style</label>
-                            <select name="mer_style_id" class="form-control inv-select2">
+                            <select name="mer_style_id" class="form-control form-control-sm inv-select2">
                                 <option value="">— None —</option>
                                 @foreach($merStylesOptions as $s)
                                     <option value="{{ $s->id }}" @selected(old('mer_style_id') == $s->id)>{{ $s->style_no }} — {{ $s->name }}</option>
@@ -76,7 +76,7 @@
                         @if(($merSalesContractPosOptions ?? collect())->isNotEmpty())
                         <div class="col-md-3 mb-3">
                             <label class="form-label">Sales Contract PO</label>
-                            <select name="mer_sales_contract_po_id" class="form-control inv-select2">
+                            <select name="mer_sales_contract_po_id" class="form-control form-control-sm inv-select2">
                                 <option value="">— None —</option>
                                 @foreach($merSalesContractPosOptions as $po)
                                     <option value="{{ $po->id }}" @selected(old('mer_sales_contract_po_id') == $po->id)>{{ $po->po_no }}</option>
@@ -87,7 +87,7 @@
                         @if(($merBuyersOptions ?? collect())->isNotEmpty())
                         <div class="col-md-3 mb-3">
                             <label class="form-label">Merchandising Buyer</label>
-                            <select name="mer_buyer_id" class="form-control inv-select2">
+                            <select name="mer_buyer_id" class="form-control form-control-sm inv-select2">
                                 <option value="">— None —</option>
                                 @foreach($merBuyersOptions as $b)
                                     <option value="{{ $b->id }}" @selected(old('mer_buyer_id') == $b->id)>{{ $b->name }}</option>
@@ -95,13 +95,13 @@
                             </select>
                         </div>
                         @endif
-                        <div class="col-md-4 mb-3">
+                        <div class="col-md-3 mb-3">
                             <label class="form-label">Invoice / Challan No.</label>
-                            <input type="text" name="challan_invoice_no" class="form-control" value="{{ old('challan_invoice_no') }}" placeholder="Supplier's invoice or challan number">
+                            <input type="text" name="challan_invoice_no" class="form-control form-control-sm" value="{{ old('challan_invoice_no') }}" placeholder="Supplier's invoice or challan number">
                         </div>
-                        <div class="col-md-4 mb-3">
+                        <div class="col-md-3 mb-3">
                             <label class="form-label">Received By</label>
-                            <select name="received_by" class="form-control inv-select2">
+                            <select name="received_by" class="form-control form-control-sm inv-select2">
                                 <option value="">— Select —</option>
                                 @foreach($employees as $employee)
                                     <option value="{{ $employee->id }}" @selected(old('received_by') == $employee->id)>{{ $employee->name }} ({{ $employee->employee_id }})</option>
@@ -110,7 +110,7 @@
                         </div>
                         <div class="col-12 mb-3">
                             <label class="form-label">Remarks</label>
-                            <textarea name="remarks" class="form-control" rows="2">{{ old('remarks') }}</textarea>
+                            <textarea name="remarks" class="form-control form-control-sm" rows="2">{{ old('remarks') }}</textarea>
                         </div>
                     </div>
 
@@ -138,10 +138,10 @@
                                         <td>{{ $line->color?->name ?? '—' }}</td>
                                         <td>{{ $line->size?->name ?? '—' }}</td>
                                         <td>{{ inv_qty($due) }}</td>
-                                        <td><input type="number" step="0.0001" min="0.0001" max="{{ $due }}" name="items[{{ $index }}][received_qty]" class="form-control" data-role="qty" value="{{ old('items.' . $index . '.received_qty', $due) }}" required></td>
-                                        <td><input type="number" step="0.01" min="0" name="items[{{ $index }}][rate]" class="form-control" data-role="rate" value="{{ old('items.' . $index . '.rate') }}" placeholder="Per supplier invoice" required></td>
-                                        <td><input type="text" class="form-control" data-role="amount" disabled></td>
-                                        <td><input type="date" name="items[{{ $index }}][expiry_date]" class="form-control"></td>
+                                        <td><input type="number" step="0.0001" min="0.0001" max="{{ $due }}" name="items[{{ $index }}][received_qty]" class="form-control form-control-sm" data-role="qty" value="{{ old('items.' . $index . '.received_qty', $due) }}" required></td>
+                                        <td><input type="number" step="0.01" min="0" name="items[{{ $index }}][rate]" class="form-control form-control-sm" data-role="rate" value="{{ old('items.' . $index . '.rate') }}" placeholder="Per supplier invoice" required></td>
+                                        <td><input type="text" class="form-control form-control-sm" data-role="amount" disabled></td>
+                                        <td><input type="date" name="items[{{ $index }}][expiry_date]" class="form-control form-control-sm"></td>
                                     </tr>
                                 @endforeach
                             </tbody>
@@ -159,8 +159,8 @@
                     @endcan
                     --}}
 
-                    <button type="submit" class="btn btn-primary mt-3">Submit Challan for Receive Approval</button>
-                    <a href="{{ route('inventory.grns.create-purchase') }}" class="btn btn-light mt-3">Change Store Order</a>
+                    <button type="submit" class="btn btn-primary mt-3 btn-sm">Submit Challan for Receive Approval</button>
+                    <a href="{{ route('inventory.grns.create-purchase') }}" class="btn btn-light mt-3 btn-sm">Change Store Order</a>
                 </form>
             @endunless
         </div>

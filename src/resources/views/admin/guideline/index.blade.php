@@ -7,6 +7,7 @@
 @section('contents')
 <div class="flex-grow-1">
     @include('sfl-inventory::admin.partials.alerts')
+    @include('sfl-inventory::admin.partials.ui-kit')
 
 <style>
 .gd-hero { background: linear-gradient(135deg, #f97316 0%, #ea580c 100%); border-radius: 14px; padding: 28px 26px; color: #fff; margin-bottom: 22px; box-shadow: 0 4px 18px rgba(249,115,22,.25); }
@@ -176,7 +177,7 @@
                 <h4><i class="fa-solid fa-chart-line text-info"></i> ১১. Reports</h4>
                 <span class="gd-path">Inventory Management → Reports</span>
                 <div class="table-responsive">
-                    <table class="table table-bordered gd-table">
+                    <table class="table table-bordered table-sm gd-table">
                         <thead><tr><th>রিপোর্ট</th><th>কী দেখায়</th></tr></thead>
                         <tbody>
                             <tr><td>Store Inventory Report</td><td>আসল স্প্রেডশিটের মতো — আইটেম-ওয়াইজ Stock In, সেকশন-ওয়াইজ Issue, ব্যালেন্স</td></tr>

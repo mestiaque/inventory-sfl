@@ -11,7 +11,7 @@
 
     <div class="card">
         <div class="card-header d-flex justify-content-between align-items-center">
-            <h5 class="mb-0">Edit Purchase Challan — {{ $grn->grn_number }}{{ $grn->purchaseOrder ? ' — against ' . $grn->purchaseOrder->po_number : '' }}</h5>
+            <h4 class="mb-0">Edit Purchase Challan — {{ $grn->grn_number }}{{ $grn->purchaseOrder ? ' — against ' . $grn->purchaseOrder->po_number : '' }}</h4>
             <a href="{{ route('inventory.grns.show', $grn) }}" class="btn btn-light btn-sm"><i class="fa-solid fa-arrow-left"></i> Back</a>
         </div>
         <div class="card-body">
@@ -33,20 +33,20 @@
                 <div class="row">
                     <div class="col-md-3 mb-3">
                         <label class="form-label">Store</label>
-                        <input type="text" class="form-control" value="{{ $grn->store?->name }}" disabled>
+                        <input type="text" class="form-control form-control-sm" value="{{ $grn->store?->name }}" disabled>
                     </div>
                     <div class="col-md-3 mb-3">
                         <label class="form-label">Supplier</label>
-                        <input type="text" class="form-control" value="{{ $grn->supplier?->name }}" disabled>
+                        <input type="text" class="form-control form-control-sm" value="{{ $grn->supplier?->name }}" disabled>
                     </div>
                     <div class="col-md-3 mb-3">
                         <label class="form-label">Receive Date <span class="text-danger">*</span></label>
-                        <input type="date" name="receive_date" class="form-control" value="{{ old('receive_date', optional($grn->receive_date)->format('Y-m-d')) }}" required>
+                        <input type="date" name="receive_date" class="form-control form-control-sm" value="{{ old('receive_date', optional($grn->receive_date)->format('Y-m-d')) }}" required>
                     </div>
                     @if(($merStylesOptions ?? collect())->isNotEmpty())
                     <div class="col-md-3 mb-3">
                         <label class="form-label">Merchandising Style</label>
-                        <select name="mer_style_id" class="form-control inv-select2">
+                        <select name="mer_style_id" class="form-control form-control-sm inv-select2">
                             <option value="">— None —</option>
                             @foreach($merStylesOptions as $s)
                                 <option value="{{ $s->id }}" @selected(old('mer_style_id', $grn->mer_style_id ?? '') == $s->id)>{{ $s->style_no }} — {{ $s->name }}</option>
@@ -57,7 +57,7 @@
                     @if(($merSalesContractPosOptions ?? collect())->isNotEmpty())
                     <div class="col-md-3 mb-3">
                         <label class="form-label">Sales Contract PO</label>
-                        <select name="mer_sales_contract_po_id" class="form-control inv-select2">
+                        <select name="mer_sales_contract_po_id" class="form-control form-control-sm inv-select2">
                             <option value="">— None —</option>
                             @foreach($merSalesContractPosOptions as $po)
                                 <option value="{{ $po->id }}" @selected(old('mer_sales_contract_po_id', $grn->mer_sales_contract_po_id ?? '') == $po->id)>{{ $po->po_no }}</option>
@@ -68,7 +68,7 @@
                     @if(($merBuyersOptions ?? collect())->isNotEmpty())
                     <div class="col-md-3 mb-3">
                         <label class="form-label">Merchandising Buyer</label>
-                        <select name="mer_buyer_id" class="form-control inv-select2">
+                        <select name="mer_buyer_id" class="form-control form-control-sm inv-select2">
                             <option value="">— None —</option>
                             @foreach($merBuyersOptions as $b)
                                 <option value="{{ $b->id }}" @selected(old('mer_buyer_id', $grn->mer_buyer_id ?? '') == $b->id)>{{ $b->name }}</option>
@@ -78,11 +78,11 @@
                     @endif
                     <div class="col-md-3 mb-3">
                         <label class="form-label">Invoice / Challan No.</label>
-                        <input type="text" name="challan_invoice_no" class="form-control" value="{{ old('challan_invoice_no', $grn->challan_invoice_no) }}" placeholder="Supplier's invoice or challan number">
+                        <input type="text" name="challan_invoice_no" class="form-control form-control-sm" value="{{ old('challan_invoice_no', $grn->challan_invoice_no) }}" placeholder="Supplier's invoice or challan number">
                     </div>
-                    <div class="col-md-4 mb-3">
+                    <div class="col-md-3 mb-3">
                         <label class="form-label">Received By</label>
-                        <select name="received_by" class="form-control inv-select2">
+                        <select name="received_by" class="form-control form-control-sm inv-select2">
                             <option value="">— Select —</option>
                             @foreach($employees as $employee)
                                 <option value="{{ $employee->id }}" @selected(old('received_by', $grn->received_by) == $employee->id)>{{ $employee->name }} ({{ $employee->employee_id }})</option>
@@ -91,7 +91,7 @@
                     </div>
                     <div class="col-12 mb-3">
                         <label class="form-label">Remarks</label>
-                        <textarea name="remarks" class="form-control" rows="2">{{ old('remarks', $grn->remarks) }}</textarea>
+                        <textarea name="remarks" class="form-control form-control-sm" rows="2">{{ old('remarks', $grn->remarks) }}</textarea>
                     </div>
                 </div>
 
@@ -128,10 +128,10 @@
                                         <td>{{ $grnItem->color?->name ?? '—' }}</td>
                                         <td>{{ $grnItem->size?->name ?? '—' }}</td>
                                         <td>{{ inv_qty($due) }}</td>
-                                        <td><input type="number" step="0.0001" min="0.0001" max="{{ $due }}" name="items[{{ $index }}][received_qty]" class="form-control" data-role="qty" value="{{ old('items.' . $index . '.received_qty', $grnItem->received_qty) }}" required></td>
-                                        <td><input type="number" step="0.01" min="0" name="items[{{ $index }}][rate]" class="form-control" data-role="rate" value="{{ old('items.' . $index . '.rate', $grnItem->rate) }}" required></td>
-                                        <td><input type="text" class="form-control" data-role="amount" disabled></td>
-                                        <td><input type="date" name="items[{{ $index }}][expiry_date]" class="form-control" value="{{ old('items.' . $index . '.expiry_date', optional($grnItem->expiry_date)->format('Y-m-d')) }}"></td>
+                                        <td><input type="number" step="0.0001" min="0.0001" max="{{ $due }}" name="items[{{ $index }}][received_qty]" class="form-control form-control-sm" data-role="qty" value="{{ old('items.' . $index . '.received_qty', $grnItem->received_qty) }}" required></td>
+                                        <td><input type="number" step="0.01" min="0" name="items[{{ $index }}][rate]" class="form-control form-control-sm" data-role="rate" value="{{ old('items.' . $index . '.rate', $grnItem->rate) }}" required></td>
+                                        <td><input type="text" class="form-control form-control-sm" data-role="amount" disabled></td>
+                                        <td><input type="date" name="items[{{ $index }}][expiry_date]" class="form-control form-control-sm" value="{{ old('items.' . $index . '.expiry_date', optional($grnItem->expiry_date)->format('Y-m-d')) }}"></td>
                                     </tr>
                                 @endforeach
                             </tbody>
@@ -148,16 +148,16 @@
                                     @php $selectedItem = $items->firstWhere('id', (int) ($line['item_id'] ?? null)); @endphp
                                     <tr>
                                         <td>
-                                            <select name="items[{{ $index }}][item_id]" class="form-control inv-select2" required>
+                                            <select name="items[{{ $index }}][item_id]" class="form-control form-control-sm inv-select2" required>
                                                 <option value="">— Select —</option>
                                                 @foreach($items as $item)
                                                     <option value="{{ $item->id }}" data-unit="{{ $item->unit?->short_name }}" data-store="{{ $item->opening_store_id }}" data-color-id="{{ $item->color_id }}" data-size-id="{{ $item->size_id }}" @selected(($line['item_id'] ?? null) == $item->id)>{{ $item->item_code }} — {{ $item->item_name }}</option>
                                                 @endforeach
                                             </select>
                                         </td>
-                                        <td><input type="text" class="form-control" data-role="unit" value="{{ $selectedItem?->unit?->short_name }}" disabled></td>
+                                        <td><input type="text" class="form-control form-control-sm" data-role="unit" value="{{ $selectedItem?->unit?->short_name }}" disabled></td>
                                         <td>
-                                            <select name="items[{{ $index }}][color_id]" class="form-control">
+                                            <select name="items[{{ $index }}][color_id]" class="form-control form-control-sm">
                                                 <option value="">— Select —</option>
                                                 @foreach($colors as $color)
                                                     <option value="{{ $color->id }}" @selected(($line['color_id'] ?? null) == $color->id)>{{ $color->name }}</option>
@@ -165,21 +165,21 @@
                                             </select>
                                         </td>
                                         <td>
-                                            <select name="items[{{ $index }}][size_id]" class="form-control">
+                                            <select name="items[{{ $index }}][size_id]" class="form-control form-control-sm">
                                                 <option value="">— Select —</option>
                                                 @foreach($sizes as $size)
                                                     <option value="{{ $size->id }}" @selected(($line['size_id'] ?? null) == $size->id)>{{ $size->name }}</option>
                                                 @endforeach
                                             </select>
                                         </td>
-                                        <td><input type="number" step="0.0001" min="0.0001" name="items[{{ $index }}][received_qty]" class="form-control" data-role="qty" value="{{ $line['received_qty'] ?? '' }}" required></td>
-                                        <td><input type="number" step="0.0001" min="0" name="items[{{ $index }}][rejected_qty]" class="form-control" value="{{ $line['rejected_qty'] ?? 0 }}"></td>
-                                        <td><input type="number" step="0.01" min="0" name="items[{{ $index }}][rate]" class="form-control" data-role="rate" value="{{ $line['rate'] ?? '' }}" required></td>
-                                        <td><input type="text" name="items[{{ $index }}][lot_no]" class="form-control" value="{{ $line['lot_no'] ?? '' }}"></td>
-                                        <td><input type="text" name="items[{{ $index }}][batch_no]" class="form-control" value="{{ $line['batch_no'] ?? '' }}"></td>
-                                        <td><input type="date" name="items[{{ $index }}][expiry_date]" class="form-control" value="{{ $line['expiry_date'] ?? '' }}"></td>
-                                        <td><input type="text" class="form-control" data-role="amount" disabled></td>
-                                        <td><button type="button" class="btn btn-sm btn-outline-danger" data-line-items-remove><i class="fa-solid fa-xmark"></i></button></td>
+                                        <td><input type="number" step="0.0001" min="0.0001" name="items[{{ $index }}][received_qty]" class="form-control form-control-sm" data-role="qty" value="{{ $line['received_qty'] ?? '' }}" required></td>
+                                        <td><input type="number" step="0.0001" min="0" name="items[{{ $index }}][rejected_qty]" class="form-control form-control-sm" value="{{ $line['rejected_qty'] ?? 0 }}"></td>
+                                        <td><input type="number" step="0.01" min="0" name="items[{{ $index }}][rate]" class="form-control form-control-sm" data-role="rate" value="{{ $line['rate'] ?? '' }}" required></td>
+                                        <td><input type="text" name="items[{{ $index }}][lot_no]" class="form-control form-control-sm" value="{{ $line['lot_no'] ?? '' }}"></td>
+                                        <td><input type="text" name="items[{{ $index }}][batch_no]" class="form-control form-control-sm" value="{{ $line['batch_no'] ?? '' }}"></td>
+                                        <td><input type="date" name="items[{{ $index }}][expiry_date]" class="form-control form-control-sm" value="{{ $line['expiry_date'] ?? '' }}"></td>
+                                        <td><input type="text" class="form-control form-control-sm" data-role="amount" disabled></td>
+                                        <td><button type="button" class="btn-custom danger" data-line-items-remove><i class="fa-solid fa-xmark"></i></button></td>
                                     </tr>
                                 @endforeach
                             </tbody>
@@ -189,16 +189,16 @@
                     <template id="grnRowTemplate">
                         <tr>
                             <td>
-                                <select name="items[__INDEX__][item_id]" class="form-control inv-select2" required>
+                                <select name="items[__INDEX__][item_id]" class="form-control form-control-sm inv-select2" required>
                                     <option value="">— Select —</option>
                                     @foreach($items as $item)
                                         <option value="{{ $item->id }}" data-unit="{{ $item->unit?->short_name }}" data-store="{{ $item->opening_store_id }}" data-color-id="{{ $item->color_id }}" data-size-id="{{ $item->size_id }}">{{ $item->item_code }} — {{ $item->item_name }}</option>
                                     @endforeach
                                 </select>
                             </td>
-                            <td><input type="text" class="form-control" data-role="unit" disabled></td>
+                            <td><input type="text" class="form-control form-control-sm" data-role="unit" disabled></td>
                             <td>
-                                <select name="items[__INDEX__][color_id]" class="form-control">
+                                <select name="items[__INDEX__][color_id]" class="form-control form-control-sm">
                                     <option value="">— Select —</option>
                                     @foreach($colors as $color)
                                         <option value="{{ $color->id }}">{{ $color->name }}</option>
@@ -206,27 +206,27 @@
                                 </select>
                             </td>
                             <td>
-                                <select name="items[__INDEX__][size_id]" class="form-control">
+                                <select name="items[__INDEX__][size_id]" class="form-control form-control-sm">
                                     <option value="">— Select —</option>
                                     @foreach($sizes as $size)
                                         <option value="{{ $size->id }}">{{ $size->name }}</option>
                                     @endforeach
                                 </select>
                             </td>
-                            <td><input type="number" step="0.0001" min="0.0001" name="items[__INDEX__][received_qty]" class="form-control" data-role="qty" required></td>
-                            <td><input type="number" step="0.0001" min="0" name="items[__INDEX__][rejected_qty]" class="form-control" value="0"></td>
-                            <td><input type="number" step="0.01" min="0" name="items[__INDEX__][rate]" class="form-control" data-role="rate" required></td>
-                            <td><input type="text" name="items[__INDEX__][lot_no]" class="form-control"></td>
-                            <td><input type="text" name="items[__INDEX__][batch_no]" class="form-control"></td>
-                            <td><input type="date" name="items[__INDEX__][expiry_date]" class="form-control"></td>
-                            <td><input type="text" class="form-control" data-role="amount" disabled></td>
-                            <td><button type="button" class="btn btn-sm btn-outline-danger" data-line-items-remove><i class="fa-solid fa-xmark"></i></button></td>
+                            <td><input type="number" step="0.0001" min="0.0001" name="items[__INDEX__][received_qty]" class="form-control form-control-sm" data-role="qty" required></td>
+                            <td><input type="number" step="0.0001" min="0" name="items[__INDEX__][rejected_qty]" class="form-control form-control-sm" value="0"></td>
+                            <td><input type="number" step="0.01" min="0" name="items[__INDEX__][rate]" class="form-control form-control-sm" data-role="rate" required></td>
+                            <td><input type="text" name="items[__INDEX__][lot_no]" class="form-control form-control-sm"></td>
+                            <td><input type="text" name="items[__INDEX__][batch_no]" class="form-control form-control-sm"></td>
+                            <td><input type="date" name="items[__INDEX__][expiry_date]" class="form-control form-control-sm"></td>
+                            <td><input type="text" class="form-control form-control-sm" data-role="amount" disabled></td>
+                            <td><button type="button" class="btn-custom danger" data-line-items-remove><i class="fa-solid fa-xmark"></i></button></td>
                         </tr>
                     </template>
                 @endif
 
-                <button type="submit" class="btn btn-primary mt-3">{{ $grn->status === 'pending' ? 'Save Changes' : 'Save Changes & Re-post Stock' }}</button>
-                <a href="{{ route('inventory.grns.show', $grn) }}" class="btn btn-light mt-3">Cancel</a>
+                <button type="submit" class="btn btn-primary mt-3 btn-sm">{{ $grn->status === 'pending' ? 'Save Changes' : 'Save Changes & Re-post Stock' }}</button>
+                <a href="{{ route('inventory.grns.show', $grn) }}" class="btn btn-light mt-3 btn-sm">Cancel</a>
             </form>
         </div>
     </div>

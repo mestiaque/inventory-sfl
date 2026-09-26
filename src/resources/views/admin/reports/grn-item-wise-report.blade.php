@@ -20,66 +20,69 @@
 
     <div class="card">
         <div class="card-header d-flex justify-content-between align-items-center">
-            <h5 class="mb-0">Item Wise Goods Receive Report</h5>
+            <h4 class="mb-0">Item Wise Goods Receive Report</h4>
             @unless($printMode)
                 @include('sfl-inventory::admin.reports.partials.export-print-buttons', ['report' => 'grn-item-wise'])
             @endunless
         </div>
         <div class="card-body">
             @unless($printMode)
-                <form method="GET" class="row g-2 mb-3">
-                    <div class="col-md-3">
-                        <select name="item_id" class="form-control inv-select2">
+                <form method="GET" class="row mb-3 align-items-end">
+                    <div class="col-md-3 mb-2">
+                        <select name="item_id" class="form-control form-control-sm inv-select2">
                             <option value="">All Items</option>
                             @foreach($items as $item)
                                 <option value="{{ $item->id }}" @selected(request('item_id') == $item->id)>{{ $item->item_code }} — {{ $item->item_name }}</option>
                             @endforeach
                         </select>
                     </div>
-                    <div class="col-md-2">
-                        <select name="store_id" class="form-control inv-select2">
+                    <div class="col-md-3 mb-2">
+                        <select name="store_id" class="form-control form-control-sm inv-select2">
                             <option value="">All Stores</option>
                             @foreach($stores as $store)
                                 <option value="{{ $store->id }}" @selected(request('store_id') == $store->id)>{{ $store->name }}</option>
                             @endforeach
                         </select>
                     </div>
-                    <div class="col-md-2">
-                        <select name="supplier_id" class="form-control inv-select2">
+                    <div class="col-md-3 mb-2">
+                        <select name="supplier_id" class="form-control form-control-sm inv-select2">
                             <option value="">All Suppliers</option>
                             @foreach($suppliers as $supplier)
                                 <option value="{{ $supplier->id }}" @selected(request('supplier_id') == $supplier->id)>{{ $supplier->name }}</option>
                             @endforeach
                         </select>
                     </div>
-                    <div class="col-md-2">
-                        <select name="color_id" class="form-control inv-select2">
+                    <div class="col-md-3 mb-2">
+                        <select name="color_id" class="form-control form-control-sm inv-select2">
                             <option value="">All Colors</option>
                             @foreach($colors as $color)
                                 <option value="{{ $color->id }}" @selected(request('color_id') == $color->id)>{{ $color->name }}</option>
                             @endforeach
                         </select>
                     </div>
-                    <div class="col-md-2">
-                        <select name="size_id" class="form-control inv-select2">
+                    <div class="col-md-3 mb-2">
+                        <select name="size_id" class="form-control form-control-sm inv-select2">
                             <option value="">All Sizes</option>
                             @foreach($sizes as $size)
                                 <option value="{{ $size->id }}" @selected(request('size_id') == $size->id)>{{ $size->name }}</option>
                             @endforeach
                         </select>
                     </div>
-                    <div class="col-md-2"><input type="date" name="date_from" class="form-control" value="{{ request('date_from') }}" placeholder="Receive From"></div>
-                    <div class="col-md-2"><input type="date" name="date_to" class="form-control" value="{{ request('date_to') }}" placeholder="Receive To"></div>
-                    <div class="col-md-1"><button type="submit" class="btn btn-secondary w-100">Filter</button></div>
+                    <div class="col-md-3 mb-2"><input type="date" name="date_from" class="form-control form-control-sm" value="{{ request('date_from') }}" placeholder="Receive From"></div>
+                    <div class="col-md-3 mb-2"><input type="date" name="date_to" class="form-control form-control-sm" value="{{ request('date_to') }}" placeholder="Receive To"></div>
+                    <div class="col-md-3 mb-2 d-flex align-items-end flex-wrap gap-1">
+                        <button type="submit" class="btn btn-secondary btn-sm">Filter</button>
+                        <a href="{{ url()->current() }}" class="btn btn-light btn-sm">Reset</a>
+                    </div>
                 </form>
             @endunless
 
             <div class="table-responsive">
-                <table class="table table-bordered table-striped table-sm align-middle">
+                <table class="table table-bordered table-sm align-middle">
                     <thead>
                         <tr>
                             <th>GRN No</th><th>PO No</th><th>Item Code</th><th>Item Name</th><th>Color</th><th>Size</th><th>Store</th>
-                            <th>Supplier / Buyer</th><th class="text-end">Qty</th><th>Unit</th><th class="text-end">Rate</th><th class="text-end">Amount</th>
+                            <th>Supplier / Buyer</th><th class="text-right">Qty</th><th>Unit</th><th class="text-right">Rate</th><th class="text-right">Amount</th>
                             <th>Receive Date</th><th>Created Date</th><th>Created By</th>
                         </tr>
                     </thead>
@@ -94,10 +97,10 @@
                                 <td>{{ $line->size?->name ?? '—' }}</td>
                                 <td>{{ $line->grn?->store?->name }}</td>
                                 <td>{{ $line->grn?->source_type === 'buyer_supplied' ? $line->grn?->buyer?->name : $line->grn?->supplier?->name }}</td>
-                                <td class="text-end">{{ inv_qty($line->received_qty) }}</td>
+                                <td class="text-right">{{ inv_qty($line->received_qty) }}</td>
                                 <td>{{ $line->item?->unit?->short_name }}</td>
-                                <td class="text-end">{{ inv_qty($line->rate) }}</td>
-                                <td class="text-end">{{ inv_qty($line->amount) }}</td>
+                                <td class="text-right">{{ inv_qty($line->rate) }}</td>
+                                <td class="text-right">{{ inv_qty($line->amount) }}</td>
                                 <td>{{ $line->grn?->receive_date?->format('d M Y') }}</td>
                                 <td>{{ $line->created_at?->format('d M Y, h:i A') }}</td>
                                 <td>{{ $line->grn?->creator?->name ?? '—' }}</td>
@@ -108,7 +111,7 @@
                     </tbody>
                     @if($lines->isNotEmpty())
                         <tfoot>
-                            <tr class="fw-bold"><td colspan="11" class="text-end">Total</td><td class="text-end">{{ inv_qty($lines->sum('amount')) }}</td><td colspan="3"></td></tr>
+                            <tr class="font-weight-bold"><td colspan="11" class="text-right">Total</td><td class="text-right">{{ inv_qty($lines->sum('amount')) }}</td><td colspan="3"></td></tr>
                         </tfoot>
                     @endif
                 </table>

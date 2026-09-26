@@ -11,11 +11,11 @@
 
     <div class="card">
         <div class="card-header d-flex justify-content-between align-items-center">
-            <h5 class="mb-0">Add GRN — Choose Challan Type</h5>
+            <h4 class="mb-0">Add GRN — Choose Challan Type</h4>
             <a href="{{ route('inventory.grns.index') }}" class="btn btn-light btn-sm"><i class="fa-solid fa-arrow-left"></i> Back</a>
         </div>
         <div class="card-body">
-            <div class="row g-3">
+            <div class="row">
                 <div class="col-md-6">
                     <a href="{{ route('inventory.grns.create-purchase') }}" class="text-decoration-none">
                         <div class="card h-100 border-primary">
