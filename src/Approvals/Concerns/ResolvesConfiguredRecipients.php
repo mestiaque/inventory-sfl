@@ -12,8 +12,10 @@ trait ResolvesConfiguredRecipients
 {
     protected function resolveRecipients(string $module, string $approvePermission): array
     {
+        // Module keys contain a dot, so read the array directly — config()'s
+        // dot-notation would treat it as a nested path and never find it.
         $configured = array_values(array_filter(
-            (array) config("sfl-inventory-mail.approval_recipients.{$module}", [])
+            (array) (config('sfl-inventory-mail.approval_recipients', [])[$module] ?? [])
         ));
 
         if (! empty($configured)) {

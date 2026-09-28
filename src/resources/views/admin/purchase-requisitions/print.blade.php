@@ -60,6 +60,8 @@
             <th>Size</th>
             <th>Unit</th>
             <th>Qty Req.</th>
+            <th>Est. Rate</th>
+            <th>Est. Amount</th>
             <th>Qty Approved</th>
             <th>Qty Ordered</th>
             <th>Remarks</th>
@@ -75,6 +77,8 @@
                 <td>{{ $line->size?->name }}</td>
                 <td>{{ $line->item?->unit?->short_name }}</td>
                 <td>{{ inv_qty($line->requested_qty) }}</td>
+                <td>{{ $line->estimated_rate !== null ? number_format((float) $line->estimated_rate, 2) : '' }}</td>
+                <td>{{ $line->estimated_rate !== null ? number_format($line->estimated_amount, 2) : '' }}</td>
                 <td>{{ $line->approved_qty !== null ? inv_qty($line->approved_qty) : '' }}</td>
                 <td>{{ inv_qty($line->converted_qty) }}</td>
                 <td></td>
@@ -83,7 +87,7 @@
         @for($i = $pr->items->count(); $i < 10; $i++)
             <tr>
                 <td>{{ $i + 1 }}</td>
-                <td>&nbsp;</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+                <td>&nbsp;</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
             </tr>
         @endfor
     </tbody>
@@ -91,6 +95,8 @@
         <tr>
             <td colspan="6" style="text-align:right;">Total</td>
             <td>{{ inv_qty($pr->items->sum('requested_qty')) }}</td>
+            <td></td>
+            <td>{{ number_format($pr->estimated_total, 2) }}</td>
             <td>{{ inv_qty($pr->items->sum('approved_qty')) }}</td>
             <td>{{ inv_qty($pr->items->sum('converted_qty')) }}</td>
             <td></td>

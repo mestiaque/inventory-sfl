@@ -14,10 +14,11 @@ class InvPurchaseRequisitionItem extends Model
 
     protected $table = 'inv_purchase_requisition_items';
 
-    protected $fillable = ['purchase_requisition_id', 'item_id', 'color_id', 'size_id', 'requested_qty', 'approved_qty', 'converted_qty'];
+    protected $fillable = ['purchase_requisition_id', 'item_id', 'color_id', 'size_id', 'requested_qty', 'estimated_rate', 'approved_qty', 'converted_qty'];
 
     protected $casts = [
         'requested_qty' => 'decimal:4',
+        'estimated_rate' => 'decimal:2',
         'approved_qty'  => 'decimal:4',
         'converted_qty' => 'decimal:4',
     ];
@@ -40,5 +41,11 @@ class InvPurchaseRequisitionItem extends Model
     public function size(): BelongsTo
     {
         return $this->belongsTo(InvSize::class, 'size_id');
+    }
+
+    /** Estimated line amount at the requested qty (qty × estimated rate). */
+    public function getEstimatedAmountAttribute(): float
+    {
+        return round((float) $this->requested_qty * (float) $this->estimated_rate, 2);
     }
 }

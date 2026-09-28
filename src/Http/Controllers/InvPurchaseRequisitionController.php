@@ -17,6 +17,7 @@ use ME\SflInventory\Models\InvPurchaseOrder;
 use ME\SflInventory\Models\InvPurchaseRequisition;
 use ME\SflInventory\Models\InvPurchaseRequisitionItem;
 use ME\SflInventory\Models\InvSize;
+use ME\SflInventory\Services\PurchaseRequisitionApprovalMailService;
 
 class InvPurchaseRequisitionController extends Controller
 {
@@ -80,6 +81,7 @@ class InvPurchaseRequisitionController extends Controller
                     'color_id'      => $colorId,
                     'size_id'       => $sizeId,
                     'requested_qty' => $line['requested_qty'],
+                    'estimated_rate' => $line['estimated_rate'],
                     ...($autoApprove ? ['approved_qty' => $line['requested_qty']] : []),
                 ]);
             }
@@ -97,13 +99,15 @@ class InvPurchaseRequisitionController extends Controller
             'module'       => 'inventory.purchase_requisition',
             'approvable'   => $purchaseRequisition,
             'title'        => "Purchase Requisition Approval - {$purchaseRequisition->requisition_no}",
-            'description'  => "{$purchaseRequisition->requester?->name} requested a purchase" . ($purchaseRequisition->department ? " for {$purchaseRequisition->department->name}" : '') . '.',
+            'description'  => "{$purchaseRequisition->requester?->name} requested a purchase" . ($purchaseRequisition->department ? " for {$purchaseRequisition->department->name}" : '')
+                . ' — estimated Tk ' . number_format($purchaseRequisition->load('items')->estimated_total, 2) . '.',
             'route_name'   => 'inventory.purchase-requisitions.approval-form',
             'route_params' => ['purchase_requisition' => $purchaseRequisition->id],
             'requested_by' => auth()->id(),
         ]);
+        app(PurchaseRequisitionApprovalMailService::class)->send($purchaseRequisition);
 
-        return redirect()->route('inventory.purchase-requisitions.index')->with('success', "Purchase requisition {$purchaseRequisition->requisition_no} submitted successfully.");
+        return redirect()->route('inventory.purchase-requisitions.index')->with('success', "Purchase requisition {$purchaseRequisition->requisition_no} submitted and sent for approval.");
     }
 
     public function edit(InvPurchaseRequisition $purchase_requisition): View
@@ -140,6 +144,7 @@ class InvPurchaseRequisitionController extends Controller
                     'color_id'      => $colorId,
                     'size_id'       => $sizeId,
                     'requested_qty' => $line['requested_qty'],
+                    'estimated_rate' => $line['estimated_rate'],
                 ]);
             }
         });
@@ -204,6 +209,7 @@ class InvPurchaseRequisitionController extends Controller
 
                     $item?->update([
                         'approved_qty' => $line['approved_qty'] ?? 0,
+                        ...(isset($line['estimated_rate']) && $line['estimated_rate'] !== '' ? ['estimated_rate' => $line['estimated_rate']] : []),
                         'color_id'     => $colorId,
                         'size_id'      => $sizeId,
                     ]);
@@ -220,6 +226,7 @@ class InvPurchaseRequisitionController extends Controller
                         'color_id'      => $colorId,
                         'size_id'       => $sizeId,
                         'requested_qty' => $line['approved_qty'],
+                        'estimated_rate' => $line['estimated_rate'] ?? null,
                         'approved_qty'  => $line['approved_qty'],
                     ]);
                 }
@@ -287,8 +294,9 @@ class InvPurchaseRequisitionController extends Controller
      * A Store Order is no longer created by hand — the moment a requisition
      * is approved (fully or partially, e.g. 100 requested but only 80
      * approved), one Store Order is auto-created here covering exactly the
-     * approved lines/quantities. Supplier and rate aren't known yet at this
-     * point — those are picked/entered later, at GRN Receive time (see
+     * approved lines/quantities, priced at the requisition's estimated rate.
+     * The supplier and the actual rate aren't known yet at this point —
+     * those are picked/entered later, at GRN Receive time (see
      * InvGrnController::store(), which now also backfills this Store
      * Order's supplier_id from the receiving GRN). A line approved with 0
      * qty (effectively rejected even though the requisition itself is
@@ -297,7 +305,9 @@ class InvPurchaseRequisitionController extends Controller
      */
     private function autoCreatePurchaseOrder(InvPurchaseRequisition $purchaseRequisition): void
     {
-        $purchaseRequisition->loadMissing('items');
+        // Always reload — lines loaded before approval still carry the old
+        // (empty) approved_qty, which would make every line look unapproved.
+        $purchaseRequisition->load('items');
 
         $approvedLines = $purchaseRequisition->items->filter(fn (InvPurchaseRequisitionItem $item) => $item->approved_qty > 0);
 
@@ -312,7 +322,9 @@ class InvPurchaseRequisitionController extends Controller
                 'order_date'    => now()->toDateString(),
                 'expected_date' => null,
                 'status'        => 'approved',
-                'total_amount'  => 0,
+                // Priced at the requisition's estimated rate — the actual
+                // price is only known at GRN (store receive) time.
+                'total_amount'  => round($approvedLines->sum(fn ($line) => (float) $line->approved_qty * (float) $line->estimated_rate), 2),
                 'remarks'       => null,
                 'created_by'    => auth()->id(),
             ]);
@@ -323,8 +335,8 @@ class InvPurchaseRequisitionController extends Controller
                     'color_id' => $line->color_id,
                     'size_id'  => $line->size_id,
                     'quantity' => $line->approved_qty,
-                    'rate'     => 0,
-                    'amount'   => 0,
+                    'rate'     => (float) $line->estimated_rate,
+                    'amount'   => round((float) $line->approved_qty * (float) $line->estimated_rate, 2),
                 ]);
 
                 $line->increment('converted_qty', $line->approved_qty);

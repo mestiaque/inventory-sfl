@@ -28,6 +28,7 @@ class InvPurchaseRequisitionRequest extends FormRequest
             'items.*.color_id'       => ['nullable', 'integer', 'exists:inv_colors,id'],
             'items.*.size_id'        => ['nullable', 'integer', 'exists:inv_sizes,id'],
             'items.*.requested_qty'  => ['required', 'numeric', 'min:0.0001'],
+            'items.*.estimated_rate' => ['required', 'numeric', 'min:0.01'],
         ];
     }
 

@@ -122,7 +122,7 @@
                     <div class="table-responsive">
                         <table class="table table-bordered table-sm align-middle">
                             <thead>
-                                <tr><th style="min-width:220px">Item</th><th>Color</th><th>Size</th><th>Due Qty</th><th style="width:150px">Received Qty</th><th style="width:140px">Rate</th><th style="width:140px">Amount</th><th>Expiry Date</th></tr>
+                                <tr><th style="min-width:220px">Item</th><th>Color</th><th>Size</th><th>Due Qty</th><th style="width:150px">Received Qty</th><th style="width:110px" class="text-right">Est. Rate<br><small class="text-muted font-weight-normal">from requisition</small></th><th style="width:140px">Actual Rate <span class="text-danger">*</span></th><th style="width:140px">Amount</th><th>Expiry Date</th></tr>
                             </thead>
                             <tbody id="grnRowsBody">
                                 @foreach($purchaseOrder->items as $index => $line)
@@ -139,6 +139,7 @@
                                         <td>{{ $line->size?->name ?? '—' }}</td>
                                         <td>{{ inv_qty($due) }}</td>
                                         <td><input type="number" step="0.0001" min="0.0001" max="{{ $due }}" name="items[{{ $index }}][received_qty]" class="form-control form-control-sm" data-role="qty" value="{{ old('items.' . $index . '.received_qty', $due) }}" required></td>
+                                        <td class="text-right text-muted">{{ (float) $line->rate > 0 ? number_format((float) $line->rate, 2) : '—' }}</td>
                                         <td><input type="number" step="0.01" min="0" name="items[{{ $index }}][rate]" class="form-control form-control-sm" data-role="rate" value="{{ old('items.' . $index . '.rate') }}" placeholder="Per supplier invoice" required></td>
                                         <td><input type="text" class="form-control form-control-sm" data-role="amount" disabled></td>
                                         <td><input type="date" name="items[{{ $index }}][expiry_date]" class="form-control form-control-sm"></td>

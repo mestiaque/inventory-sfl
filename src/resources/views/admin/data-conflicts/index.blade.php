@@ -28,7 +28,7 @@
     <div class="card mb-3" id="stray">
         <div class="card-header"><h5 class="mb-0">1. Stock sitting outside the item's own store</h5></div>
         <div class="card-body">
-            <p class="text-muted small">Reports show this stock under the wrong store. <strong>Move into own store</strong> transfers it (a paired store-change entry, history kept).</p>
+            <p class="text-muted small">Reports show this stock under the wrong store. <strong>Move into own store</strong> moves the item's history into its own store — no new entries, quantity unchanged.</p>
             <div class="table-responsive">
                 <table class="table table-bordered table-sm align-middle mb-0">
                     <thead><tr><th>Item</th><th>Stock is in</th><th>Item's own store</th><th class="text-right">Balance</th><th class="text-center">Action</th></tr></thead>
@@ -41,7 +41,7 @@
                                 <td class="text-right {{ $row->balance < 0 ? 'text-danger' : '' }}">{{ inv_qty($row->balance) }}</td>
                                 <td class="text-center">
                                     @can('inv_negative_stock.fix')
-                                        <form method="POST" action="{{ route('inventory.data-conflicts.consolidate', $row->item_id) }}" onsubmit="return confirm('Move {{ inv_qty($row->balance) }} of {{ $row->item_code }} from {{ $row->store_name }} into {{ $row->own_store }}?');">
+                                        <form method="POST" action="{{ route('inventory.data-conflicts.consolidate', $row->item_id) }}" onsubmit="return confirm('Move all of {{ $row->item_code }}\'s history from {{ $row->store_name }} into {{ $row->own_store }}?');">
                                             @csrf
                                             <button class="btn btn-primary btn-sm">Move into own store</button>
                                         </form>
@@ -60,7 +60,7 @@
     <div class="card mb-3" id="nostore">
         <div class="card-header"><h5 class="mb-0">2. Items with stock movement but no store</h5></div>
         <div class="card-body">
-            <p class="text-muted small">These no longer appear in Purchase, Store Order, GRN, Requisition or Issue. Set a store in Item Master to use them again — any stock in other stores moves into it automatically.</p>
+            <p class="text-muted small">These no longer appear in Purchase, Store Order, GRN, Requisition or Issue. Set a store in Item Master to use them again — its history in other stores moves into it automatically.</p>
             <div class="table-responsive">
                 <table class="table table-bordered table-sm align-middle mb-0">
                     <thead><tr><th>Item</th><th>Has movement in</th><th class="text-right">Balance (all stores)</th><th class="text-center">Action</th></tr></thead>

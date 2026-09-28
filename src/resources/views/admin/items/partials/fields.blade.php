@@ -132,9 +132,9 @@
                 </select>
                 <div class="form-text">
                     @if($item->opening_store_id)
-                        Changing the store moves this item's whole stock balance (from every store) into the new store, so all reports show it there.
+                        Changing the store moves this item's whole history into the new store — every report (old dates too) shows its stock there. Quantity and value don't change.
                     @else
-                        This item has no store assigned yet. Set it here — any existing stock moves into it.
+                        This item has no store assigned yet. Set it here — any existing history moves into it.
                     @endif
                 </div>
             </div>

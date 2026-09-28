@@ -80,4 +80,10 @@ class InvPurchaseRequisition extends Model
 
         $this->save();
     }
+
+    /** Estimated total of the whole requisition (Σ requested qty × estimated rate). */
+    public function getEstimatedTotalAttribute(): float
+    {
+        return round($this->items->sum(fn ($line) => $line->estimated_amount), 2);
+    }
 }

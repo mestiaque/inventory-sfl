@@ -167,6 +167,8 @@
                                 <tr>
                                     <th>#</th><th>Item</th><th>Unit</th><th>Color</th><th>Size</th>
                                     <th class="text-right">Requested</th>
+                                    <th class="text-right">Est. Rate</th>
+                                    <th class="text-right">Est. Amount</th>
                                     <th class="text-right">Approved</th>
                                     <th class="text-right">Converted</th>
                                 </tr>
@@ -180,13 +182,15 @@
                                         <td>{{ $line->color?->name ?? '—' }}</td>
                                         <td>{{ $line->size?->name ?? '—' }}</td>
                                         <td class="text-right">{{ inv_qty($line->requested_qty) }}</td>
+                                        <td class="text-right">{{ $line->estimated_rate !== null ? number_format((float) $line->estimated_rate, 2) : '—' }}</td>
+                                        <td class="text-right">{{ $line->estimated_rate !== null ? number_format($line->estimated_amount, 2) : '—' }}</td>
                                         <td class="text-right">{{ inv_qty($line->approved_qty) }}</td>
                                         <td class="text-right">{{ inv_qty($line->converted_qty) }}</td>
                                     </tr>
                                 @endforeach
                             </tbody>
                     <tfoot>
-                        <tr class="font-weight-bold"><td colspan="5" class="text-right">Total</td><td class="text-right">{{ inv_qty($purchaseRequisition->items->sum('requested_qty')) }}</td><td class="text-right">{{ inv_qty($purchaseRequisition->items->sum('approved_qty')) }}</td><td class="text-right">{{ inv_qty($purchaseRequisition->items->sum('converted_qty')) }}</td></tr>
+                        <tr class="font-weight-bold"><td colspan="5" class="text-right">Total</td><td class="text-right">{{ inv_qty($purchaseRequisition->items->sum('requested_qty')) }}</td><td></td><td class="text-right">{{ number_format($purchaseRequisition->estimated_total, 2) }}</td><td class="text-right">{{ inv_qty($purchaseRequisition->items->sum('approved_qty')) }}</td><td class="text-right">{{ inv_qty($purchaseRequisition->items->sum('converted_qty')) }}</td></tr>
                     </tfoot>
                         </table>
                     </div>

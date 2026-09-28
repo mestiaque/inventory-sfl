@@ -13,8 +13,8 @@ use ME\SflInventory\Services\StockService;
  * Data Conflicts: history that breaks the "one item, one store" and "Buyer
  * Store stock belongs to a buyer + style" rules — mostly left over from
  * before those rules were enforced on new documents. Read-only except for
- * "Move into own store", which consolidates an item's stray balances the
- * same way changing its store in Item Master does.
+ * "Move into own store", which moves the item's stray ledger history into
+ * its own store the same way changing its store in Item Master does.
  */
 class InvDataConflictController extends Controller
 {
@@ -90,7 +90,7 @@ class InvDataConflictController extends Controller
         return view('sfl-inventory::admin.data-conflicts.index', compact('strayStock', 'noStore', 'wrongStoreDocs', 'styleOverIssues'));
     }
 
-    /** Moves every stray balance of this item into its own store. */
+    /** Moves this item's stray ledger history into its own store. */
     public function consolidate(InvItem $item): RedirectResponse
     {
         $this->authorize('inv_negative_stock.fix');
@@ -99,8 +99,8 @@ class InvDataConflictController extends Controller
             return back()->with('error', "{$item->item_code} has no store assigned — set one in Item Master first.");
         }
 
-        $moved = DB::transaction(fn () => $this->stock->consolidateItemStock($item, (int) $item->opening_store_id));
+        $moved = DB::transaction(fn () => $this->stock->moveItemHistoryToStore($item, (int) $item->opening_store_id));
 
-        return back()->with('success', "{$item->item_code}: {$moved} stray balance(s) moved into " . $item->openingStore?->name . '.');
+        return back()->with('success', "{$item->item_code}: {$moved} ledger entr" . ($moved === 1 ? 'y' : 'ies') . ' moved into ' . $item->openingStore?->name . '.');
     }
 }

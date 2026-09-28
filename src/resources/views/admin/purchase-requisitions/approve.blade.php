@@ -28,23 +28,32 @@
                 </div>
                 <div class="table-responsive">
                     <table class="table table-bordered table-sm align-middle">
-                        <thead><tr><th>Item</th><th style="width:140px">Color</th><th style="width:140px">Size</th><th>Requested Qty</th><th style="width:180px">Approved Qty</th><th style="width:40px"></th></tr></thead>
+                        <thead><tr><th>Item</th><th style="width:140px">Color</th><th style="width:140px">Size</th><th>Requested Qty</th><th style="width:160px">Approved Qty</th><th style="width:150px">Estimated Rate</th><th style="width:130px">Est. Amount</th><th style="width:40px"></th></tr></thead>
                         <tbody id="preqApproveRowsBody">
                             @foreach($purchaseRequisition->items as $item)
                                 <tr>
                                     <td>{{ $item->item?->item_code }} — {{ $item->item?->item_name }}</td>
                                     <td>{{ $item->color?->name ?? '—' }}</td>
                                     <td>{{ $item->size?->name ?? '—' }}</td>
-                                    <td>{{ $item->requested_qty }}</td>
+                                    <td>{{ inv_qty($item->requested_qty) }}</td>
                                     <td>
                                         <input type="hidden" name="items[{{ $loop->index }}][id]" value="{{ $item->id }}">
-                                        <input type="number" step="0.0001" min="0" class="form-control form-control-sm"
-                                            name="items[{{ $loop->index }}][approved_qty]" value="{{ $item->requested_qty }}">
+                                        <input type="number" step="0.0001" min="0" class="form-control form-control-sm" data-role="qty"
+                                            name="items[{{ $loop->index }}][approved_qty]" value="{{ $item->requested_qty + 0 }}">
                                     </td>
+                                    <td><input type="number" step="0.01" min="0" class="form-control form-control-sm" data-role="rate" name="items[{{ $loop->index }}][estimated_rate]" value="{{ $item->estimated_rate }}" placeholder="Tk"></td>
+                                    <td><input type="text" class="form-control form-control-sm text-right" data-role="amount" value="{{ number_format((float) $item->requested_qty * (float) $item->estimated_rate, 2, '.', '') }}" readonly tabindex="-1"></td>
                                     <td><button type="button" class="btn-custom danger" data-line-items-remove title="Remove — don't approve this item"><i class="fa-solid fa-xmark"></i></button></td>
                                 </tr>
                             @endforeach
                         </tbody>
+                        <tfoot>
+                            <tr class="font-weight-bold">
+                                <td colspan="6" class="text-right">Estimated Total (Tk) — requested: {{ number_format($purchaseRequisition->estimated_total, 2) }} / approving:</td>
+                                <td><input type="text" id="preqApproveTotal" class="form-control form-control-sm text-right font-weight-bold" readonly tabindex="-1"></td>
+                                <td></td>
+                            </tr>
+                        </tfoot>
                     </table>
                 </div>
 
@@ -75,7 +84,9 @@
                             </select>
                         </td>
                         <td class="text-muted">— (new) —</td>
-                        <td><input type="number" step="0.0001" min="0.0001" class="form-control form-control-sm" name="items[__INDEX__][approved_qty]" required></td>
+                        <td><input type="number" step="0.0001" min="0.0001" class="form-control form-control-sm" data-role="qty" name="items[__INDEX__][approved_qty]" required></td>
+                        <td><input type="number" step="0.01" min="0.01" class="form-control form-control-sm" data-role="rate" name="items[__INDEX__][estimated_rate]" placeholder="Tk" required></td>
+                        <td><input type="text" class="form-control form-control-sm text-right" data-role="amount" readonly tabindex="-1"></td>
                         <td><button type="button" class="btn-custom danger" data-line-items-remove><i class="fa-solid fa-xmark"></i></button></td>
                     </tr>
                 </template>
@@ -94,4 +105,23 @@
 </div>
 @include('sfl-inventory::admin.partials.select2-init')
 @include('sfl-inventory::admin.partials.line-items-script')
+@push('js')
+<script>
+    (function () {
+        const body = document.getElementById('preqApproveRowsBody');
+        const total = document.getElementById('preqApproveTotal');
+        function refresh() {
+            let sum = 0;
+            body.querySelectorAll('tr').forEach(function (row) {
+                sum += parseFloat(row.querySelector('[data-role="qty"]')?.value || 0) * parseFloat(row.querySelector('[data-role="rate"]')?.value || 0);
+            });
+            total.value = sum.toFixed(2);
+        }
+        body.addEventListener('input', refresh);
+        body.addEventListener('click', function () { setTimeout(refresh, 0); });
+        document.querySelector('[data-line-items-add="preqApprove"]')?.addEventListener('click', function () { setTimeout(refresh, 0); });
+        refresh();
+    })();
+</script>
+@endpush
 @endsection

@@ -99,9 +99,9 @@ class StockService
      */
     public function latestRate(int $itemId, ?int $storeId = null, ?int $colorId = null, ?int $sizeId = null): float
     {
-        // store_change inflows carry the purchase price over when an item's
-        // store is changed (consolidateItemStock() below), so they
-        // count as a price source for the new store too.
+        // store_change inflows (from the older transfer-style item store
+        // change) carried the purchase price over, so they count as a
+        // price source for their store too.
         $query = InvStockTransaction::where('item_id', $itemId)
             ->where(fn ($q) => $q->whereIn('transaction_type', ['grn', 'opening'])
                 ->orWhere(fn ($q2) => $q2->where('transaction_type', 'store_change')->where('qty_in', '>', 0)))
@@ -169,55 +169,36 @@ class StockService
     }
 
     /**
-     * Makes the item's new store its only store: every item+variant balance
-     * sitting in any other store (positive or negative) is moved into
-     * $storeId with a paired store_change out/in, so Main Store Inventory and
-     * every stock report show the whole balance under the current store.
-     * The ledger stays insert-only — old rows keep their original store as
-     * history. Returns how many balances were moved.
+     * Moves an item to a new store by rewriting its history: every ledger
+     * row it has in another General/Buyer store is re-pointed at $storeId,
+     * so every report — old periods included — shows the item as if it had
+     * always lived there. No new entries are posted, so quantity and value
+     * are exactly what they were, just in one store. Production-floor and
+     * Finish Store rows are left alone (that stock genuinely left the main
+     * store). Any 'store_change' pairs from the older transfer-style move
+     * now sit in one store and cancel out, so they're removed. This is the
+     * one deliberate exception to the ledger's insert-only rule, made on
+     * purpose when the item's store is corrected. Returns rows moved.
      */
-    public function consolidateItemStock(InvItem $item, int $storeId): int
+    public function moveItemHistoryToStore(InvItem $item, int $storeId): int
     {
-        $balances = DB::table('inv_stock_transactions')
+        $sourceStoreIds = \ME\SflInventory\Models\InvStore::whereIn('type', [
+            \ME\SflInventory\Models\InvStore::TYPE_GENERAL,
+            \ME\SflInventory\Models\InvStore::TYPE_BUYER,
+        ])->pluck('id')->push($storeId)->unique();
+
+        $moved = DB::table('inv_stock_transactions')
             ->where('item_id', $item->id)
             ->where('store_id', '!=', $storeId)
-            ->select('store_id', 'color_id', 'size_id', DB::raw('SUM(qty_in) - SUM(qty_out) as balance'))
-            ->groupBy('store_id', 'color_id', 'size_id')
-            ->havingRaw('ABS(SUM(qty_in) - SUM(qty_out)) > 0.0001')
-            ->get();
+            ->whereIn('store_id', $sourceStoreIds)
+            ->update(['store_id' => $storeId, 'updated_at' => now()]);
 
-        $stores = \ME\SflInventory\Models\InvStore::whereIn('id', $balances->pluck('store_id')->push($storeId))->pluck('name', 'id');
+        DB::table('inv_stock_transactions')
+            ->where('item_id', $item->id)
+            ->where('transaction_type', 'store_change')
+            ->delete();
 
-        foreach ($balances as $row) {
-            $colorId = $row->color_id !== null ? (int) $row->color_id : null;
-            $sizeId = $row->size_id !== null ? (int) $row->size_id : null;
-            $qty = abs((float) $row->balance);
-            // Carry the real purchase price across, so the new store's
-            // report value (priced at latestRate) matches the old one.
-            $rate = $this->latestRate($item->id, (int) $row->store_id, $colorId, $sizeId)
-                ?: $this->latestRate($item->id);
-            $note = "Item store changed: {$stores[$row->store_id]} → {$stores[$storeId]}";
-
-            foreach ([[(int) $row->store_id, $row->balance < 0], [$storeId, $row->balance > 0]] as [$postStore, $isInflow]) {
-                $this->post([
-                    'item_id'          => $item->id,
-                    'color_id'         => $colorId,
-                    'size_id'          => $sizeId,
-                    'store_id'         => $postStore,
-                    'transaction_date' => now()->toDateString(),
-                    'transaction_type' => 'store_change',
-                    'qty_in'           => $isInflow ? $qty : 0,
-                    'qty_out'          => $isInflow ? 0 : $qty,
-                    'rate'             => $rate,
-                    'reference_type'   => 'inv_item',
-                    'reference_id'     => $item->id,
-                    'remarks'          => $note,
-                    'created_by'       => auth()->id(),
-                ]);
-            }
-        }
-
-        return $balances->count();
+        return $moved;
     }
 
     /**

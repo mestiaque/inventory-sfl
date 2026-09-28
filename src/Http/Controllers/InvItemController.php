@@ -135,13 +135,13 @@ class InvItemController extends Controller
         $moved = DB::transaction(function () use ($item, $data, $storeChanged, $newStoreId) {
             $item->update($data);
 
-            return $storeChanged ? $this->stock->consolidateItemStock($item, $newStoreId) : 0;
+            return $storeChanged ? $this->stock->moveItemHistoryToStore($item, $newStoreId) : 0;
         });
 
         $message = 'Item updated successfully.';
         if ($storeChanged) {
             $storeName = InvStore::find($newStoreId)?->name;
-            $message = "Item updated. Store changed to {$storeName}" . ($moved ? " — {$moved} stock balance(s) moved into it, reports now show the item there." : '.');
+            $message = "Item updated. Store changed to {$storeName}" . ($moved ? " — {$moved} ledger entr" . ($moved === 1 ? 'y' : 'ies') . " moved with it; every report now shows the item's stock there (quantity unchanged)." : '.');
 
             $openRequisitions = InvRequisitionItem::where('item_id', $item->id)
                 ->whereHas('requisition', fn ($q) => $q->where('store_id', '!=', $newStoreId)->whereIn('status', ['pending', 'approved', 'partially_issued']))

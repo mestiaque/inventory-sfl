@@ -6,7 +6,6 @@ use App\Approvals\BaseApprovalHandler;
 use App\Models\Approval;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
-use ME\SflInventory\Approvals\Concerns\ResolvesConfiguredRecipients;
 use ME\SflInventory\Models\InvPurchaseRequisition;
 use ME\SflInventory\Models\InvPurchaseRequisitionItem;
 
@@ -17,19 +16,22 @@ use ME\SflInventory\Models\InvPurchaseRequisitionItem;
  * dedicated approval page (per-line quantity, reject-with-remarks — see
  * InvPurchaseRequisitionController::approvalForm/approval). That page remains
  * the primary way to act on a request; this handler only covers:
- *   - who gets emailed when a purchase requisition is submitted (recipients)
- *     — see src/Config/mail.php to override who that is
+ *   - who gets emailed: nobody from here — see recipients()
  *   - what happens if someone uses the central Approvals list's quick
  *     Approve/Reject buttons instead (onApproved/onRejected) — a full-quantity
  *     approve, since the central button has no per-line quantity input.
  */
 class InvPurchaseRequisitionApprovalHandler extends BaseApprovalHandler
 {
-    use ResolvesConfiguredRecipients;
-
+    /**
+     * Empty on purpose: approvers get the detailed memo email from
+     * PurchaseRequisitionApprovalMailService instead (same recipients —
+     * see its recipients()), so the generic central email would only be a
+     * duplicate. The central Approval record itself is still created.
+     */
     public function recipients(?Model $approvable, Approval $approval): array
     {
-        return $this->resolveRecipients('inventory.purchase_requisition', 'inv_purchase_requisition.approve');
+        return [];
     }
 
     public function onApproved(Approval $approval): void
