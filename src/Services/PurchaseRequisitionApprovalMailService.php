@@ -57,28 +57,22 @@ class PurchaseRequisitionApprovalMailService
     /** @return list<string> */
     public function recipients(): array
     {
-        // Temporarily disabled — every approval mail goes to the default
-        // address below. Restore this block to send to the configured
-        // recipients / every user holding inv_purchase_requisition.approve.
-        //
-        // // Module keys contain a dot, so read the array directly — config()'s
-        // // dot-notation would treat it as a nested path and never find it.
-        // $configured = array_values(array_filter(
-        //     (array) (config('sfl-inventory-mail.approval_recipients', [])['inventory.purchase_requisition'] ?? [])
-        // ));
-        //
-        // $emails = $configured ?: User::all()
-        //     ->filter(fn (User $user) => $user->hasPermission('inv_purchase_requisition.approve'))
-        //     ->pluck('email')
-        //     ->all();
-        //
-        // return collect($emails)
-        //     ->filter(fn ($email) => filter_var($email, FILTER_VALIDATE_EMAIL) !== false)
-        //     ->unique()
-        //     ->values()
-        //     ->all();
+        // Module keys contain a dot, so read the array directly — config()'s
+        // dot-notation would treat it as a nested path and never find it.
+        $configured = array_values(array_filter(
+            (array) (config('sfl-inventory-mail.approval_recipients', [])['inventory.purchase_requisition'] ?? [])
+        ));
 
-        return ['mrm.khan.1298@gmail.com'];
+        $emails = $configured ?: User::all()
+            ->filter(fn (User $user) => $user->hasPermission('inv_purchase_requisition.approve'))
+            ->pluck('email')
+            ->all();
+
+        return collect($emails)
+            ->filter(fn ($email) => filter_var($email, FILTER_VALIDATE_EMAIL) !== false)
+            ->unique()
+            ->values()
+            ->all();
     }
 
     /** Taka in words via the Accounts package's converter, when it's installed. */
