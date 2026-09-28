@@ -172,18 +172,7 @@ class InvReportController extends Controller
                 ->leftJoin('inv_sizes as sz', 'sz.id', '=', 'poi.size_id')
                 ->where('poi.item_id', $selectedItem->id)
                 ->whereNull('po.deleted_at')
-                ->selectRaw("'Purchase Order' as document_type, po.po_number as document_no, po.order_date as txn_date, poi.quantity as qty, c.name as color_name, sz.name as size_name, u.name as person_name, sup.name as party_name, po.status as status");
-
-            $grns = DB::table('inv_grn_items as gi')
-                ->join('inv_grns as g', 'g.id', '=', 'gi.grn_id')
-                ->leftJoin('users as u', 'u.id', '=', 'g.created_by')
-                ->leftJoin('hr_employees as emp', 'emp.id', '=', 'g.received_by')
-                ->leftJoin('inv_stores as s', 's.id', '=', 'g.store_id')
-                ->leftJoin('inv_colors as c', 'c.id', '=', 'gi.color_id')
-                ->leftJoin('inv_sizes as sz', 'sz.id', '=', 'gi.size_id')
-                ->where('gi.item_id', $selectedItem->id)
-                ->whereNull('g.deleted_at')
-                ->selectRaw("'GRN' as document_type, g.grn_number as document_no, g.receive_date as txn_date, gi.received_qty as qty, c.name as color_name, sz.name as size_name, COALESCE(emp.name, u.name) as person_name, s.name as party_name, g.status as status");
+                ->selectRaw("'Purchase Order' as document_type, po.po_number as document_no, po.order_date as txn_date, poi.quantity as qty, c.name as color_name, sz.name as size_name, u.name as person_name, sup.name as party_name, po.status as status, NULL as stock_effect, 1 as sort_group, 0 as ledger_id");
 
             $requisitions = DB::table('inv_requisition_items as ri')
                 ->join('inv_requisitions as r', 'r.id', '=', 'ri.requisition_id')
@@ -193,27 +182,73 @@ class InvReportController extends Controller
                 ->leftJoin('inv_sizes as sz', 'sz.id', '=', 'ri.size_id')
                 ->where('ri.item_id', $selectedItem->id)
                 ->whereNull('r.deleted_at')
-                ->selectRaw("'Requisition' as document_type, r.requisition_no as document_no, r.requisition_date as txn_date, ri.requested_qty as qty, c.name as color_name, sz.name as size_name, u.name as person_name, d.name as party_name, r.status as status");
+                ->selectRaw("'Requisition' as document_type, r.requisition_no as document_no, r.requisition_date as txn_date, ri.requested_qty as qty, c.name as color_name, sz.name as size_name, u.name as person_name, d.name as party_name, r.status as status, NULL as stock_effect, 2 as sort_group, 0 as ledger_id");
 
-            $issues = DB::table('inv_issue_items as ii')
-                ->join('inv_issues as i', 'i.id', '=', 'ii.issue_id')
-                ->leftJoin('users as u', 'u.id', '=', 'i.issued_by')
-                ->leftJoin('inv_departments as d', 'd.id', '=', 'i.department_id')
-                ->leftJoin('inv_colors as c', 'c.id', '=', 'ii.color_id')
-                ->leftJoin('inv_sizes as sz', 'sz.id', '=', 'ii.size_id')
-                ->where('ii.item_id', $selectedItem->id)
-                ->whereNull('i.deleted_at')
-                ->selectRaw("'Issue' as document_type, i.issue_no as document_no, i.issue_date as txn_date, ii.issued_qty as qty, c.name as color_name, sz.name as size_name, u.name as person_name, d.name as party_name, i.status as status");
+            // Every stock movement straight from the ledger (GRN, Issue, their
+            // reversals, adjustments, opening, …) — one row per ledger entry,
+            // signed, so the running Current Qty always reconciles with the
+            // item's real current stock.
+            $movements = DB::table('inv_stock_transactions as t')
+                ->leftJoin('inv_grns as g', fn ($j) => $j->on('g.id', '=', 't.reference_id')->where('t.reference_type', '=', 'inv_grn'))
+                ->leftJoin('inv_issues as iss', fn ($j) => $j->on('iss.id', '=', 't.reference_id')->where('t.reference_type', '=', 'inv_issue'))
+                ->leftJoin('inv_stock_adjustments as adj', fn ($j) => $j->on('adj.id', '=', 't.reference_id')->where('t.reference_type', '=', 'inv_stock_adjustment'))
+                ->leftJoin('hr_employees as gre', 'gre.id', '=', 'g.received_by')
+                ->leftJoin('users as u', 'u.id', '=', DB::raw('COALESCE(iss.issued_by, g.created_by, t.created_by)'))
+                ->leftJoin('inv_departments as d', 'd.id', '=', 'iss.department_id')
+                ->leftJoin('inv_stores as s', 's.id', '=', 't.store_id')
+                ->leftJoin('inv_colors as c', 'c.id', '=', 't.color_id')
+                ->leftJoin('inv_sizes as sz', 'sz.id', '=', 't.size_id')
+                ->where('t.item_id', $selectedItem->id)
+                ->selectRaw("
+                    CASE t.transaction_type
+                        WHEN 'grn' THEN 'GRN' WHEN 'grn_reversal' THEN 'GRN Reversal'
+                        WHEN 'issue' THEN 'Issue' WHEN 'issue_reversal' THEN 'Issue Reversal'
+                        WHEN 'adjustment' THEN 'Adjustment' WHEN 'adjustment_reversal' THEN 'Adjustment Reversal'
+                        WHEN 'opening' THEN 'Opening' ELSE REPLACE(t.transaction_type, '_', ' ') END as document_type,
+                    COALESCE(g.grn_number, iss.issue_no, adj.adjustment_no, t.remarks) as document_no,
+                    t.transaction_date as txn_date,
+                    t.qty_in + t.qty_out as qty,
+                    c.name as color_name, sz.name as size_name,
+                    COALESCE(gre.name, u.name) as person_name,
+                    CONCAT(s.name, COALESCE(CONCAT(' → ', d.name), '')) as party_name,
+                    COALESCE(g.status, iss.status, adj.status) as status,
+                    t.qty_in - t.qty_out as stock_effect, 3 as sort_group, t.id as ledger_id
+                ");
 
             $rows = $purchaseOrders
-                ->unionAll($grns)
                 ->unionAll($requisitions)
-                ->unionAll($issues)
+                ->unionAll($movements)
                 ->orderBy('txn_date')
+                ->orderBy('sort_group')
+                ->orderBy('ledger_id')
                 ->get();
+
+            // Running stock after each row — PO / Requisition don't move stock.
+            $running = 0.0;
+            foreach ($rows as $row) {
+                if ($row->stock_effect !== null) {
+                    $running += (float) $row->stock_effect;
+                }
+                $row->current_qty = $running;
+            }
         }
 
-        return view('sfl-inventory::admin.reports.item-full-trail', compact('items', 'selectedItem', 'rows'));
+        // Current Stock / Stock Value, per store the item has movement in —
+        // same figures as Main Store Inventory (value = qty × latest rate).
+        $stockByStore = collect();
+        if ($selectedItem) {
+            $selectedItem->loadMissing('unit');
+            $stockByStore = InvStore::whereIn('id', DB::table('inv_stock_transactions')->where('item_id', $selectedItem->id)->distinct()->pluck('store_id'))
+                ->orderBy('name')->get()
+                ->map(fn (InvStore $store) => (object) [
+                    'store' => $store->name,
+                    'qty'   => $this->stock->currentStock($selectedItem->id, $store->id),
+                    'rate'  => $this->stock->latestRate($selectedItem->id, $store->id),
+                    'value' => $this->stock->stockValue($selectedItem->id, $store->id),
+                ]);
+        }
+
+        return view('sfl-inventory::admin.reports.item-full-trail', compact('items', 'selectedItem', 'rows', 'stockByStore'));
     }
 
     public function storeWiseStock(Request $request): View
