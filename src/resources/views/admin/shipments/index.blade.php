@@ -19,6 +19,14 @@
         <div class="card-body">
             <form method="GET" class="row mb-3 align-items-end">
                 <div class="col-md-3 mb-2">
+                    <select name="item_id" class="form-control form-control-sm inv-select2">
+                        <option value="">All Items</option>
+                        @foreach($filterItems as $filterItem)
+                            <option value="{{ $filterItem->id }}" @selected(request('item_id') == $filterItem->id)>{{ $filterItem->item_code }} — {{ $filterItem->item_name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="col-md-3 mb-2">
                     <input type="text" name="search" class="form-control form-control-sm" placeholder="Search shipment no" value="{{ request('search') }}">
                 </div>
                 <div class="col-md-3 mb-2">
@@ -94,6 +102,11 @@
                             <tr><td colspan="8" class="text-center text-muted">No shipments found.</td></tr>
                         @endforelse
                     </tbody>
+                    @if($shipments->total())
+                        <tfoot>
+                            <tr class="font-weight-bold"><td colspan="8">Total: {{ $shipments->total() }} shipment(s){{ $shipments->hasPages() ? ' (all pages)' : '' }}{{ request('item_id') ? ' — item qty ' : ' — total qty ' }}{{ inv_qty($grandQty) }}</td></tr>
+                        </tfoot>
+                    @endif
                 </table>
             </div>
 
@@ -144,6 +157,9 @@
                                     </tr>
                                 @endforeach
                             </tbody>
+                    <tfoot>
+                        <tr class="font-weight-bold"><td colspan="3" class="text-right">Total</td><td class="text-right">{{ inv_qty($shipment->items->sum('quantity')) }}</td></tr>
+                    </tfoot>
                         </table>
                     </div>
                 </div>

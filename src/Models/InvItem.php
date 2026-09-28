@@ -106,6 +106,21 @@ class InvItem extends Model
         return $query->where('is_active', true);
     }
 
+    /**
+     * Items a document form (Purchase Requisition, Store Order, GRN, Store
+     * Requisition, Issue) may offer: only ones with a store assigned — an
+     * item without a store can't be bought, received, requisitioned or
+     * issued until Item Master gives it one. $keepIds keeps items already on
+     * a document being edited, so its existing lines still render.
+     */
+    public function scopeSelectable(Builder $query, iterable $keepIds = []): Builder
+    {
+        $keep = collect($keepIds)->filter()->unique()->values()->all();
+
+        return $query->active()->where(fn ($q) => $q->whereNotNull('opening_store_id')
+            ->when($keep, fn ($q2) => $q2->orWhereIn('id', $keep)));
+    }
+
     public function scopeOfType(Builder $query, string $type): Builder
     {
         return $query->where('item_type', $type);

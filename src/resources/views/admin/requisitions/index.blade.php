@@ -107,6 +107,11 @@
                                             <button type="button" class="btn-custom danger" data-toggle="modal" data-target="#deleteReqModal" data-action="{{ route('inventory.requisitions.destroy', $requisition) }}"><i class="fa-solid fa-trash"></i></button>
                                         @endcan
                                     @endif
+                                    @if($requisition->isApprovedButUnissued())
+                                        @can('inv_requisition.delete_approved')
+                                            <button type="button" class="btn-custom danger" title="Approved, nothing issued yet — delete to release the reserved stock" data-toggle="modal" data-target="#deleteReqModal" data-action="{{ route('inventory.requisitions.destroy', $requisition) }}"><i class="fa-solid fa-trash"></i></button>
+                                        @endcan
+                                    @endif
                                     @can('inv_issue.add')
                                         @if(in_array($requisition->status, ['approved', 'partially_issued']))
                                             <a href="{{ route('inventory.issues.create', ['requisition_id' => $requisition->id]) }}" class="btn btn-sm btn-outline-secondary">Issue</a>
@@ -121,6 +126,11 @@
                             <tr><td colspan="8" class="text-center text-muted">No requisitions found.</td></tr>
                         @endforelse
                     </tbody>
+                    @if($requisitions->total())
+                        <tfoot>
+                            <tr class="font-weight-bold"><td colspan="8">Total: {{ $requisitions->total() }} requisition(s){{ $requisitions->hasPages() ? ' (all pages)' : '' }}</td></tr>
+                        </tfoot>
+                    @endif
                 </table>
             </div>
 
@@ -187,6 +197,9 @@
                                     </tr>
                                 @endforeach
                             </tbody>
+                    <tfoot>
+                        <tr class="font-weight-bold"><td colspan="5" class="text-right">Total</td><td class="text-right">{{ inv_qty($requisition->items->sum('requested_qty')) }}</td><td class="text-right">{{ inv_qty($requisition->items->sum('approved_qty')) }}</td><td class="text-right">{{ inv_qty($requisition->items->sum('issued_qty')) }}</td></tr>
+                    </tfoot>
                         </table>
                     </div>
                 </div>

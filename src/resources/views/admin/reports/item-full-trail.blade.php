@@ -85,6 +85,13 @@
                                 <tr><td colspan="9" class="text-center text-muted">No purchase/receive/requisition/issue history found for this item.</td></tr>
                             @endforelse
                         </tbody>
+                        @if($rows->isNotEmpty())
+                            <tfoot>
+                                @foreach($rows->groupBy('document_type') as $type => $docs)
+                                    <tr class="font-weight-bold"><td colspan="3" class="text-right">Total {{ $type }} ({{ $docs->count() }})</td><td class="text-right">{{ inv_qty($docs->sum('qty')) }}</td><td colspan="5"></td></tr>
+                                @endforeach
+                            </tfoot>
+                        @endif
                     </table>
                 </div>
             @endif

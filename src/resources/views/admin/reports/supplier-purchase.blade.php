@@ -36,6 +36,14 @@
                             @endforeach
                         </select>
                     </div>
+                    <div class="col-md-3 mb-2">
+                        <select name="item_id" class="form-control form-control-sm inv-select2">
+                            <option value="">All Items</option>
+                            @foreach($items as $filterItem)
+                                <option value="{{ $filterItem->id }}" @selected(request('item_id') == $filterItem->id)>{{ $filterItem->item_code }} — {{ $filterItem->item_name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
                     <div class="col-md-3 mb-2"><input type="date" name="date_from" class="form-control form-control-sm" value="{{ request('date_from') }}" placeholder="From"></div>
                     <div class="col-md-3 mb-2"><input type="date" name="date_to" class="form-control form-control-sm" value="{{ request('date_to') }}" placeholder="To"></div>
                     <div class="col-md-3 mb-2 d-flex align-items-end flex-wrap gap-1">
@@ -59,6 +67,11 @@
                             <tr><td colspan="3" class="text-center text-muted">No purchases found.</td></tr>
                         @endforelse
                     </tbody>
+                    @if($rows->isNotEmpty())
+                        <tfoot>
+                            <tr class="font-weight-bold"><td class="text-right">Total</td><td class="text-right">{{ request('item_id') ? inv_qty($rows->sum('total_qty')) : '' }}</td><td class="text-right">{{ inv_qty($rows->sum('total_amount')) }}</td></tr>
+                        </tfoot>
+                    @endif
                 </table>
             </div>
         </div>

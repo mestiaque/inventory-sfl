@@ -12,11 +12,11 @@
     <label class="form-label">Store For <span class="text-danger">*</span></label>
     <select name="type" class="form-control form-control-sm inv-select2" required>
         <option value="">— Select —</option>
-        <option value="raw_material" @selected(old('type', $store?->type ?? '') === 'raw_material')>For Buyer (Warehouse)</option>
-        <option value="accessories" @selected(old('type', $store?->type ?? '') === 'accessories')>For Accessories</option>
-        <option value="finished_goods" @selected(old('type', $store?->type ?? '') === 'finished_goods')>For Finished Goods</option>
+        @foreach(\ME\SflInventory\Models\InvStore::TYPE_LABELS as $typeKey => $typeLabel)
+            <option value="{{ $typeKey }}" @selected(old('type', $store?->type ?? '') === $typeKey)>{{ $typeLabel }}</option>
+        @endforeach
     </select>
-    <div class="form-text">Determines where this store is auto-selected/locked across Purchase, Requisition and Finished Goods screens.</div>
+    <div class="form-text">General = purchased accessories · Buyer = goods the buyer sends (style-wise) · Finish = finished garments. Each receive screen only accepts its own kind.</div>
 </div>
 <div class="col-md-3 mb-3">
     <label class="form-label">Address</label>

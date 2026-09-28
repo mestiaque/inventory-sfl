@@ -13,6 +13,26 @@ class InvItemRequest extends FormRequest
         return (bool) $this->user()?->can($ability);
     }
 
+    /**
+     * Replacing an item's existing store needs inv_item.change_store — a
+     * plain editor can only set it while the item has none yet.
+     */
+    public function withValidator($validator): void
+    {
+        $validator->after(function ($v) {
+            $item = $this->route('item');
+            if (! $item || ! $item->opening_store_id || ! $this->has('opening_store_id')) {
+                return;
+            }
+            if ((int) $this->input('opening_store_id') !== (int) $item->opening_store_id && ! $this->user()->can('inv_item.change_store')) {
+                $v->errors()->add('opening_store_id', 'You do not have permission to change this item\'s store.');
+            }
+            if (! $this->filled('opening_store_id')) {
+                $v->errors()->add('opening_store_id', 'An item that already has a store cannot be left without one.');
+            }
+        });
+    }
+
     public function rules(): array
     {
         $itemId = $this->route('item')?->id;

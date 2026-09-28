@@ -24,13 +24,15 @@ class InvPurchaseRequisitionController extends Controller
     {
         $this->authorize('inv_purchase_requisition.list');
 
-        $purchaseRequisitions = InvPurchaseRequisition::query()
+        $purchaseRequisitionsQuery = InvPurchaseRequisition::query()
             ->with(['department', 'requester', 'approver', 'items.item.unit', 'items.color', 'items.size'])
             ->when($request->filled('search'), fn ($q) => $q->where('requisition_no', 'like', '%' . $request->search . '%'))
+            ->when($request->filled('item_id'), fn ($q) => $q->whereHas('items', fn ($iq) => $iq->where('item_id', $request->item_id)))
             ->when($request->filled('department_id'), fn ($q) => $q->where('department_id', $request->department_id))
             ->when($request->filled('status'), fn ($q) => $q->where('status', $request->status))
             ->when($request->filled('date_from'), fn ($q) => $q->whereDate('requisition_date', '>=', $request->date_from))
-            ->when($request->filled('date_to'), fn ($q) => $q->whereDate('requisition_date', '<=', $request->date_to))
+            ->when($request->filled('date_to'), fn ($q) => $q->whereDate('requisition_date', '<=', $request->date_to));
+        $purchaseRequisitions = $purchaseRequisitionsQuery
             ->latest('id')
             ->paginate(20)
             ->withQueryString();
@@ -112,7 +114,7 @@ class InvPurchaseRequisitionController extends Controller
 
         $purchase_requisition->load('items.item', 'items.color', 'items.size');
 
-        return view('sfl-inventory::admin.purchase-requisitions.edit', ['purchaseRequisition' => $purchase_requisition] + $this->formOptions());
+        return view('sfl-inventory::admin.purchase-requisitions.edit', ['purchaseRequisition' => $purchase_requisition] + $this->formOptions($purchase_requisition->items->pluck('item_id')));
     }
 
     public function update(InvPurchaseRequisitionRequest $request, InvPurchaseRequisition $purchase_requisition): RedirectResponse
@@ -145,6 +147,15 @@ class InvPurchaseRequisitionController extends Controller
         return redirect()->route('inventory.purchase-requisitions.index')->with('success', 'Purchase requisition updated successfully.');
     }
 
+    public function print(InvPurchaseRequisition $purchase_requisition): View
+    {
+        $this->authorize('inv_purchase_requisition.print');
+
+        $purchase_requisition->load(['items.item.unit', 'items.color', 'items.size', 'department', 'requester', 'approver', 'purchaseOrders']);
+
+        return view('sfl-inventory::admin.purchase-requisitions.print', ['purchaseRequisition' => $purchase_requisition]);
+    }
+
     public function approvalForm(InvPurchaseRequisition $purchase_requisition): View
     {
         $this->authorize('inv_purchase_requisition.approve');
@@ -153,7 +164,7 @@ class InvPurchaseRequisitionController extends Controller
 
         $purchase_requisition->load('items.item', 'items.color', 'items.size', 'department');
 
-        return view('sfl-inventory::admin.purchase-requisitions.approve', ['purchaseRequisition' => $purchase_requisition] + $this->formOptions());
+        return view('sfl-inventory::admin.purchase-requisitions.approve', ['purchaseRequisition' => $purchase_requisition] + $this->formOptions($purchase_requisition->items->pluck('item_id')));
     }
 
     public function approval(InvPurchaseRequisitionApprovalRequest $request, InvPurchaseRequisition $purchase_requisition): RedirectResponse
@@ -346,11 +357,11 @@ class InvPurchaseRequisitionController extends Controller
             ]);
     }
 
-    private function formOptions(): array
+    private function formOptions(iterable $keepItemIds = []): array
     {
         return [
             'departments' => InvDepartment::active()->orderBy('name')->get(),
-            'items'       => InvItem::active()->with('unit')->orderBy('item_name')->get(),
+            'items'       => InvItem::selectable($keepItemIds)->with('unit')->orderBy('item_name')->get(),
             'colors'      => InvColor::active()->orderBy('name')->get(),
             'sizes'       => InvSize::active()->ordered()->get(),
         ];

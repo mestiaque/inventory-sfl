@@ -29,6 +29,31 @@
             @endunless
         </div>
         <div class="card-body">
+            @unless($printMode)
+                <form method="GET" class="row mb-3 align-items-end">
+                    <div class="col-md-3 mb-2">
+                        <select name="item_id" class="form-control form-control-sm inv-select2">
+                            <option value="">All Items</option>
+                            @foreach($filterItems as $filterItem)
+                                <option value="{{ $filterItem->id }}" @selected(request('item_id') == $filterItem->id)>{{ $filterItem->item_code }} — {{ $filterItem->item_name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="col-md-3 mb-2">
+                        <select name="category_id" class="form-control form-control-sm inv-select2">
+                            <option value="">All Categories</option>
+                            @foreach($categories as $category)
+                                <option value="{{ $category->id }}" @selected(request('category_id') == $category->id)>{{ $category->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="col-md-3 mb-2 d-flex align-items-end flex-wrap gap-1">
+                        <button type="submit" class="btn btn-secondary btn-sm">Filter</button>
+                        <a href="{{ url()->current() }}" class="btn btn-light btn-sm">Reset</a>
+                    </div>
+                </form>
+            @endunless
+
             <div class="table-responsive">
                 <table class="table table-bordered table-sm align-middle">
                     <thead><tr><th>Item Code</th><th>Item Name</th><th>Category</th><th class="text-right">Current Stock</th><th class="text-right">Stock Value</th></tr></thead>
@@ -45,9 +70,17 @@
                             <tr><td colspan="5" class="text-center text-muted">No dead stock found.</td></tr>
                         @endforelse
                     </tbody>
+                    @if($items->isNotEmpty())
+                        <tfoot>
+                            <tr class="font-weight-bold"><td colspan="4" class="text-right">Total ({{ $items->count() }} items)</td><td class="text-right">{{ inv_qty($items->sum('stock_value')) }}</td></tr>
+                        </tfoot>
+                    @endif
                 </table>
             </div>
         </div>
     </div>
 </div>
+@unless($printMode)
+    @include('sfl-inventory::admin.partials.select2-init')
+@endunless
 @endsection

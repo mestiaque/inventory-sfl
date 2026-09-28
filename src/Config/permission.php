@@ -51,7 +51,7 @@ return [
         ],
         'inv_item' => [
             'label' => 'Item Master',
-            'permissions' => $crud + ['import' => 'Import', 'export' => 'Export', 'merge' => 'Merge Duplicates', 'force_delete' => 'Force Delete'],
+            'permissions' => $crud + ['import' => 'Import', 'export' => 'Export', 'merge' => 'Merge Duplicates', 'change_store' => 'Change Store', 'force_delete' => 'Force Delete'],
         ],
         'inv_supplier' => [
             'label' => 'Suppliers',
@@ -71,7 +71,7 @@ return [
         ],
         'inv_purchase_requisition' => [
             'label' => 'Purchase Requisition',
-            'permissions' => $crud + ['approve' => 'Approve', 'reject' => 'Reject', 'force_delete' => 'Force Delete'],
+            'permissions' => $crud + ['approve' => 'Approve', 'reject' => 'Reject', 'print' => 'Print', 'force_delete' => 'Force Delete'],
         ],
         'inv_purchase_order' => [
             'label' => 'Store Order',
@@ -87,7 +87,7 @@ return [
         ],
         'inv_requisition' => [
             'label' => 'Store Requisition',
-            'permissions' => $crud + ['approve' => 'Approve', 'reject' => 'Reject', 'print' => 'Print', 'export' => 'Export', 'force_delete' => 'Force Delete'],
+            'permissions' => $crud + ['approve' => 'Approve', 'reject' => 'Reject', 'print' => 'Print', 'export' => 'Export', 'delete_approved' => 'Delete Approved (Not Issued)', 'force_delete' => 'Force Delete'],
         ],
         'inv_issue' => [
             'label' => 'Store Issue & Department Receive',
@@ -116,6 +116,10 @@ return [
         'inv_adjustment' => [
             'label' => 'Stock Adjustment',
             'permissions' => $crud + ['approve' => 'Approve', 'export' => 'Export', 'force_delete' => 'Force Delete'],
+        ],
+        'inv_negative_stock' => [
+            'label' => 'Negative Stock Fix',
+            'permissions' => ['view' => 'View', 'fix' => 'Fix', 'all' => 'All'],
         ],
         'inv_stock_ledger' => [
             'label' => 'Stock Ledger',

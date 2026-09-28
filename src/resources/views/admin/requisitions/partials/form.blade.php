@@ -11,10 +11,10 @@
     </div>
     <div class="col-md-3 mb-3">
         <label class="form-label">Issue From Store <span class="text-danger">*</span></label>
-        <select name="store_id" class="form-control form-control-sm inv-select2" required>
+        <select name="store_id" id="reqStore" class="form-control form-control-sm inv-select2" required>
             <option value="">— Select —</option>
             @foreach($stores as $store)
-                <option value="{{ $store->id }}" @selected(old('store_id', $requisition->store_id ?? '') == $store->id)>{{ $store->name }}</option>
+                <option value="{{ $store->id }}" data-type="{{ $store->type }}" @selected(old('store_id', $requisition->store_id ?? '') == $store->id)>{{ $store->name }} ({{ $store->typeLabel() }})</option>
             @endforeach
         </select>
     </div>
@@ -41,56 +41,119 @@
             @endforeach
         </select>
     </div>
-    <div class="col-md-3 mb-3">
-        <label class="form-label">Buyer</label>
-        <select name="buyer_id" class="form-control form-control-sm inv-select2">
-            <option value="">— None —</option>
-            @foreach($buyers as $buyer)
-                <option value="{{ $buyer->id }}" @selected(old('buyer_id', $requisition->buyer_id ?? '') == $buyer->id)>{{ $buyer->name }}</option>
-            @endforeach
-        </select>
-        <div class="form-text">Which buyer's order this material is needed for.</div>
-    </div>
-    <div class="col-md-3 mb-3">
-        <label class="form-label">Style</label>
-        <input type="text" name="style" class="form-control form-control-sm" value="{{ old('style', $requisition->style ?? '') }}" placeholder="e.g. Style-A">
-    </div>
-    <div class="col-md-3 mb-3">
-        <label class="form-label">Order Ref</label>
-        <input type="text" name="order_ref" class="form-control form-control-sm" value="{{ old('order_ref', $requisition->order_ref ?? '') }}">
-    </div>
-    @if(($merStylesOptions ?? collect())->isNotEmpty())
-    <div class="col-md-3 mb-3">
-        <label class="form-label">Merchandising Style</label>
-        <select name="mer_style_id" class="form-control form-control-sm inv-select2">
-            <option value="">— None —</option>
-            @foreach($merStylesOptions as $s)
-                <option value="{{ $s->id }}" @selected(old('mer_style_id', $requisition->mer_style_id ?? '') == $s->id)>{{ $s->style_no }} — {{ $s->name }}</option>
-            @endforeach
-        </select>
-    </div>
-    @endif
-    @if(($merSalesContractPosOptions ?? collect())->isNotEmpty())
-    <div class="col-md-3 mb-3">
-        <label class="form-label">Sales Contract PO</label>
-        <select name="mer_sales_contract_po_id" class="form-control form-control-sm inv-select2">
-            <option value="">— None —</option>
-            @foreach($merSalesContractPosOptions as $po)
-                <option value="{{ $po->id }}" @selected(old('mer_sales_contract_po_id', $requisition->mer_sales_contract_po_id ?? '') == $po->id)>{{ $po->po_no }}</option>
-            @endforeach
-        </select>
-    </div>
-    @endif
-    @if(($merBuyersOptions ?? collect())->isNotEmpty())
-    <div class="col-md-3 mb-3">
-        <label class="form-label">Merchandising Buyer</label>
-        <select name="mer_buyer_id" class="form-control form-control-sm inv-select2">
-            <option value="">— None —</option>
-            @foreach($merBuyersOptions as $b)
-                <option value="{{ $b->id }}" @selected(old('mer_buyer_id', $requisition->mer_buyer_id ?? '') == $b->id)>{{ $b->name }}</option>
-            @endforeach
-        </select>
-    </div>
+    @php $req = $requisition ?? null; @endphp
+    @if(($merLinked ?? false) && (! $req || $req->mer_buyer_id || $req->mer_style_id))
+        {{-- Buyer / Style / PO from Merchandising. Required for the Buyer Store (PO optional), optional for the General Store. --}}
+        <div class="col-md-3 mb-3">
+            <label class="form-label">Buyer <span class="text-danger req-buyer-star">*</span> <small class="text-muted">(Merchandising)</small></label>
+            <select name="mer_buyer_id" id="reqMerBuyer" class="form-control form-control-sm inv-select2">
+                <option value="">— None —</option>
+                @foreach($merBuyersOptions as $b)
+                    <option value="{{ $b->id }}" @selected(old('mer_buyer_id', $req->mer_buyer_id ?? '') == $b->id)>{{ $b->name }}</option>
+                @endforeach
+            </select>
+        </div>
+        <div class="col-md-3 mb-3">
+            <label class="form-label">Style <span class="text-danger req-buyer-star">*</span></label>
+            <select name="mer_style_id" id="reqMerStyle" class="form-control form-control-sm inv-select2">
+                <option value="">— None —</option>
+                @foreach($merStylesOptions as $s)
+                    <option value="{{ $s->id }}" data-buyer="{{ $s->buyer_id }}" data-received="{{ in_array($s->id, $merReceivedStyleIds ?? [], true) ? 1 : 0 }}"
+                        @selected(old('mer_style_id', $req->mer_style_id ?? '') == $s->id)>{{ $s->style_no }} — {{ $s->name }}</option>
+                @endforeach
+            </select>
+            <div class="form-text" id="reqStyleHint"></div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <label class="form-label">Order (PO) <small class="text-muted">optional</small></label>
+            <select name="mer_sales_contract_po_id" id="reqMerPo" class="form-control form-control-sm inv-select2">
+                <option value="">— All orders of the style —</option>
+                @foreach($merSalesContractPosOptions as $po)
+                    <option value="{{ $po->id }}" data-style="{{ $po->style_id }}" @selected(old('mer_sales_contract_po_id', $req->mer_sales_contract_po_id ?? '') == $po->id)>
+                        {{ $po->po_no }}{{ $po->salesContract ? ' — ' . $po->salesContract->contract_no : '' }}
+                    </option>
+                @endforeach
+            </select>
+        </div>
+
+        @push('js')
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                const store = document.getElementById('reqStore');
+                const buyer = document.getElementById('reqMerBuyer');
+                const style = document.getElementById('reqMerStyle');
+                const po = document.getElementById('reqMerPo');
+                const hint = document.getElementById('reqStyleHint');
+                const jq = typeof $ !== 'undefined' ? $ : null;
+                const allStyles = Array.from(style.options).map(function (o) { return o.cloneNode(true); });
+                const allPos = Array.from(po.options).map(function (o) { return o.cloneNode(true); });
+
+                function fromBuyerStore() {
+                    const opt = store.options[store.selectedIndex];
+                    return !!opt && opt.dataset.type === @json(\ME\SflInventory\Models\InvStore::TYPE_BUYER);
+                }
+                // Select2 can't hide options, so rebuild each list from its full copy.
+                function rebuild(select, all, keepFn) {
+                    const keep = select.value;
+                    select.innerHTML = '';
+                    all.forEach(function (o) { if (!o.value || keepFn(o)) { select.appendChild(o.cloneNode(true)); } });
+                    select.value = Array.from(select.options).some(function (o) { return o.value === keep; }) ? keep : '';
+                    if (jq) { jq(select).trigger('change.select2'); }
+                }
+                function refresh() {
+                    const buyerStore = fromBuyerStore();
+                    buyer.required = buyerStore;
+                    style.required = buyerStore;
+                    document.querySelectorAll('.req-buyer-star').forEach(function (el) { el.style.display = buyerStore ? '' : 'none'; });
+                    // Buyer Store: only styles that have actually been received there.
+                    rebuild(style, allStyles, function (o) {
+                        return buyer.value && o.dataset.buyer === buyer.value && (!buyerStore || o.dataset.received === '1');
+                    });
+                    hint.textContent = buyerStore ? 'Only styles received into the Buyer Store.' : 'Optional for the General Store.';
+                    refreshPo();
+                }
+                function refreshPo() {
+                    rebuild(po, allPos, function (o) { return style.value && o.dataset.style === style.value; });
+                }
+
+                if (jq) {
+                    jq(store).on('change', refresh);
+                    jq(buyer).on('change', refresh);
+                    jq(style).on('change', refreshPo);
+                } else {
+                    store.addEventListener('change', refresh);
+                    buyer.addEventListener('change', refresh);
+                    style.addEventListener('change', refreshPo);
+                }
+                refresh();
+            });
+        </script>
+        @endpush
+    @else
+        <div class="col-md-3 mb-3">
+            <label class="form-label">Buyer</label>
+            <select name="buyer_id" class="form-control form-control-sm inv-select2">
+                <option value="">— None —</option>
+                @foreach($buyers as $buyer)
+                    <option value="{{ $buyer->id }}" @selected(old('buyer_id', $req->buyer_id ?? '') == $buyer->id)>{{ $buyer->name }}</option>
+                @endforeach
+            </select>
+            <div class="form-text">Which buyer's order this material is needed for.</div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <label class="form-label">Style</label>
+            <input type="text" name="style" class="form-control form-control-sm" value="{{ old('style', $req->style ?? '') }}" placeholder="e.g. Style-A">
+        </div>
+        <div class="col-md-3 mb-3">
+            <label class="form-label">Order Ref</label>
+            <input type="text" name="order_ref" class="form-control form-control-sm" value="{{ old('order_ref', $req->order_ref ?? '') }}">
+        </div>
+        @if($req)
+            {{-- Older, unlinked requisition: keep whatever Merchandising links it already had. --}}
+            <input type="hidden" name="mer_style_id" value="{{ $req->mer_style_id }}">
+            <input type="hidden" name="mer_sales_contract_po_id" value="{{ $req->mer_sales_contract_po_id }}">
+            <input type="hidden" name="mer_buyer_id" value="{{ $req->mer_buyer_id }}">
+        @endif
     @endif
     <div class="col-12 mb-3">
         <label class="form-label">Remarks</label>
@@ -105,7 +168,7 @@
 </div>
 <div class="table-responsive">
     <table class="table table-bordered table-sm align-middle">
-        <thead><tr><th style="min-width:220px">Item</th><th style="width:90px">Unit</th><th style="width:140px">Color</th><th style="width:140px">Size</th><th style="width:160px">Requested Qty</th><th style="width:40px"></th></tr></thead>
+        <thead><tr><th style="min-width:220px">Item</th><th style="width:90px">Unit</th><th style="width:140px">Color</th><th style="width:140px">Size</th><th style="width:150px">Stock</th><th style="width:160px">Requested Qty</th><th style="width:40px"></th></tr></thead>
         <tbody id="reqRowsBody">
             @php $lines = old('items', isset($requisition) ? $requisition->items->map(fn ($i) => $i->toArray())->all() : [[]]); @endphp
             @foreach($lines as $index => $line)
@@ -136,7 +199,8 @@
                             @endforeach
                         </select>
                     </td>
-                    <td><input type="number" step="0.0001" min="0.0001" name="items[{{ $index }}][requested_qty]" class="form-control form-control-sm" value="{{ $line['requested_qty'] ?? '' }}" required></td>
+                    <td data-role="stock" @if(isset($requisition)) data-exclude-requisition="{{ $requisition->id }}" @endif></td>
+                    <td><input type="number" step="0.0001" min="0.0001" name="items[{{ $index }}][requested_qty]" class="form-control form-control-sm" value="{{ $line['requested_qty'] ?? '' }}" data-stock-qty="available" required></td>
                     <td><button type="button" class="btn-custom danger" data-line-items-remove><i class="fa-solid fa-xmark"></i></button></td>
                 </tr>
             @endforeach
@@ -171,7 +235,10 @@
                 @endforeach
             </select>
         </td>
-        <td><input type="number" step="0.0001" min="0.0001" name="items[__INDEX__][requested_qty]" class="form-control form-control-sm" required></td>
+        <td data-role="stock" @if(isset($requisition)) data-exclude-requisition="{{ $requisition->id }}" @endif></td>
+        <td><input type="number" step="0.0001" min="0.0001" name="items[__INDEX__][requested_qty]" class="form-control form-control-sm" data-stock-qty="available" required></td>
         <td><button type="button" class="btn-custom danger" data-line-items-remove><i class="fa-solid fa-xmark"></i></button></td>
     </tr>
 </template>
+
+@include('sfl-inventory::admin.partials.stock-hint-script')

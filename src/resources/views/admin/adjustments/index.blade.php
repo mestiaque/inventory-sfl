@@ -29,6 +29,14 @@
                     <input type="text" name="search" class="form-control form-control-sm" placeholder="Search adjustment no" value="{{ request('search') }}">
                 </div>
                 <div class="col-md-3 mb-2">
+                    <select name="item_id" class="form-control form-control-sm inv-select2">
+                        <option value="">All Items</option>
+                        @foreach($filterItems as $filterItem)
+                            <option value="{{ $filterItem->id }}" @selected(request('item_id') == $filterItem->id)>{{ $filterItem->item_code }} — {{ $filterItem->item_name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="col-md-3 mb-2">
                     <select name="store_id" class="form-control form-control-sm inv-select2">
                         <option value="">All Stores</option>
                         @foreach($stores as $store)
@@ -105,6 +113,11 @@
                             <tr><td colspan="7" class="text-center text-muted">No adjustments found.</td></tr>
                         @endforelse
                     </tbody>
+                    @if($adjustments->total())
+                        <tfoot>
+                            <tr class="font-weight-bold"><td colspan="7">Total: {{ $adjustments->total() }} adjustment(s){{ $adjustments->hasPages() ? ' (all pages)' : '' }}</td></tr>
+                        </tfoot>
+                    @endif
                 </table>
             </div>
 

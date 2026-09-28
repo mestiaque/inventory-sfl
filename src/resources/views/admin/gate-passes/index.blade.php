@@ -19,6 +19,14 @@
         <div class="card-body">
             <form method="GET" class="row mb-3 align-items-end">
                 <div class="col-md-3 mb-2">
+                    <select name="item_id" class="form-control form-control-sm inv-select2">
+                        <option value="">All Items</option>
+                        @foreach($filterItems as $filterItem)
+                            <option value="{{ $filterItem->id }}" @selected(request('item_id') == $filterItem->id)>{{ $filterItem->item_code }} — {{ $filterItem->item_name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="col-md-3 mb-2">
                     <input type="text" name="search" class="form-control form-control-sm" placeholder="Search gate pass no" value="{{ request('search') }}">
                 </div>
                 <div class="col-md-3 mb-2">
@@ -92,6 +100,11 @@
                             <tr><td colspan="9" class="text-center text-muted">No gate passes found.</td></tr>
                         @endforelse
                     </tbody>
+                    @if($gatePasses->total())
+                        <tfoot>
+                            <tr class="font-weight-bold"><td colspan="9">Total: {{ $gatePasses->total() }} gate pass(es){{ $gatePasses->hasPages() ? ' (all pages)' : '' }}{{ request('item_id') ? ' — item qty ' : ' — total qty ' }}{{ inv_qty($grandQty) }}</td></tr>
+                        </tfoot>
+                    @endif
                 </table>
             </div>
 
@@ -142,6 +155,9 @@
                                     </tr>
                                 @endforeach
                             </tbody>
+                    <tfoot>
+                        <tr class="font-weight-bold"><td colspan="3" class="text-right">Total</td><td class="text-right">{{ inv_qty($gatePass->items->sum('quantity')) }}</td></tr>
+                    </tfoot>
                         </table>
                     </div>
                 </div>

@@ -103,6 +103,15 @@
                             <tr><td colspan="9" class="text-center text-muted">No items with an expiry date recorded.</td></tr>
                         @endforelse
                     </tbody>
+                    @if($lines->total())
+                        <tfoot>
+                            <tr class="font-weight-bold">
+                                <td colspan="6" class="text-right">Total: {{ $lines->total() }} lot(s){{ $lines->hasPages() && ! $printMode ? ' (all pages)' : '' }}</td>
+                                <td class="text-right">{{ request('item_id') ? inv_qty($grandQty) : '' }}</td>
+                                <td colspan="2">{{ request('item_id') ? '' : 'pick an item for qty total' }}</td>
+                            </tr>
+                        </tfoot>
+                    @endif
                 </table>
             </div>
             @unless($printMode)

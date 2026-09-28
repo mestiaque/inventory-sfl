@@ -21,7 +21,7 @@ class InvBrokenNeedleController extends Controller
     {
         $this->authorize('inv_broken_needle.list');
 
-        $entries = InvBrokenNeedle::query()
+        $entriesQuery = InvBrokenNeedle::query()
             ->with(['employee', 'department', 'machine', 'buyer', 'creator'])
             ->when($request->filled('employee_id'), fn ($q) => $q->where('employee_id', $request->employee_id))
             ->when($request->filled('department_id'), fn ($q) => $q->where('department_id', $request->department_id))
@@ -29,7 +29,11 @@ class InvBrokenNeedleController extends Controller
             ->when($request->filled('buyer_id'), fn ($q) => $q->where('buyer_id', $request->buyer_id))
             ->when($request->filled('line_no'), fn ($q) => $q->where('line_no', 'like', '%' . $request->line_no . '%'))
             ->when($request->filled('date_from'), fn ($q) => $q->whereDate('broken_date', '>=', $request->date_from))
-            ->when($request->filled('date_to'), fn ($q) => $q->whereDate('broken_date', '<=', $request->date_to))
+            ->when($request->filled('date_to'), fn ($q) => $q->whereDate('broken_date', '<=', $request->date_to));
+
+        $grandTotal = (float) (clone $entriesQuery)->sum('quantity');
+
+        $entries = $entriesQuery
             ->latest('broken_date')
             ->latest('id')
             ->paginate(20)
@@ -43,7 +47,7 @@ class InvBrokenNeedleController extends Controller
                 'deleted_at' => $entry->deleted_at,
             ]);
 
-        return view('sfl-inventory::admin.broken-needles.index', compact('entries', 'trashedEntries') + $this->formOptions());
+        return view('sfl-inventory::admin.broken-needles.index', compact('entries', 'trashedEntries', 'grandTotal') + $this->formOptions());
     }
 
     public function store(InvBrokenNeedleRequest $request): RedirectResponse

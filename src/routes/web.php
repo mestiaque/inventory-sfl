@@ -6,6 +6,7 @@ use ME\SflInventory\Http\Controllers\InvBrandController;
 use ME\SflInventory\Http\Controllers\InvBrokenNeedleController;
 use ME\SflInventory\Http\Controllers\InvBuyerController;
 use ME\SflInventory\Http\Controllers\InvColorController;
+use ME\SflInventory\Http\Controllers\InvDataConflictController;
 use ME\SflInventory\Http\Controllers\InvDepartmentController;
 use ME\SflInventory\Http\Controllers\InvFinishedGoodsReceiveController;
 use ME\SflInventory\Http\Controllers\InvGatePassController;
@@ -15,6 +16,7 @@ use ME\SflInventory\Http\Controllers\InvIssueController;
 use ME\SflInventory\Http\Controllers\InvItemCategoryController;
 use ME\SflInventory\Http\Controllers\InvItemController;
 use ME\SflInventory\Http\Controllers\InvMachineController;
+use ME\SflInventory\Http\Controllers\InvNegativeStockController;
 use ME\SflInventory\Http\Controllers\InvOperatorController;
 use ME\SflInventory\Http\Controllers\InvProductionConsumptionController;
 use ME\SflInventory\Http\Controllers\InvPurchaseOrderController;
@@ -84,6 +86,8 @@ Route::middleware($route['middleware'] ?? ['web', 'auth'])
         Route::delete('items/{item}/force', [InvItemController::class, 'forceDestroy'])->name('items.force-destroy')->withTrashed();
         Route::post('items/{item}/generate-barcode', [InvItemController::class, 'generateBarcode'])->name('items.generate-barcode');
         Route::get('items-merge', [InvItemController::class, 'mergeForm'])->name('items.merge-form');
+        Route::get('items-print', [InvItemController::class, 'print'])->name('items.print');
+        Route::get('items-export', [InvItemController::class, 'export'])->name('items.export');
         Route::post('items-merge', [InvItemController::class, 'merge'])->name('items.merge');
 
         // Purchase Requisition -> Approval -> Purchase Order -> GRN
@@ -96,6 +100,8 @@ Route::middleware($route['middleware'] ?? ['web', 'auth'])
             ->name('purchase-requisitions.approval-form');
         Route::post('purchase-requisitions/{purchase_requisition}/approval', [InvPurchaseRequisitionController::class, 'approval'])
             ->name('purchase-requisitions.approval');
+        Route::get('purchase-requisitions/{purchase_requisition}/print', [InvPurchaseRequisitionController::class, 'print'])
+            ->name('purchase-requisitions.print');
 
         Route::resource('purchase-orders', InvPurchaseOrderController::class)
             ->only(['index', 'create', 'store', 'show', 'edit', 'update', 'destroy'])
@@ -145,6 +151,7 @@ Route::middleware($route['middleware'] ?? ['web', 'auth'])
         Route::delete('production-consumptions/{production_consumption}/force', [InvProductionConsumptionController::class, 'forceDestroy'])->name('production-consumptions.force-destroy')->withTrashed();
 
         // Finished Goods -> Gate Pass -> Shipment
+        Route::get('fg-receives/production-summary', [InvFinishedGoodsReceiveController::class, 'productionSummary'])->name('fg-receives.production-summary');
         Route::resource('fg-receives', InvFinishedGoodsReceiveController::class)->only(['index', 'create', 'store']);
         Route::resource('gate-passes', InvGatePassController::class)
             ->only(['index', 'create', 'store'])
@@ -160,9 +167,23 @@ Route::middleware($route['middleware'] ?? ['web', 'auth'])
         Route::post('adjustments/{adjustment}/restore', [InvStockAdjustmentController::class, 'restore'])->name('adjustments.restore')->withTrashed();
         Route::delete('adjustments/{adjustment}/force', [InvStockAdjustmentController::class, 'forceDestroy'])->name('adjustments.force-destroy')->withTrashed();
 
+        // Data Conflicts
+        Route::get('data-conflicts', [InvDataConflictController::class, 'index'])->name('data-conflicts.index');
+        Route::post('data-conflicts/items/{item}/consolidate', [InvDataConflictController::class, 'consolidate'])->name('data-conflicts.consolidate');
+
+        // Negative Stock Fix
+        Route::get('negative-stock', [InvNegativeStockController::class, 'index'])->name('negative-stock.index');
+        Route::get('negative-stock/detail', [InvNegativeStockController::class, 'show'])->name('negative-stock.show');
+        Route::post('negative-stock/issues/{issue}/move', [InvNegativeStockController::class, 'moveIssue'])->name('negative-stock.move-issue');
+        Route::post('negative-stock/issues/{issue}/undo', [InvNegativeStockController::class, 'undoMove'])->name('negative-stock.undo-move');
+        Route::post('negative-stock/zero-out', [InvNegativeStockController::class, 'zeroOut'])->name('negative-stock.zero-out');
+        Route::get('negative-stock/auto-fix', [InvNegativeStockController::class, 'autoFixPreview'])->name('negative-stock.auto-fix');
+        Route::post('negative-stock/auto-fix', [InvNegativeStockController::class, 'autoFixApply'])->name('negative-stock.auto-fix.apply');
+
         // Stock Ledger + Main Store Inventory
         Route::get('stock-ledger', [InvStockLedgerController::class, 'index'])->name('stock-ledger.index');
         Route::get('stock-overview', [InvStockOverviewController::class, 'index'])->name('stock-overview.index');
+        Route::get('stock-balance', [InvStockOverviewController::class, 'balance'])->name('stock-balance');
         Route::get('store-overview', [InvStockOverviewController::class, 'cards'])->name('stock-overview.cards');
 
         // Broken Needle tracking

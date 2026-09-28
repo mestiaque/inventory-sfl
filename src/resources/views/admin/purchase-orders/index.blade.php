@@ -138,6 +138,15 @@
                             <tr><td colspan="11" class="text-center text-muted">No store orders found.</td></tr>
                         @endforelse
                     </tbody>
+                    @if($purchaseOrders->total())
+                        <tfoot>
+                            <tr class="font-weight-bold">
+                                <td colspan="6" class="text-right">Total: {{ $purchaseOrders->total() }} store order(s){{ $purchaseOrders->hasPages() ? ' (all pages)' : '' }}</td>
+                                <td>{{ inv_qty($grandTotal) }}</td>
+                                <td colspan="4"></td>
+                            </tr>
+                        </tfoot>
+                    @endif
                 </table>
             </div>
 

@@ -29,7 +29,12 @@
             @unless($printMode)
                 <form method="GET" class="row mb-3 align-items-end">
                     <div class="col-md-3 mb-2">
-                        <input type="text" name="style" class="form-control form-control-sm" value="{{ request('style') }}" placeholder="Search style">
+                        <select name="style" class="form-control form-control-sm inv-select2">
+                            <option value="">All Styles</option>
+                            @foreach($styles as $styleOption)
+                                <option value="{{ $styleOption }}" @selected(request('style') === $styleOption)>{{ $styleOption }}</option>
+                            @endforeach
+                        </select>
                     </div>
                     <div class="col-md-3 mb-2">
                         <select name="buyer_id" class="form-control form-control-sm inv-select2">

@@ -45,7 +45,20 @@
                         </select>
                     </div>
                     <div class="col-md-3 mb-2">
-                        <input type="text" name="style" class="form-control form-control-sm" value="{{ request('style') }}" placeholder="Search style">
+                        <select name="store_id" class="form-control form-control-sm inv-select2">
+                            <option value="">All Stores</option>
+                            @foreach($stores as $store)
+                                <option value="{{ $store->id }}" @selected(request('store_id') == $store->id)>{{ $store->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="col-md-3 mb-2">
+                        <select name="style" class="form-control form-control-sm inv-select2">
+                            <option value="">All Styles</option>
+                            @foreach($styles as $styleOption)
+                                <option value="{{ $styleOption }}" @selected(request('style') === $styleOption)>{{ $styleOption }}</option>
+                            @endforeach
+                        </select>
                     </div>
                     <div class="col-md-3 mb-2">
                         <select name="buyer_id" class="form-control form-control-sm inv-select2">
@@ -91,7 +104,7 @@
                     @if($issues->isNotEmpty())
                         <tfoot>
                             <tr class="font-weight-bold">
-                                <td colspan="6" class="text-right">Total</td>
+                                <td colspan="6" class="text-right">Total{{ $issues->hasPages() ? ' (this page)' : '' }}</td>
                                 <td class="text-right">{{ inv_qty($issues->sum('issue_qty_total')) }}</td>
                                 <td class="text-right">{{ inv_qty($issues->sum('delivery_qty_total')) }}</td>
                                 <td></td>

@@ -26,6 +26,7 @@ class InvProductionConsumptionController extends Controller
         $consumptions = InvProductionConsumption::query()
             ->with(['department', 'store', 'issue', 'creator', 'items.item.unit'])
             ->when($request->filled('search'), fn ($q) => $q->where('consumption_no', 'like', '%' . $request->search . '%'))
+            ->when($request->filled('item_id'), fn ($q) => $q->whereHas('items', fn ($iq) => $iq->where('item_id', $request->item_id)))
             ->when($request->filled('department_id'), fn ($q) => $q->where('department_id', $request->department_id))
             ->when($request->filled('store_id'), fn ($q) => $q->where('store_id', $request->store_id))
             ->when($request->filled('date_from'), fn ($q) => $q->whereDate('consumption_date', '>=', $request->date_from))
@@ -40,7 +41,9 @@ class InvProductionConsumptionController extends Controller
         $trashedConsumptions = InvProductionConsumption::onlyTrashed()->with('department')->latest('deleted_at')->get()
             ->map(fn ($consumption) => ['id' => $consumption->id, 'title' => $consumption->consumption_no, 'subtitle' => $consumption->department?->name, 'deleted_at' => $consumption->deleted_at]);
 
-        return view('sfl-inventory::admin.production-consumptions.index', compact('consumptions', 'departments', 'stores', 'trashedConsumptions'));
+        $filterItems = InvItem::active()->orderBy('item_name')->get(['id', 'item_code', 'item_name']);
+
+        return view('sfl-inventory::admin.production-consumptions.index', compact('filterItems', 'consumptions', 'departments', 'stores', 'trashedConsumptions'));
     }
 
     public function create(): View

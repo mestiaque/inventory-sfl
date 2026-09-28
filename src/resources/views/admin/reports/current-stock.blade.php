@@ -29,10 +29,12 @@
             @unless($printMode)
                 <form method="GET" class="row mb-3 align-items-end">
                     <div class="col-md-3 mb-2">
-                        <input type="text" name="item_code" class="form-control form-control-sm" placeholder="Item Code" value="{{ request('item_code') }}">
-                    </div>
-                    <div class="col-md-3 mb-2">
-                        <input type="text" name="item_name" class="form-control form-control-sm" placeholder="Item Name" value="{{ request('item_name') }}">
+                        <select name="item_id" class="form-control form-control-sm inv-select2">
+                            <option value="">All Items</option>
+                            @foreach($filterItems as $item)
+                                <option value="{{ $item->id }}" @selected(request('item_id') == $item->id)>{{ $item->item_code }} — {{ $item->item_name }}</option>
+                            @endforeach
+                        </select>
                     </div>
                     <div class="col-md-3 mb-2">
                         <select name="category_id" class="form-control form-control-sm inv-select2">
@@ -75,6 +77,11 @@
                             <tr><td colspan="7" class="text-center text-muted">No stock records found.</td></tr>
                         @endforelse
                     </tbody>
+                    @if($items->isNotEmpty())
+                        <tfoot>
+                            <tr class="font-weight-bold"><td colspan="6" class="text-right">Total ({{ $items->count() }} items)</td><td class="text-right">{{ inv_qty($items->sum('stock_value')) }}</td></tr>
+                        </tfoot>
+                    @endif
                 </table>
             </div>
         </div>

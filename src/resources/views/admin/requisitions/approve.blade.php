@@ -30,18 +30,19 @@
                 @csrf
                 <div class="table-responsive">
                     <table class="table table-bordered table-sm align-middle">
-                        <thead><tr><th>Item</th><th>Color</th><th>Size</th><th>Requested Qty</th><th style="width:180px">Approved Qty</th></tr></thead>
+                        <thead><tr><th>Item</th><th>Color</th><th>Size</th><th>Requested Qty</th><th style="width:160px">Stock</th><th style="width:180px">Approved Qty</th></tr></thead>
                         <tbody>
                             @foreach($requisition->items as $item)
                                 <tr>
                                     <td>{{ $item->item?->item_code }} — {{ $item->item?->item_name }}</td>
                                     <td>{{ $item->color?->name ?? '—' }}</td>
                                     <td>{{ $item->size?->name ?? '—' }}</td>
-                                    <td>{{ $item->requested_qty }}</td>
+                                    <td>{{ inv_qty($item->requested_qty) }}</td>
+                                    <td data-role="stock" data-store-id="{{ $requisition->store_id }}" data-item-id="{{ $item->item_id }}" data-color-id="{{ $item->color_id }}" data-size-id="{{ $item->size_id }}" data-exclude-requisition="{{ $requisition->id }}" data-requisition="{{ $requisition->id }}"></td>
                                     <td>
                                         <input type="hidden" name="items[{{ $loop->index }}][id]" value="{{ $item->id }}">
                                         <input type="number" step="0.0001" min="0" class="form-control form-control-sm"
-                                            name="items[{{ $loop->index }}][approved_qty]" value="{{ $item->requested_qty }}">
+                                            name="items[{{ $loop->index }}][approved_qty]" value="{{ old('items.' . $loop->index . '.approved_qty', $item->requested_qty + 0) }}" data-stock-qty="available">
                                     </td>
                                 </tr>
                             @endforeach
@@ -61,4 +62,5 @@
         </div>
     </div>
 </div>
+@include('sfl-inventory::admin.partials.stock-hint-script')
 @endsection

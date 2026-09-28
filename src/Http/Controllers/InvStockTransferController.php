@@ -33,6 +33,7 @@ class InvStockTransferController extends Controller
         $transfers = InvStockTransfer::query()
             ->with(['fromStore', 'toStore'])
             ->when($request->filled('search'), fn ($q) => $q->where('transfer_no', 'like', '%' . $request->search . '%'))
+            ->when($request->filled('item_id'), fn ($q) => $q->whereHas('items', fn ($iq) => $iq->where('item_id', $request->item_id)))
             ->when($request->filled('from_store_id'), fn ($q) => $q->where('from_store_id', $request->from_store_id))
             ->when($request->filled('to_store_id'), fn ($q) => $q->where('to_store_id', $request->to_store_id))
             ->when($request->filled('status'), fn ($q) => $q->where('status', $request->status))
@@ -48,7 +49,9 @@ class InvStockTransferController extends Controller
         $trashedTransfers = InvStockTransfer::onlyTrashed()->with(['fromStore', 'toStore'])->latest('deleted_at')->get()
             ->map(fn ($transfer) => ['id' => $transfer->id, 'title' => $transfer->transfer_no, 'subtitle' => ($transfer->fromStore?->name ?? '—') . ' → ' . ($transfer->toStore?->name ?? '—'), 'deleted_at' => $transfer->deleted_at]);
 
-        return view('sfl-inventory::admin.transfers.index', compact('transfers', 'stores', 'trashedTransfers'));
+        $filterItems = InvItem::active()->orderBy('item_name')->get(['id', 'item_code', 'item_name']);
+
+        return view('sfl-inventory::admin.transfers.index', compact('filterItems', 'transfers', 'stores', 'trashedTransfers'));
     }
 
     public function create(): View

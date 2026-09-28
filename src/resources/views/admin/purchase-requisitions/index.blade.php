@@ -26,6 +26,14 @@
         <div class="card-body">
             <form method="GET" class="row mb-3 align-items-end">
                 <div class="col-md-3 mb-2">
+                    <select name="item_id" class="form-control form-control-sm inv-select2">
+                        <option value="">All Items</option>
+                        @foreach($items as $filterItem)
+                            <option value="{{ $filterItem->id }}" @selected(request('item_id') == $filterItem->id)>{{ $filterItem->item_code }} — {{ $filterItem->item_name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="col-md-3 mb-2">
                     <input type="text" name="search" class="form-control form-control-sm" placeholder="Search requisition no" value="{{ request('search') }}">
                 </div>
                 <div class="col-md-3 mb-2">
@@ -88,6 +96,9 @@
                                             <button type="button" class="btn-custom danger" data-toggle="modal" data-target="#deletePreqModal" data-action="{{ route('inventory.purchase-requisitions.destroy', $purchaseRequisition) }}"><i class="fa-solid fa-trash"></i></button>
                                         @endcan
                                     @endif
+                                    @can('inv_purchase_requisition.print')
+                                        <a href="{{ route('inventory.purchase-requisitions.print', $purchaseRequisition) }}" target="_blank" class="btn-custom primary" title="Print"><i class="fa-solid fa-print"></i></a>
+                                    @endcan
                                     @can('inv_purchase_order.add')
                                         @if(in_array($purchaseRequisition->status, ['approved', 'partially_converted']))
                                             <a href="{{ route('inventory.purchase-orders.create', ['purchase_requisition_id' => $purchaseRequisition->id]) }}" class="btn btn-sm btn-outline-secondary">Create Purchase Order</a>
@@ -107,6 +118,11 @@
                             <tr><td colspan="8" class="text-center text-muted">No purchase requisitions found.</td></tr>
                         @endforelse
                     </tbody>
+                    @if($purchaseRequisitions->total())
+                        <tfoot>
+                            <tr class="font-weight-bold"><td colspan="8">Total: {{ $purchaseRequisitions->total() }} purchase requisition(s){{ $purchaseRequisitions->hasPages() ? ' (all pages)' : '' }}</td></tr>
+                        </tfoot>
+                    @endif
                 </table>
             </div>
 
@@ -169,6 +185,9 @@
                                     </tr>
                                 @endforeach
                             </tbody>
+                    <tfoot>
+                        <tr class="font-weight-bold"><td colspan="5" class="text-right">Total</td><td class="text-right">{{ inv_qty($purchaseRequisition->items->sum('requested_qty')) }}</td><td class="text-right">{{ inv_qty($purchaseRequisition->items->sum('approved_qty')) }}</td><td class="text-right">{{ inv_qty($purchaseRequisition->items->sum('converted_qty')) }}</td></tr>
+                    </tfoot>
                         </table>
                     </div>
                 </div>

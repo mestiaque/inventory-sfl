@@ -27,15 +27,25 @@ class InvGatePassController extends Controller
     {
         $this->authorize('inv_gate_pass.list');
 
-        $gatePasses = InvGatePass::query()
+        $gatePassesQuery = InvGatePass::query()
             ->with(['buyer', 'store', 'creator', 'shipment', 'items.item.unit'])
             ->when($request->filled('search'), fn ($q) => $q->where('gate_pass_no', 'like', '%' . $request->search . '%'))
+            ->when($request->filled('item_id'), fn ($q) => $q->whereHas('items', fn ($iq) => $iq->where('item_id', $request->item_id)))
             ->when($request->filled('buyer_id'), fn ($q) => $q->where('buyer_id', $request->buyer_id))
             ->when($request->filled('store_id'), fn ($q) => $q->where('store_id', $request->store_id))
             ->when($request->filled('status'), fn ($q) => $q->where('status', $request->status))
             ->when($request->filled('date_from'), fn ($q) => $q->whereDate('gate_pass_date', '>=', $request->date_from))
             ->when($request->filled('date_to'), fn ($q) => $q->whereDate('gate_pass_date', '<=', $request->date_to))
-            ->tap(fn ($q) => $this->operatorScope->applyToStore($q, 'store_id', 'created_by'))
+            ->tap(fn ($q) => $this->operatorScope->applyToStore($q, 'store_id', 'created_by'));
+
+        // Total qty over every filtered document (just the picked item's lines when filtered by item).
+        $grandQty = (float) \Illuminate\Support\Facades\DB::table('inv_gate_pass_items')
+            ->whereIn('gate_pass_id', (clone $gatePassesQuery)->reorder()->select('id'))
+            ->when($request->filled('item_id'), fn ($q) => $q->where('item_id', $request->item_id))
+            ->sum('quantity');
+        $filterItems = \ME\SflInventory\Models\InvItem::active()->orderBy('item_name')->get(['id', 'item_code', 'item_name']);
+
+        $gatePasses = $gatePassesQuery
             ->latest('id')
             ->paginate(20)
             ->withQueryString();
@@ -43,7 +53,7 @@ class InvGatePassController extends Controller
         $buyers = InvBuyer::active()->orderBy('name')->get();
         $stores = InvStore::active()->orderBy('name')->get();
 
-        return view('sfl-inventory::admin.gate-passes.index', compact('gatePasses', 'buyers', 'stores'));
+        return view('sfl-inventory::admin.gate-passes.index', compact('gatePasses', 'buyers', 'stores', 'grandQty', 'filterItems'));
     }
 
     /**

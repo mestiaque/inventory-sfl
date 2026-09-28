@@ -44,6 +44,14 @@
                             @endforeach
                         </select>
                     </div>
+                    <div class="col-md-3 mb-2">
+                        <select name="item_id" class="form-control form-control-sm inv-select2">
+                            <option value="">All Items</option>
+                            @foreach($items as $filterItem)
+                                <option value="{{ $filterItem->id }}" @selected(request('item_id') == $filterItem->id)>{{ $filterItem->item_code }} — {{ $filterItem->item_name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
                     <div class="col-md-3 mb-2"><input type="date" name="date_from" class="form-control form-control-sm" value="{{ request('date_from') }}" placeholder="From"></div>
                     <div class="col-md-3 mb-2"><input type="date" name="date_to" class="form-control form-control-sm" value="{{ request('date_to') }}" placeholder="To"></div>
                     <div class="col-md-3 mb-2 d-flex align-items-end flex-wrap gap-1">
@@ -70,6 +78,11 @@
                             <tr><td colspan="6" class="text-center text-muted">No GRNs found.</td></tr>
                         @endforelse
                     </tbody>
+                    @if($grns->isNotEmpty())
+                        <tfoot>
+                            <tr class="font-weight-bold"><td colspan="5" class="text-right">Grand Total ({{ $grns->total() }} GRNs, all pages)</td><td class="text-right">{{ inv_qty($grandTotal) }}</td></tr>
+                        </tfoot>
+                    @endif
                 </table>
             </div>
             @unless($printMode)

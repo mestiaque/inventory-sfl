@@ -26,21 +26,31 @@ class InvShipmentController extends Controller
     {
         $this->authorize('inv_shipment.list');
 
-        $shipments = InvShipment::query()
+        $shipmentsQuery = InvShipment::query()
             ->with(['buyer', 'gatePasses', 'store', 'creator', 'items.item.unit'])
             ->when($request->filled('search'), fn ($q) => $q->where('shipment_no', 'like', '%' . $request->search . '%'))
+            ->when($request->filled('item_id'), fn ($q) => $q->whereHas('items', fn ($iq) => $iq->where('item_id', $request->item_id)))
             ->when($request->filled('buyer_id'), fn ($q) => $q->where('buyer_id', $request->buyer_id))
             ->when($request->filled('status'), fn ($q) => $q->where('status', $request->status))
             ->when($request->filled('date_from'), fn ($q) => $q->whereDate('shipment_date', '>=', $request->date_from))
             ->when($request->filled('date_to'), fn ($q) => $q->whereDate('shipment_date', '<=', $request->date_to))
-            ->tap(fn ($q) => $this->operatorScope->applyToStore($q, 'store_id', 'created_by'))
+            ->tap(fn ($q) => $this->operatorScope->applyToStore($q, 'store_id', 'created_by'));
+
+        // Total qty over every filtered document (just the picked item's lines when filtered by item).
+        $grandQty = (float) \Illuminate\Support\Facades\DB::table('inv_shipment_items')
+            ->whereIn('shipment_id', (clone $shipmentsQuery)->reorder()->select('id'))
+            ->when($request->filled('item_id'), fn ($q) => $q->where('item_id', $request->item_id))
+            ->sum('quantity');
+        $filterItems = \ME\SflInventory\Models\InvItem::active()->orderBy('item_name')->get(['id', 'item_code', 'item_name']);
+
+        $shipments = $shipmentsQuery
             ->latest('id')
             ->paginate(20)
             ->withQueryString();
 
         $buyers = InvBuyer::active()->orderBy('name')->get();
 
-        return view('sfl-inventory::admin.shipments.index', compact('shipments', 'buyers'));
+        return view('sfl-inventory::admin.shipments.index', compact('shipments', 'buyers', 'grandQty', 'filterItems'));
     }
 
     /**

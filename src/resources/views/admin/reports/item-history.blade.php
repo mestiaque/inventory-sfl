@@ -103,6 +103,22 @@
                             <tr><td colspan="{{ $selectedItem ? 10 : 11 }}" class="text-center text-muted">No movements found for this period.</td></tr>
                         @endforelse
                     </tbody>
+                    @if($transactions->isNotEmpty())
+                        <tfoot>
+                            <tr class="font-weight-bold">
+                                <td colspan="{{ $selectedItem ? 5 : 6 }}" class="text-right">Total ({{ $transactions->total() }} movements{{ $transactions->hasPages() ? ', all pages' : '' }})</td>
+                                @if($selectedItem)
+                                    <td class="text-right text-success">{{ inv_qty($totals->qty_in) }}</td>
+                                    <td class="text-right text-danger">{{ inv_qty($totals->qty_out) }}</td>
+                                @else
+                                    <td colspan="2" class="text-muted small text-center">pick an item for qty totals</td>
+                                @endif
+                                <td></td>
+                                <td class="text-right">{{ inv_qty($totals->value) }}</td>
+                                <td class="text-right">{{ $selectedItem ? inv_qty($currentStock) : '' }}</td>
+                            </tr>
+                        </tfoot>
+                    @endif
                 </table>
             </div>
             @unless($printMode)

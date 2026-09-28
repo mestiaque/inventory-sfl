@@ -91,6 +91,22 @@
                             <tr><td colspan="11" class="text-center text-muted">No ledger entries found.</td></tr>
                         @endforelse
                     </tbody>
+                    @if($transactions->total())
+                        <tfoot>
+                            <tr class="font-weight-bold">
+                                <td colspan="6" class="text-right">Total: {{ $transactions->total() }} movement(s){{ $transactions->hasPages() ? ' (all pages)' : '' }}</td>
+                                @if(request('item_id'))
+                                    <td class="text-right">{{ inv_qty($totals->qty_in) }}</td>
+                                    <td class="text-right">{{ inv_qty($totals->qty_out) }}</td>
+                                @else
+                                    <td colspan="2" class="text-muted small text-center">pick an item for qty totals</td>
+                                @endif
+                                <td></td>
+                                <td class="text-right">{{ inv_qty($totals->value) }}</td>
+                                <td></td>
+                            </tr>
+                        </tfoot>
+                    @endif
                 </table>
             </div>
 

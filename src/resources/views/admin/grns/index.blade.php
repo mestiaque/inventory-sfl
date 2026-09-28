@@ -137,6 +137,15 @@
                             <tr><td colspan="13" class="text-center text-muted">No GRNs found.</td></tr>
                         @endforelse
                     </tbody>
+                    @if($grns->total())
+                        <tfoot>
+                            <tr class="font-weight-bold">
+                                <td colspan="8" class="text-right">Total: {{ $grns->total() }} GRN(s){{ $grns->hasPages() ? ' (all pages)' : '' }}</td>
+                                <td>{{ inv_qty($grandTotal) }}</td>
+                                <td colspan="4"></td>
+                            </tr>
+                        </tfoot>
+                    @endif
                 </table>
             </div>
 

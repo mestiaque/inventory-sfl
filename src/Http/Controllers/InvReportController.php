@@ -42,11 +42,9 @@ class InvReportController extends Controller
 
         $items = InvItem::query()
             ->with(['category', 'unit'])
-            ->when($request->filled('item_code'), fn ($q) => $q->where('item_code', 'like', '%' . $request->item_code . '%'))
-            ->when($request->filled('item_name'), fn ($q) => $q->where('item_name', 'like', '%' . $request->item_name . '%'))
+            ->when($request->filled('item_id'), fn ($q) => $q->where('id', $request->item_id))
             ->when($request->filled('category_id'), fn ($q) => $q->where('category_id', $request->category_id))
             ->when($request->filled('unit_id'), fn ($q) => $q->where('unit_id', $request->unit_id))
-            ->when($request->filled('item_id'), fn ($q) => $q->where('id', $request->item_id))
             ->active()
             ->orderBy('item_name')
             ->get()
@@ -59,18 +57,21 @@ class InvReportController extends Controller
             })
             ->filter(fn ($item) => $item->current_stock != 0);
 
+        $filterItems = InvItem::active()->orderBy('item_name')->get();
         $categories = InvItemCategory::active()->orderBy('name')->get();
         $units = InvUnit::active()->orderBy('name')->get();
 
-        return view('sfl-inventory::admin.reports.current-stock', compact('items', 'categories', 'units'));
+        return view('sfl-inventory::admin.reports.current-stock', compact('items', 'filterItems', 'categories', 'units'));
     }
 
     public function stockSummary(Request $request): View
     {
         $this->authorize('inv_report.view');
 
-        $summary = InvItemCategory::active()->orderBy('name')->get()->map(function (InvItemCategory $category) {
-            $itemIds = InvItem::where('category_id', $category->id)->pluck('id');
+        $summary = InvItemCategory::active()->orderBy('name')->get()->map(function (InvItemCategory $category) use ($request) {
+            $itemIds = InvItem::where('category_id', $category->id)
+                ->when($request->filled('item_id'), fn ($q) => $q->whereKey($request->item_id))
+                ->pluck('id');
             $qty = 0.0;
             $value = 0.0;
             foreach ($itemIds as $itemId) {
@@ -81,7 +82,9 @@ class InvReportController extends Controller
             return (object) ['category' => $category, 'items_count' => $itemIds->count(), 'total_qty' => $qty, 'total_value' => $value];
         })->filter(fn ($row) => $row->total_qty != 0);
 
-        return view('sfl-inventory::admin.reports.stock-summary', compact('summary'));
+        $filterItems = InvItem::active()->orderBy('item_name')->get(['id', 'item_code', 'item_name']);
+
+        return view('sfl-inventory::admin.reports.stock-summary', compact('summary', 'filterItems'));
     }
 
     public function itemHistory(Request $request): View
@@ -123,10 +126,15 @@ class InvReportController extends Controller
                     OVER (PARTITION BY t.item_id, t.store_id, t.color_id, t.size_id ORDER BY t.transaction_date, t.id) as running_balance
             ');
 
-        $transactions = DB::query()->fromSub($withBalance, 'x')
+        $filtered = DB::query()->fromSub($withBalance, 'x')
             ->whereDate('x.transaction_date', '>=', $from)
             ->whereDate('x.transaction_date', '<=', $to)
-            ->where('x.transaction_type', 'not like', '%\_reversal')
+            ->where('x.transaction_type', 'not like', '%\_reversal');
+
+        // Footer totals cover every filtered row, not just the current page.
+        $totals = (clone $filtered)->selectRaw('COALESCE(SUM(x.qty_in), 0) as qty_in, COALESCE(SUM(x.qty_out), 0) as qty_out, COALESCE(SUM(CASE WHEN x.qty_in > 0 THEN x.value ELSE -x.value END), 0) as value')->first();
+
+        $transactions = $filtered
             ->orderBy('x.transaction_date')
             ->orderBy('x.id')
             ->paginate($request->boolean('print') ? 100000 : 50)
@@ -136,7 +144,7 @@ class InvReportController extends Controller
         $colors = InvColor::active()->orderBy('name')->get();
         $sizes = InvSize::active()->ordered()->get();
 
-        return view('sfl-inventory::admin.reports.item-history', compact('items', 'transactions', 'selectedItem', 'from', 'to', 'currentStock', 'colors', 'sizes'));
+        return view('sfl-inventory::admin.reports.item-history', compact('items', 'transactions', 'totals', 'selectedItem', 'from', 'to', 'currentStock', 'colors', 'sizes'));
     }
 
     /**
@@ -212,17 +220,23 @@ class InvReportController extends Controller
     {
         $this->authorize('inv_report.view');
 
-        $stores = InvStore::active()->orderBy('name')->get()->map(function (InvStore $store) {
-            $itemIds = DB::table('inv_stock_transactions')->where('store_id', $store->id)->distinct()->pluck('item_id');
+        $stores = InvStore::active()->orderBy('name')->get()->map(function (InvStore $store) use ($request) {
+            $itemIds = DB::table('inv_stock_transactions')->where('store_id', $store->id)
+                ->when($request->filled('item_id'), fn ($q) => $q->where('item_id', $request->item_id))
+                ->distinct()->pluck('item_id');
             $value = 0.0;
+            $qty = 0.0;
             foreach ($itemIds as $itemId) {
                 $value += $this->stock->stockValue($itemId, $store->id);
+                $qty += $this->stock->currentStock($itemId, $store->id);
             }
 
-            return (object) ['store' => $store, 'items_count' => $itemIds->count(), 'total_value' => $value];
+            return (object) ['store' => $store, 'items_count' => $itemIds->count(), 'total_qty' => $qty, 'total_value' => $value];
         });
 
-        return view('sfl-inventory::admin.reports.store-wise-stock', compact('stores'));
+        $filterItems = InvItem::active()->orderBy('item_name')->get(['id', 'item_code', 'item_name']);
+
+        return view('sfl-inventory::admin.reports.store-wise-stock', compact('stores', 'filterItems'));
     }
 
     public function departmentWiseConsumption(Request $request): View
@@ -235,6 +249,7 @@ class InvReportController extends Controller
             ->whereNull('pc.deleted_at')
             ->whereNull('d.deleted_at')
             ->when($request->filled('department_id'), fn ($q) => $q->where('pc.department_id', $request->department_id))
+            ->when($request->filled('item_id'), fn ($q) => $q->where('pci.item_id', $request->item_id))
             ->when($request->filled('date_from'), fn ($q) => $q->whereDate('pc.consumption_date', '>=', $request->date_from))
             ->when($request->filled('date_to'), fn ($q) => $q->whereDate('pc.consumption_date', '<=', $request->date_to))
             ->groupBy('d.id', 'd.name')
@@ -243,8 +258,9 @@ class InvReportController extends Controller
             ->get();
 
         $departments = InvDepartment::active()->orderBy('name')->get();
+        $items = InvItem::active()->orderBy('item_name')->get();
 
-        return view('sfl-inventory::admin.reports.department-consumption', compact('rows', 'departments'));
+        return view('sfl-inventory::admin.reports.department-consumption', compact('rows', 'departments', 'items'));
     }
 
     public function supplierWisePurchase(Request $request): View
@@ -256,7 +272,9 @@ class InvReportController extends Controller
             ->join('inv_suppliers as s', 's.id', '=', 'g.supplier_id')
             ->whereNull('g.deleted_at')
             ->whereNull('s.deleted_at')
+            ->where('g.status', 'posted')
             ->when($request->filled('supplier_id'), fn ($q) => $q->where('g.supplier_id', $request->supplier_id))
+            ->when($request->filled('item_id'), fn ($q) => $q->where('gi.item_id', $request->item_id))
             ->when($request->filled('date_from'), fn ($q) => $q->whereDate('g.receive_date', '>=', $request->date_from))
             ->when($request->filled('date_to'), fn ($q) => $q->whereDate('g.receive_date', '<=', $request->date_to))
             ->groupBy('s.id', 's.name')
@@ -265,8 +283,9 @@ class InvReportController extends Controller
             ->get();
 
         $suppliers = InvSupplier::active()->orderBy('name')->get();
+        $items = InvItem::active()->orderBy('item_name')->get();
 
-        return view('sfl-inventory::admin.reports.supplier-purchase', compact('rows', 'suppliers'));
+        return view('sfl-inventory::admin.reports.supplier-purchase', compact('rows', 'suppliers', 'items'));
     }
 
     public function supplierList(Request $request): View
@@ -280,6 +299,10 @@ class InvReportController extends Controller
                 ->where('name', 'like', '%' . $request->search . '%')
                 ->orWhere('code', 'like', '%' . $request->search . '%')))
             ->when($status, fn ($q) => $q->where('is_active', $status === 'active'))
+            ->when($request->filled('item_id'), fn ($q) => $q->whereIn('id', DB::table('inv_grns as g')
+                ->join('inv_grn_items as gi', 'gi.grn_id', '=', 'g.id')
+                ->whereNull('g.deleted_at')->where('gi.item_id', $request->item_id)->whereNotNull('g.supplier_id')
+                ->select('g.supplier_id')))
             ->orderBy('name')
             ->get();
 
@@ -290,7 +313,9 @@ class InvReportController extends Controller
             default                    => 'All Supplier',
         };
 
-        return view('sfl-inventory::admin.reports.supplier-list', compact('suppliers', 'dataRangeLabel'));
+        $filterItems = InvItem::active()->orderBy('item_name')->get(['id', 'item_code', 'item_name']);
+
+        return view('sfl-inventory::admin.reports.supplier-list', compact('suppliers', 'dataRangeLabel', 'filterItems'));
     }
 
     /**
@@ -321,7 +346,7 @@ class InvReportController extends Controller
             ->where($this->buyerStyleContextClause('inv_grns'))
             ->with(['item.unit', 'color', 'size', 'grn.buyer'])
             ->when($request->filled('buyer_id'), fn ($q) => $q->where('inv_grns.buyer_id', $request->buyer_id))
-            ->when($request->filled('style'), fn ($q) => $q->where('inv_grns.style', 'like', '%' . $request->style . '%'))
+            ->when($request->filled('style'), fn ($q) => $q->where('inv_grns.style', $request->style))
             ->when($request->filled('item_id'), fn ($q) => $q->where('inv_grn_items.item_id', $request->item_id))
             ->when($request->filled('date_from'), fn ($q) => $q->whereDate('inv_grns.receive_date', '>=', $request->date_from))
             ->when($request->filled('date_to'), fn ($q) => $q->whereDate('inv_grns.receive_date', '<=', $request->date_to))
@@ -337,7 +362,7 @@ class InvReportController extends Controller
             ->whereNull('g.deleted_at')
             ->where($this->buyerStyleContextClause('g'))
             ->when($request->filled('buyer_id'), fn ($q) => $q->where('g.buyer_id', $request->buyer_id))
-            ->when($request->filled('style'), fn ($q) => $q->where('g.style', 'like', '%' . $request->style . '%'))
+            ->when($request->filled('style'), fn ($q) => $q->where('g.style', $request->style))
             ->when($request->filled('item_id'), fn ($q) => $q->where('gi.item_id', $request->item_id))
             ->groupBy('g.buyer_id', 'g.style', 'gi.item_id')
             ->select('g.buyer_id', DB::raw("COALESCE(g.style, '') as style"), 'gi.item_id', DB::raw('SUM(gi.received_qty) as total_qty'))
@@ -355,7 +380,7 @@ class InvReportController extends Controller
             ->where('i.status', 'approved')
             ->where($this->buyerStyleContextClause('i'))
             ->when($request->filled('buyer_id'), fn ($q) => $q->where('i.buyer_id', $request->buyer_id))
-            ->when($request->filled('style'), fn ($q) => $q->where('i.style', 'like', '%' . $request->style . '%'))
+            ->when($request->filled('style'), fn ($q) => $q->where('i.style', $request->style))
             ->when($request->filled('item_id'), fn ($q) => $q->where('ii.item_id', $request->item_id))
             ->groupBy('i.buyer_id', 'i.style', 'ii.item_id')
             ->select('i.buyer_id', DB::raw("COALESCE(i.style, '') as style"), 'ii.item_id', DB::raw('SUM(ii.issued_qty) as total_qty'))
@@ -375,8 +400,17 @@ class InvReportController extends Controller
 
         $buyers = InvBuyer::active()->orderBy('name')->get();
         $items = InvItem::active()->orderBy('item_name')->get();
+        $styles = $this->styleOptions();
 
-        return view('sfl-inventory::admin.reports.buyer-style-wise', compact('rows', 'styleSpans', 'buyerSpans', 'buyers', 'items'));
+        return view('sfl-inventory::admin.reports.buyer-style-wise', compact('rows', 'styleSpans', 'buyerSpans', 'buyers', 'items', 'styles'));
+    }
+
+    /** Every style ever received or issued — for the Style dropdown filters. */
+    private function styleOptions(): \Illuminate\Support\Collection
+    {
+        return DB::table('inv_grns')->whereNull('deleted_at')->whereNotNull('style')->where('style', '!=', '')->distinct()->pluck('style')
+            ->merge(DB::table('inv_issues')->whereNull('deleted_at')->whereNotNull('style')->where('style', '!=', '')->distinct()->pluck('style'))
+            ->map(fn ($s) => trim($s))->unique()->sort(SORT_NATURAL)->values();
     }
 
     /**
@@ -427,20 +461,25 @@ class InvReportController extends Controller
     {
         $this->authorize('inv_report.view');
 
-        $grns = InvGrn::query()
+        $query = InvGrn::query()
             ->with(['store', 'supplier', 'purchaseOrder'])
             ->when($request->filled('store_id'), fn ($q) => $q->where('store_id', $request->store_id))
             ->when($request->filled('supplier_id'), fn ($q) => $q->where('supplier_id', $request->supplier_id))
+            ->when($request->filled('item_id'), fn ($q) => $q->whereHas('items', fn ($iq) => $iq->where('item_id', $request->item_id)))
             ->when($request->filled('date_from'), fn ($q) => $q->whereDate('receive_date', '>=', $request->date_from))
-            ->when($request->filled('date_to'), fn ($q) => $q->whereDate('receive_date', '<=', $request->date_to))
-            ->latest('receive_date')
+            ->when($request->filled('date_to'), fn ($q) => $q->whereDate('receive_date', '<=', $request->date_to));
+
+        $grandTotal = (float) (clone $query)->sum('total_amount');
+
+        $grns = $query->latest('receive_date')
             ->paginate($request->boolean('print') ? 100000 : 30)
             ->withQueryString();
 
         $stores = InvStore::active()->orderBy('name')->get();
         $suppliers = InvSupplier::active()->orderBy('name')->get();
+        $items = InvItem::active()->orderBy('item_name')->get();
 
-        return view('sfl-inventory::admin.reports.grn-report', compact('grns', 'stores', 'suppliers'));
+        return view('sfl-inventory::admin.reports.grn-report', compact('grns', 'stores', 'suppliers', 'items', 'grandTotal'));
     }
 
     /**
@@ -491,7 +530,7 @@ class InvReportController extends Controller
 
         $withinDays = $request->filled('within_days') ? (int) $request->within_days : 30;
 
-        $lines = InvGrnItem::query()
+        $linesQuery = InvGrnItem::query()
             ->select('inv_grn_items.*')
             ->join('inv_grns', 'inv_grns.id', '=', 'inv_grn_items.grn_id')
             ->whereNull('inv_grns.deleted_at')
@@ -510,7 +549,11 @@ class InvReportController extends Controller
                 } elseif ($request->status === 'ok') {
                     $q->whereDate('inv_grn_items.expiry_date', '>', $horizon);
                 }
-            })
+            });
+
+        $grandQty = (float) (clone $linesQuery)->sum('inv_grn_items.received_qty');
+
+        $lines = $linesQuery
             ->orderBy('inv_grn_items.expiry_date')
             ->paginate($request->boolean('print') ? 100000 : 30)
             ->withQueryString();
@@ -518,7 +561,7 @@ class InvReportController extends Controller
         $items = InvItem::active()->orderBy('item_name')->get();
         $stores = InvStore::active()->orderBy('name')->get();
 
-        return view('sfl-inventory::admin.reports.expiry-tracking', compact('lines', 'items', 'stores', 'withinDays'));
+        return view('sfl-inventory::admin.reports.expiry-tracking', compact('lines', 'items', 'stores', 'withinDays', 'grandQty'));
     }
 
     public function issueReport(Request $request): View
@@ -535,7 +578,8 @@ class InvReportController extends Controller
             ->withSum('items as delivery_qty_total', 'department_received_qty')
             ->when($request->filled('department_id'), fn ($q) => $q->where('department_id', $request->department_id))
             ->when($request->filled('buyer_id'), fn ($q) => $q->where('buyer_id', $request->buyer_id))
-            ->when($request->filled('style'), fn ($q) => $q->where('style', 'like', '%' . $request->style . '%'))
+            ->when($request->filled('style'), fn ($q) => $q->where('style', $request->style))
+            ->when($request->filled('store_id'), fn ($q) => $q->where('store_id', $request->store_id))
             ->when($request->filled('item_id'), fn ($q) => $q->whereHas('items', fn ($iq) => $iq->where('item_id', $request->item_id)))
             ->when($request->filled('date_from'), fn ($q) => $q->whereDate('issue_date', '>=', $request->date_from))
             ->when($request->filled('date_to'), fn ($q) => $q->whereDate('issue_date', '<=', $request->date_to))
@@ -546,50 +590,75 @@ class InvReportController extends Controller
         $departments = InvDepartment::active()->orderBy('name')->get();
         $buyers = InvBuyer::active()->orderBy('name')->get();
         $items = InvItem::active()->orderBy('item_name')->get();
+        $stores = InvStore::active()->orderBy('name')->get();
+        $styles = $this->styleOptions();
 
-        return view('sfl-inventory::admin.reports.issue-report', compact('issues', 'departments', 'buyers', 'items'));
+        return view('sfl-inventory::admin.reports.issue-report', compact('issues', 'departments', 'buyers', 'items', 'stores', 'styles'));
     }
 
     public function gatePassReport(Request $request): View
     {
         $this->authorize('inv_report.view');
 
-        $gatePasses = InvGatePass::query()
+        $gatePassesQuery = InvGatePass::query()
             ->with(['buyer', 'store'])
             ->when($request->filled('status'), fn ($q) => $q->where('status', $request->status))
             ->when($request->filled('date_from'), fn ($q) => $q->whereDate('gate_pass_date', '>=', $request->date_from))
             ->when($request->filled('date_to'), fn ($q) => $q->whereDate('gate_pass_date', '<=', $request->date_to))
+            ->when($request->filled('item_id'), fn ($q) => $q->whereHas('items', fn ($iq) => $iq->where('item_id', $request->item_id)));
+
+        $grandQty = (float) DB::table('inv_gate_pass_items')
+            ->whereIn('gate_pass_id', (clone $gatePassesQuery)->select('id'))
+            ->when($request->filled('item_id'), fn ($q) => $q->where('item_id', $request->item_id))
+            ->sum('quantity');
+
+        $gatePasses = $gatePassesQuery
             ->latest('gate_pass_date')
             ->paginate($request->boolean('print') ? 100000 : 30)
             ->withQueryString();
 
-        return view('sfl-inventory::admin.reports.gate-pass-report', compact('gatePasses'));
+        $filterItems = InvItem::active()->orderBy('item_name')->get(['id', 'item_code', 'item_name']);
+
+        return view('sfl-inventory::admin.reports.gate-pass-report', compact('gatePasses', 'grandQty', 'filterItems'));
     }
 
     public function shipmentReport(Request $request): View
     {
         $this->authorize('inv_report.view');
 
-        $shipments = InvShipment::query()
+        $shipmentsQuery = InvShipment::query()
             ->with(['buyer', 'gatePass', 'gatePasses'])
             ->when($request->filled('buyer_id'), fn ($q) => $q->where('buyer_id', $request->buyer_id))
             ->when($request->filled('status'), fn ($q) => $q->where('status', $request->status))
             ->when($request->filled('date_from'), fn ($q) => $q->whereDate('shipment_date', '>=', $request->date_from))
             ->when($request->filled('date_to'), fn ($q) => $q->whereDate('shipment_date', '<=', $request->date_to))
+            ->when($request->filled('item_id'), fn ($q) => $q->whereHas('items', fn ($iq) => $iq->where('item_id', $request->item_id)));
+
+        $grandQty = (float) DB::table('inv_shipment_items')
+            ->whereIn('shipment_id', (clone $shipmentsQuery)->select('id'))
+            ->when($request->filled('item_id'), fn ($q) => $q->where('item_id', $request->item_id))
+            ->sum('quantity');
+
+        $shipments = $shipmentsQuery
             ->latest('shipment_date')
             ->paginate($request->boolean('print') ? 100000 : 30)
             ->withQueryString();
 
         $buyers = InvBuyer::active()->orderBy('name')->get();
 
-        return view('sfl-inventory::admin.reports.shipment-report', compact('shipments', 'buyers'));
+        $filterItems = InvItem::active()->orderBy('item_name')->get(['id', 'item_code', 'item_name']);
+
+        return view('sfl-inventory::admin.reports.shipment-report', compact('shipments', 'buyers', 'grandQty', 'filterItems'));
     }
 
-    public function lowStock(): View
+    public function lowStock(Request $request): View
     {
         $this->authorize('inv_report.view');
 
-        $items = InvItem::active()->with(['category', 'unit'])->orderBy('item_name')->get()
+        $items = InvItem::active()->with(['category', 'unit'])
+            ->when($request->filled('item_id'), fn ($q) => $q->whereKey($request->item_id))
+            ->when($request->filled('category_id'), fn ($q) => $q->where('category_id', $request->category_id))
+            ->orderBy('item_name')->get()
             ->filter(fn (InvItem $item) => $this->stock->isLowStock($item))
             ->map(function (InvItem $item) {
                 $item->current_stock = $this->stock->currentStock($item->id);
@@ -597,14 +666,20 @@ class InvReportController extends Controller
                 return $item;
             });
 
-        return view('sfl-inventory::admin.reports.low-stock', compact('items'));
+        $filterItems = InvItem::active()->orderBy('item_name')->get();
+        $categories = InvItemCategory::active()->orderBy('name')->get();
+
+        return view('sfl-inventory::admin.reports.low-stock', compact('items', 'filterItems', 'categories'));
     }
 
-    public function deadStock(): View
+    public function deadStock(Request $request): View
     {
         $this->authorize('inv_report.view');
 
-        $items = InvItem::active()->with(['category', 'unit'])->orderBy('item_name')->get()
+        $items = InvItem::active()->with(['category', 'unit'])
+            ->when($request->filled('item_id'), fn ($q) => $q->whereKey($request->item_id))
+            ->when($request->filled('category_id'), fn ($q) => $q->where('category_id', $request->category_id))
+            ->orderBy('item_name')->get()
             ->filter(fn (InvItem $item) => $this->stock->isDeadStock($item))
             ->map(function (InvItem $item) {
                 $item->current_stock = $this->stock->currentStock($item->id);
@@ -613,7 +688,10 @@ class InvReportController extends Controller
                 return $item;
             });
 
-        return view('sfl-inventory::admin.reports.dead-stock', compact('items'));
+        $filterItems = InvItem::active()->orderBy('item_name')->get();
+        $categories = InvItemCategory::active()->orderBy('name')->get();
+
+        return view('sfl-inventory::admin.reports.dead-stock', compact('items', 'filterItems', 'categories'));
     }
 
     public function stockValuation(Request $request): View
@@ -623,6 +701,7 @@ class InvReportController extends Controller
         $items = InvItem::query()
             ->with(['category', 'unit'])
             ->when($request->filled('category_id'), fn ($q) => $q->where('category_id', $request->category_id))
+            ->when($request->filled('item_id'), fn ($q) => $q->whereKey($request->item_id))
             ->active()
             ->orderBy('item_name')
             ->get()
@@ -636,8 +715,9 @@ class InvReportController extends Controller
             ->filter(fn ($item) => $item->current_stock != 0);
 
         $categories = InvItemCategory::active()->orderBy('name')->get();
+        $filterItems = InvItem::active()->orderBy('item_name')->get();
 
-        return view('sfl-inventory::admin.reports.stock-valuation', compact('items', 'categories'));
+        return view('sfl-inventory::admin.reports.stock-valuation', compact('items', 'categories', 'filterItems'));
     }
 
     /**
@@ -679,10 +759,11 @@ class InvReportController extends Controller
             ->whereNull('c.deleted_at')
             ->whereNull('u.deleted_at')
             ->whereNull('s.deleted_at')
+            // Store/item narrow whole partitions, so they're safe here; the
+            // date range is applied only in the outer query — filtering it
+            // here would restart every running balance at 0 on date_from.
             ->when($request->filled('store_id'), fn ($q) => $q->where('t.store_id', $request->store_id))
             ->when($request->filled('item_id'), fn ($q) => $q->where('t.item_id', $request->item_id))
-            ->when($request->filled('date_from'), fn ($q) => $q->whereDate('t.transaction_date', '>=', $request->date_from))
-            ->when($request->filled('date_to'), fn ($q) => $q->whereDate('t.transaction_date', '<=', $request->date_to))
             ->selectRaw('
                 t.id, t.item_id, t.store_id, t.transaction_date, t.transaction_type,
                 t.qty_in, t.qty_out, t.rate, t.value,
@@ -691,18 +772,34 @@ class InvReportController extends Controller
                 g.challan_invoice_no, gu.name as received_by_name,
                 iss.issue_no, isu.name as issued_by_name,
                 SUM(CASE WHEN t.qty_in > 0 THEN t.qty_in ELSE -t.qty_out END)
-                    OVER (PARTITION BY t.item_id, t.store_id ORDER BY t.transaction_date, t.id) as running_balance
+                    OVER (PARTITION BY t.item_id, t.store_id, t.color_id, t.size_id ORDER BY t.transaction_date, t.id) as running_balance
             ');
 
-        $rows = DB::query()->fromSub($withBalance, 'x')
+        $filtered = DB::query()->fromSub($withBalance, 'x')
             ->where('x.transaction_type', 'not like', '%\_reversal')
+            ->when($request->filled('date_from'), fn ($q) => $q->whereDate('x.transaction_date', '>=', $request->date_from))
+            ->when($request->filled('date_to'), fn ($q) => $q->whereDate('x.transaction_date', '<=', $request->date_to));
+
+        // Footer totals cover every filtered row, not just the current page.
+        $totals = (clone $filtered)->selectRaw("
+            COALESCE(SUM(x.qty_in), 0) as qty_in,
+            COALESCE(SUM(CASE WHEN x.transaction_type = 'issue' AND x.qty_out > 0 AND x.department_name IS NOT NULL THEN 0 ELSE x.qty_out END), 0) as other_out,
+            COALESCE(SUM(CASE WHEN x.qty_in > 0 THEN x.value ELSE -x.value END), 0) as value
+        ")->first();
+        $departmentTotals = (clone $filtered)->where('x.transaction_type', 'issue')->whereNotNull('x.department_name')
+            ->groupBy('x.department_name')->selectRaw('x.department_name, SUM(x.qty_out) as qty')->pluck('qty', 'department_name');
+
+        $rows = $filtered
             ->orderBy('x.item_name')
             ->orderBy('x.transaction_date')
             ->orderBy('x.id')
-            ->limit(500)
-            ->get();
+            ->paginate($request->boolean('print') ? 100000 : 100)
+            ->withQueryString();
 
-        return view('sfl-inventory::admin.reports.store-inventory-report', compact('rows', 'departments'));
+        $items = InvItem::active()->orderBy('item_name')->get();
+        $stores = InvStore::active()->orderBy('name')->get();
+
+        return view('sfl-inventory::admin.reports.store-inventory-report', compact('rows', 'departments', 'totals', 'departmentTotals', 'items', 'stores'));
     }
 
     /**

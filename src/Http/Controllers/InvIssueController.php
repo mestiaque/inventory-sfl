@@ -73,7 +73,7 @@ class InvIssueController extends Controller
                 ->with('error', 'Direct issue is disabled — select an approved requisition and click "Issue" against it.');
         }
 
-        return view('sfl-inventory::admin.issues.create', ['requisition' => $requisition] + $this->formOptions());
+        return view('sfl-inventory::admin.issues.create', ['requisition' => $requisition] + $this->formOptions($requisition?->items->pluck('item_id') ?? []));
     }
 
     /**
@@ -301,6 +301,8 @@ class InvIssueController extends Controller
      */
     private function postIssueStock(InvIssue $issue): void
     {
+        $this->guardStyleBalance($issue);
+
         foreach ($issue->items as $issueItem) {
             // Re-checked here, not just at store() time — stock can move
             // (another issue, a transfer, an adjustment) in the time
@@ -361,6 +363,38 @@ class InvIssueController extends Controller
         }
     }
 
+    /**
+     * Buyer Store goods belong to a buyer + style: a challan can only take
+     * what was received under that same style, minus what other challans
+     * already took from it. Lines repeating an item+variant are summed.
+     */
+    private function guardStyleBalance(InvIssue $issue): void
+    {
+        if (InvStore::whereKey($issue->store_id)->value('type') !== InvStore::TYPE_BUYER) {
+            return;
+        }
+
+        $styleLabel = trim(($issue->style ?: '(no style)') . ($issue->buyer?->name ? " / {$issue->buyer->name}" : ''));
+
+        foreach ($issue->items->groupBy(fn ($line) => "{$line->item_id}|{$line->color_id}|{$line->size_id}") as $lines) {
+            $first = $lines->first();
+            $qty = (float) $lines->sum('issued_qty');
+            $balance = $this->stock->styleBalance(
+                $first->item_id, $issue->store_id, $issue->buyer_id, $issue->style, $issue->mer_style_id,
+                $first->color_id, $first->size_id, $issue->id
+            );
+
+            if ($qty > $balance['balance'] + 0.0001) {
+                $itemName = $first->item?->item_name ?? "item #{$first->item_id}";
+                throw ValidationException::withMessages([
+                    'items' => "\"{$itemName}\" — style {$styleLabel} only has " . inv_qty(max($balance['balance'], 0))
+                        . ' left in the Buyer Store (received ' . inv_qty($balance['received']) . ', already issued ' . inv_qty($balance['issued'])
+                        . '), but this challan needs ' . inv_qty($qty) . '. Stock received under another style can\'t be issued against this one.',
+                ]);
+            }
+        }
+    }
+
     public function print(InvIssue $issue): View
     {
         $this->authorize('inv_issue.print');
@@ -407,12 +441,12 @@ class InvIssueController extends Controller
         return redirect()->route('inventory.issues.index')->with('success', "Receipt confirmed for issue {$issue->issue_no}.");
     }
 
-    private function formOptions(): array
+    private function formOptions(iterable $keepItemIds = []): array
     {
         return [
             'stores'      => InvStore::active()->orderBy('name')->get(),
             'departments' => InvDepartment::active()->orderBy('name')->get(),
-            'items'       => InvItem::active()->orderBy('item_name')->get(),
+            'items'       => InvItem::selectable($keepItemIds)->orderBy('item_name')->get(),
             'buyers'      => InvBuyer::active()->orderBy('name')->get(),
             'merStylesOptions' => class_exists(\ME\MerchandisingTrace\Models\Style::class)
                 ? \ME\MerchandisingTrace\Models\Style::query()->orderBy('style_no')->get(['id', 'style_no', 'name'])

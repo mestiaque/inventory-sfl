@@ -2,6 +2,7 @@
 
 namespace ME\SflInventory\Http\Controllers;
 
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -12,6 +13,7 @@ use ME\SflInventory\Models\InvFinishedGoodsReceive;
 use ME\SflInventory\Models\InvItem;
 use ME\SflInventory\Models\InvStore;
 use ME\SflInventory\Services\InvOperatorScopeService;
+use ME\SflInventory\Services\MerchandisingLink;
 use ME\SflInventory\Services\StockService;
 
 class InvFinishedGoodsReceiveController extends Controller
@@ -26,14 +28,24 @@ class InvFinishedGoodsReceiveController extends Controller
     {
         $this->authorize('inv_fg_receive.list');
 
-        $receives = InvFinishedGoodsReceive::query()
+        $receivesQuery = InvFinishedGoodsReceive::query()
             ->with(['buyer', 'store', 'creator', 'items.item.unit'])
             ->when($request->filled('search'), fn ($q) => $q->where('receive_no', 'like', '%' . $request->search . '%'))
+            ->when($request->filled('item_id'), fn ($q) => $q->whereHas('items', fn ($iq) => $iq->where('item_id', $request->item_id)))
             ->when($request->filled('buyer_id'), fn ($q) => $q->where('buyer_id', $request->buyer_id))
             ->when($request->filled('store_id'), fn ($q) => $q->where('store_id', $request->store_id))
             ->when($request->filled('date_from'), fn ($q) => $q->whereDate('receive_date', '>=', $request->date_from))
             ->when($request->filled('date_to'), fn ($q) => $q->whereDate('receive_date', '<=', $request->date_to))
-            ->tap(fn ($q) => $this->operatorScope->applyToStore($q, 'store_id', 'created_by'))
+            ->tap(fn ($q) => $this->operatorScope->applyToStore($q, 'store_id', 'created_by'));
+
+        // Total qty over every filtered document (just the picked item's lines when filtered by item).
+        $grandQty = (float) \Illuminate\Support\Facades\DB::table('inv_finished_goods_receive_items')
+            ->whereIn('fg_receive_id', (clone $receivesQuery)->reorder()->select('id'))
+            ->when($request->filled('item_id'), fn ($q) => $q->where('item_id', $request->item_id))
+            ->sum('quantity');
+        $filterItems = \ME\SflInventory\Models\InvItem::active()->orderBy('item_name')->get(['id', 'item_code', 'item_name']);
+
+        $receives = $receivesQuery
             ->latest('id')
             ->paginate(20)
             ->withQueryString();
@@ -41,7 +53,7 @@ class InvFinishedGoodsReceiveController extends Controller
         $buyers = InvBuyer::active()->orderBy('name')->get();
         $stores = InvStore::active()->orderBy('name')->get();
 
-        return view('sfl-inventory::admin.fg-receives.index', compact('receives', 'buyers', 'stores'));
+        return view('sfl-inventory::admin.fg-receives.index', compact('receives', 'buyers', 'stores', 'grandQty', 'filterItems'));
     }
 
     public function create(): View
@@ -54,6 +66,15 @@ class InvFinishedGoodsReceiveController extends Controller
     public function store(InvFinishedGoodsReceiveRequest $request): RedirectResponse
     {
         $data = $request->validated();
+
+        // Merchandising-linked: inventory buyer, style text and order ref come
+        // from the Merchandising buyer / style / PO picked — never retyped.
+        $link = app(MerchandisingLink::class);
+        if ($link->available() && ! empty($data['mer_buyer_id']) && ! empty($data['mer_style_id'])) {
+            $data['buyer_id'] = $link->inventoryBuyerId((int) $data['mer_buyer_id']);
+            $data['style'] = $link->styleNo((int) $data['mer_style_id']);
+            $data['order_ref'] = ! empty($data['mer_sales_contract_po_id']) ? $link->orderRef((int) $data['mer_sales_contract_po_id']) : null;
+        }
 
         $receive = DB::transaction(function () use ($data) {
             $receive = InvFinishedGoodsReceive::create([
@@ -91,26 +112,37 @@ class InvFinishedGoodsReceiveController extends Controller
         return redirect()->route('inventory.fg-receives.index')->with('success', "Finished goods receive {$receive->receive_no} posted and stock updated.");
     }
 
+    /**
+     * For the receive form: how many pieces production has packed for the
+     * style / PO, how many are already in the Finish Store, and what's left.
+     */
+    public function productionSummary(Request $request): JsonResponse
+    {
+        $this->authorize('inv_fg_receive.add');
+
+        $link = app(MerchandisingLink::class);
+        $styleId = (int) $request->input('style_id');
+        abort_unless($link->available() && $styleId, 404);
+
+        return response()->json($link->finishSummary($styleId, (int) $request->input('po_id') ?: null));
+    }
+
     private function formOptions(): array
     {
         // Finished goods only ever go into the one store marked "For
         // Finished Goods" — locked here rather than left as a free choice.
-        $fgStore = InvStore::active()->where('type', 'finished_goods')->first();
+        $fgStore = InvStore::active()->where('type', InvStore::TYPE_FINISH)->first();
 
         return [
             'buyers'  => InvBuyer::active()->orderBy('name')->get(),
             'stores'  => InvStore::active()->orderBy('name')->get(),
             'fgStore' => $fgStore,
             'items'   => InvItem::active()->ofType('finished_good')->orderBy('item_name')->get(),
-            'merStylesOptions' => class_exists(\ME\MerchandisingTrace\Models\Style::class)
-                ? \ME\MerchandisingTrace\Models\Style::query()->orderBy('style_no')->get(['id', 'style_no', 'name'])
-                : collect(),
-            'merSalesContractPosOptions' => class_exists(\ME\MerchandisingTrace\Models\SalesContractPo::class)
-                ? \ME\MerchandisingTrace\Models\SalesContractPo::query()->latest('id')->limit(500)->get(['id', 'po_no'])
-                : collect(),
-            'merBuyersOptions' => class_exists(\ME\MerchandisingTrace\Models\Buyer::class)
-                ? \ME\MerchandisingTrace\Models\Buyer::query()->orderBy('name')->get(['id', 'name'])
-                : collect(),
+            // Buyer -> Style -> PO from Merchandising (see MerchandisingLink).
+            'merLinked'                  => app(MerchandisingLink::class)->available(),
+            'merBuyersOptions'           => app(MerchandisingLink::class)->buyers(),
+            'merStylesOptions'           => app(MerchandisingLink::class)->styles(),
+            'merSalesContractPosOptions' => app(MerchandisingLink::class)->pos(),
         ];
     }
 }

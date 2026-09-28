@@ -12,6 +12,7 @@ use Illuminate\Validation\ValidationException;
 use ME\SflInventory\Http\Requests\InvGrnApprovalRequest;
 use ME\SflInventory\Http\Requests\InvGrnRequest;
 use ME\SflInventory\Models\InvBuyer;
+use ME\SflInventory\Services\MerchandisingLink;
 use ME\SflInventory\Models\InvColor;
 use ME\SflInventory\Models\InvGrn;
 use ME\SflInventory\Models\InvItem;
@@ -35,7 +36,7 @@ class InvGrnController extends Controller
     {
         $this->authorize('inv_grn.list');
 
-        $grns = InvGrn::query()
+        $grnsQuery = InvGrn::query()
             ->with(['store', 'supplier', 'buyer', 'purchaseOrder', 'creator'])
             ->withCount('items')
             ->when($request->filled('search'), fn ($q) => $q->where('grn_number', 'like', '%' . $request->search . '%'))
@@ -46,7 +47,11 @@ class InvGrnController extends Controller
             ->when($request->filled('status'), fn ($q) => $q->where('status', $request->status))
             ->when($request->filled('date_from'), fn ($q) => $q->whereDate('receive_date', '>=', $request->date_from))
             ->when($request->filled('date_to'), fn ($q) => $q->whereDate('receive_date', '<=', $request->date_to))
-            ->tap(fn ($q) => $this->operatorScope->applyToStore($q, 'store_id', 'created_by'))
+            ->tap(fn ($q) => $this->operatorScope->applyToStore($q, 'store_id', 'created_by'));
+
+        $grandTotal = (float) (clone $grnsQuery)->sum('total_amount');
+
+        $grns = $grnsQuery
             ->latest('id')
             ->paginate(20)
             ->withQueryString();
@@ -58,7 +63,7 @@ class InvGrnController extends Controller
         $trashedGrns = InvGrn::onlyTrashed()->with('supplier')->latest('deleted_at')->get()
             ->map(fn ($grn) => ['id' => $grn->id, 'title' => $grn->grn_number, 'subtitle' => $grn->supplier?->name, 'deleted_at' => $grn->deleted_at]);
 
-        return view('sfl-inventory::admin.grns.index', compact('grns', 'stores', 'suppliers', 'items', 'trashedGrns'));
+        return view('sfl-inventory::admin.grns.index', compact('grns', 'stores', 'suppliers', 'items', 'trashedGrns', 'grandTotal'));
     }
 
     /**
@@ -129,14 +134,14 @@ class InvGrnController extends Controller
 
         $view = $grn->source_type === 'buyer_supplied' ? 'edit-buyer' : 'edit-purchase';
 
-        return view("sfl-inventory::admin.grns.{$view}", ['grn' => $grn] + $this->formOptions());
+        return view("sfl-inventory::admin.grns.{$view}", ['grn' => $grn] + $this->formOptions($grn->items->pluck('item_id')));
     }
 
     public function update(InvGrnRequest $request, InvGrn $grn): RedirectResponse
     {
         abort_if($grn->status === 'rejected', 403, 'A rejected GRN cannot be edited — create a new challan instead.');
 
-        $data = $request->validated();
+        $data = $this->applyMerchandisingLink($request, $request->validated(), false);
 
         $grn->load('items');
         $wasPosted = $grn->status === 'posted';
@@ -185,7 +190,7 @@ class InvGrnController extends Controller
 
     public function store(InvGrnRequest $request): RedirectResponse
     {
-        $data = $request->validated();
+        $data = $this->applyMerchandisingLink($request, $request->validated(), true);
 
         // Buyer-supplied challans keep posting immediately — no approval
         // step, matching "Receive from Buyer (Direct Goods Receive)". A
@@ -546,7 +551,28 @@ class InvGrnController extends Controller
             ]);
     }
 
-    private function formOptions(): array
+    /**
+     * Buyer Store receive linked to Merchandising: derive the inventory buyer,
+     * style text and order ref from the Merchandising buyer / style / PO picked
+     * on the form, so none of them is typed twice.
+     */
+    private function applyMerchandisingLink(InvGrnRequest $request, array $data, bool $isNew): array
+    {
+        if (! $request->usesMerchandisingBuyer()) {
+            return $data;
+        }
+
+        $link = app(MerchandisingLink::class);
+        if ($isNew) {
+            $data['buyer_id'] = $link->inventoryBuyerId((int) $data['mer_buyer_id']);
+        }
+        $data['style'] = $link->styleNo((int) $data['mer_style_id']);
+        $data['order_ref'] = ! empty($data['mer_sales_contract_po_id']) ? $link->orderRef((int) $data['mer_sales_contract_po_id']) : null;
+
+        return $data;
+    }
+
+    private function formOptions(iterable $keepItemIds = []): array
     {
         $employees = class_exists(\ME\Hr\Models\HrEmployee::class)
             ? \ME\Hr\Models\HrEmployee::query()->where('status', 1)->orderBy('name')->get()
@@ -554,23 +580,19 @@ class InvGrnController extends Controller
 
         return [
             'stores'          => InvStore::active()->orderBy('name')->get(),
-            'accessoriesStore' => InvStore::active()->where('type', 'accessories')->first(),
-            'buyerStore'      => InvStore::active()->where('type', 'raw_material')->first(),
+            'accessoriesStore' => InvStore::active()->where('type', InvStore::TYPE_GENERAL)->first(),
+            'buyerStore'      => InvStore::active()->where('type', InvStore::TYPE_BUYER)->first(),
             'suppliers'       => InvSupplier::active()->orderBy('name')->get(),
             'buyers'          => InvBuyer::active()->orderBy('name')->get(),
-            'items'           => InvItem::active()->with('unit')->orderBy('item_name')->get(),
+            'items'           => InvItem::selectable($keepItemIds)->with('unit')->orderBy('item_name')->get(),
             'colors'          => InvColor::active()->orderBy('name')->get(),
             'sizes'           => InvSize::active()->ordered()->get(),
             'employees'       => $employees,
-            'merStylesOptions' => class_exists(\ME\MerchandisingTrace\Models\Style::class)
-                ? \ME\MerchandisingTrace\Models\Style::query()->orderBy('style_no')->get(['id', 'style_no', 'name'])
-                : collect(),
-            'merSalesContractPosOptions' => class_exists(\ME\MerchandisingTrace\Models\SalesContractPo::class)
-                ? \ME\MerchandisingTrace\Models\SalesContractPo::query()->latest('id')->limit(500)->get(['id', 'po_no'])
-                : collect(),
-            'merBuyersOptions' => class_exists(\ME\MerchandisingTrace\Models\Buyer::class)
-                ? \ME\MerchandisingTrace\Models\Buyer::query()->orderBy('name')->get(['id', 'name'])
-                : collect(),
+            // Buyer Store receive: Buyer -> Style -> PO, all from Merchandising (see MerchandisingLink).
+            'merLinked'                  => app(MerchandisingLink::class)->available(),
+            'merBuyersOptions'           => app(MerchandisingLink::class)->buyers(),
+            'merStylesOptions'           => app(MerchandisingLink::class)->styles(),
+            'merSalesContractPosOptions' => app(MerchandisingLink::class)->pos(),
         ];
     }
 }

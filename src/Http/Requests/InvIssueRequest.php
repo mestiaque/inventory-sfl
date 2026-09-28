@@ -3,9 +3,13 @@
 namespace ME\SflInventory\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Validator;
+use ME\SflInventory\Http\Requests\Concerns\ValidatesItemStore;
 
 class InvIssueRequest extends FormRequest
 {
+    use ValidatesItemStore;
+
     public function authorize(): bool
     {
         return (bool) $this->user()?->can('inv_issue.add');
@@ -34,5 +38,10 @@ class InvIssueRequest extends FormRequest
             'items.*.issued_qty'          => ['required', 'numeric', 'min:0.0001'],
             'items.*.unit_rate'           => ['nullable', 'numeric', 'min:0'],
         ];
+    }
+
+    public function withValidator(Validator $validator): void
+    {
+        $validator->after(fn (Validator $v) => $this->validateItemStores($v, $this->integer('store_id') ?: null));
     }
 }

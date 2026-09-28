@@ -138,6 +138,11 @@
                             <tr><td colspan="10" class="text-center text-muted">No issues found.</td></tr>
                         @endforelse
                     </tbody>
+                    @if($issues->total())
+                        <tfoot>
+                            <tr class="font-weight-bold"><td colspan="10">Total: {{ $issues->total() }} challan(s){{ $issues->hasPages() ? ' (all pages)' : '' }}</td></tr>
+                        </tfoot>
+                    @endif
                 </table>
             </div>
 

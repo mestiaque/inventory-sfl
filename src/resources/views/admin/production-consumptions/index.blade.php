@@ -29,6 +29,14 @@
                     <input type="text" name="search" class="form-control form-control-sm" placeholder="Search consumption no" value="{{ request('search') }}">
                 </div>
                 <div class="col-md-3 mb-2">
+                    <select name="item_id" class="form-control form-control-sm inv-select2">
+                        <option value="">All Items</option>
+                        @foreach($filterItems as $filterItem)
+                            <option value="{{ $filterItem->id }}" @selected(request('item_id') == $filterItem->id)>{{ $filterItem->item_code }} — {{ $filterItem->item_name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="col-md-3 mb-2">
                     <select name="department_id" class="form-control form-control-sm inv-select2">
                         <option value="">All Departments</option>
                         @foreach($departments as $department)
@@ -82,6 +90,11 @@
                             <tr><td colspan="8" class="text-center text-muted">No consumption records found.</td></tr>
                         @endforelse
                     </tbody>
+                    @if($consumptions->total())
+                        <tfoot>
+                            <tr class="font-weight-bold"><td colspan="8">Total: {{ $consumptions->total() }} consumption(s){{ $consumptions->hasPages() ? ' (all pages)' : '' }}</td></tr>
+                        </tfoot>
+                    @endif
                 </table>
             </div>
 
@@ -132,6 +145,9 @@
                                     </tr>
                                 @endforeach
                             </tbody>
+                    <tfoot>
+                        <tr class="font-weight-bold"><td colspan="3" class="text-right">Total</td><td class="text-right">{{ inv_qty($consumption->items->sum('consumed_qty')) }}</td><td class="text-right">{{ inv_qty($consumption->items->sum('waste_qty')) }}</td><td class="text-right">{{ inv_qty($consumption->items->sum('consumed_qty') + $consumption->items->sum('waste_qty')) }}</td></tr>
+                    </tfoot>
                         </table>
                     </div>
                 </div>

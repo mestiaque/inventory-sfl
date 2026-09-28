@@ -123,6 +123,20 @@ return [
                     'route'      => "$base/adjustments",
                 ],
                 [
+                    'title'      => 'Data Conflicts',
+                    'icon'       => 'fa-solid fa-code-compare',
+                    'icon_color' => 'text-warning',
+                    'permission' => 'inv_negative_stock',
+                    'route'      => "$base/data-conflicts",
+                ],
+                [
+                    'title'      => 'Negative Stock Fix',
+                    'icon'       => 'fa-solid fa-triangle-exclamation',
+                    'icon_color' => 'text-danger',
+                    'permission' => 'inv_negative_stock',
+                    'route'      => "$base/negative-stock",
+                ],
+                [
                     'title'      => 'Stock Ledger',
                     'icon'       => 'fa-solid fa-book',
                     'icon_color' => 'text-secondary',

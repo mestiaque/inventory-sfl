@@ -29,6 +29,14 @@
             @unless($printMode)
                 <form method="GET" class="row mb-3 align-items-end">
                     <div class="col-md-3 mb-2">
+                        <select name="item_id" class="form-control form-control-sm inv-select2">
+                            <option value="">All Items</option>
+                            @foreach($filterItems as $filterItem)
+                                <option value="{{ $filterItem->id }}" @selected(request('item_id') == $filterItem->id)>{{ $filterItem->item_code }} — {{ $filterItem->item_name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="col-md-3 mb-2">
                         <select name="category_id" class="form-control form-control-sm inv-select2">
                             <option value="">All Categories</option>
                             @foreach($categories as $category)

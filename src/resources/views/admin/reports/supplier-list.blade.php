@@ -46,6 +46,14 @@
             @unless($printMode)
                 <form method="GET" class="row mb-3 align-items-end">
                     <div class="col-md-3 mb-2">
+                        <select name="item_id" class="form-control form-control-sm inv-select2">
+                            <option value="">All Items</option>
+                            @foreach($filterItems as $filterItem)
+                                <option value="{{ $filterItem->id }}" @selected(request('item_id') == $filterItem->id)>{{ $filterItem->item_code }} — {{ $filterItem->item_name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="col-md-3 mb-2">
                         <input type="text" name="search" class="form-control form-control-sm" placeholder="Search name or code" value="{{ request('search') }}">
                     </div>
                     <div class="col-md-3 mb-2">
@@ -101,6 +109,11 @@
                             <tr><td colspan="10" class="text-center text-muted">No suppliers found.</td></tr>
                         @endforelse
                     </tbody>
+                    @if($suppliers->isNotEmpty())
+                        <tfoot>
+                            <tr class="font-weight-bold"><td colspan="10">Total: {{ $suppliers->count() }} supplier(s) — Active {{ $suppliers->where('is_active', true)->count() }}, Inactive {{ $suppliers->where('is_active', false)->count() }}</td></tr>
+                        </tfoot>
+                    @endif
                 </table>
             </div>
         </div>

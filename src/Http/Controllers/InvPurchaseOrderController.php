@@ -25,7 +25,7 @@ class InvPurchaseOrderController extends Controller
     {
         $this->authorize('inv_purchase_order.list');
 
-        $purchaseOrders = InvPurchaseOrder::query()
+        $purchaseOrdersQuery = InvPurchaseOrder::query()
             ->with(['supplier', 'creator', 'purchaseRequisition'])
             ->withCount(['grns', 'items'])
             ->when($request->filled('search'), fn ($q) => $q->where('po_number', 'like', '%' . $request->search . '%'))
@@ -34,7 +34,11 @@ class InvPurchaseOrderController extends Controller
             ->when($request->filled('status'), fn ($q) => $q->where('status', $request->status))
             ->when($request->filled('date_from'), fn ($q) => $q->whereDate('order_date', '>=', $request->date_from))
             ->when($request->filled('date_to'), fn ($q) => $q->whereDate('order_date', '<=', $request->date_to))
-            ->tap(fn ($q) => $this->operatorScope->applyToActor($q, 'created_by'))
+            ->tap(fn ($q) => $this->operatorScope->applyToActor($q, 'created_by'));
+
+        $grandTotal = (float) (clone $purchaseOrdersQuery)->sum('total_amount');
+
+        $purchaseOrders = $purchaseOrdersQuery
             ->latest('id')
             ->paginate(20)
             ->withQueryString();
@@ -45,7 +49,7 @@ class InvPurchaseOrderController extends Controller
         $trashedPurchaseOrders = InvPurchaseOrder::onlyTrashed()->with('supplier')->latest('deleted_at')->get()
             ->map(fn ($po) => ['id' => $po->id, 'title' => $po->po_number, 'subtitle' => $po->supplier?->name, 'deleted_at' => $po->deleted_at]);
 
-        return view('sfl-inventory::admin.purchase-orders.index', compact('purchaseOrders', 'suppliers', 'items', 'trashedPurchaseOrders'));
+        return view('sfl-inventory::admin.purchase-orders.index', compact('purchaseOrders', 'suppliers', 'items', 'trashedPurchaseOrders', 'grandTotal'));
     }
 
     /**
@@ -148,7 +152,7 @@ class InvPurchaseOrderController extends Controller
 
         $purchase_order->load('items');
 
-        return view('sfl-inventory::admin.purchase-orders.edit', ['purchaseOrder' => $purchase_order] + $this->formOptions());
+        return view('sfl-inventory::admin.purchase-orders.edit', ['purchaseOrder' => $purchase_order] + $this->formOptions($purchase_order->items->pluck('item_id')));
     }
 
     public function update(InvPurchaseOrderRequest $request, InvPurchaseOrder $purchase_order): RedirectResponse
@@ -250,19 +254,18 @@ class InvPurchaseOrderController extends Controller
         return back()->with('success', 'Purchase order permanently deleted.');
     }
 
-    private function formOptions(): array
+    private function formOptions(iterable $keepItemIds = []): array
     {
-        // Purchase Orders always target the Accessories store — items
-        // explicitly assigned to a *different* store are excluded, but an
-        // item with no opening store set yet isn't restricted to anywhere
-        // (same "unset = unrestricted" rule every other document form's
-        // item picker already follows via its data-store JS filter).
+        // Purchase Orders always target the Accessories store — only items
+        // assigned to it (items without a store can't be bought until Item
+        // Master gives them one; see InvItem::scopeSelectable()).
         $accessoriesStoreId = InvStore::active()->where('type', 'accessories')->value('id');
+        $keep = collect($keepItemIds)->all();
 
         return [
             'suppliers' => InvSupplier::active()->orderBy('name')->get(),
             'items'     => InvItem::active()->with('unit')
-                ->when($accessoriesStoreId, fn ($q) => $q->where(fn ($q2) => $q2->whereNull('opening_store_id')->orWhere('opening_store_id', $accessoriesStoreId)))
+                ->where(fn ($q) => $q->where('opening_store_id', $accessoriesStoreId)->when($keep, fn ($q2) => $q2->orWhereIn('id', $keep)))
                 ->orderBy('item_name')->get(),
         ];
     }

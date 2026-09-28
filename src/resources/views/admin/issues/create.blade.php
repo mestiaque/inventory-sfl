@@ -131,7 +131,7 @@
                 </div>
                 <div class="table-responsive">
                     <table class="table table-bordered table-sm align-middle">
-                        <thead><tr><th style="min-width:220px">Item</th><th>Color</th><th>Size</th><th style="width:140px">Remaining Approved</th><th style="width:160px">Issue Qty</th><th style="width:40px"></th></tr></thead>
+                        <thead><tr><th style="min-width:220px">Item</th><th>Color</th><th>Size</th><th style="width:140px">Remaining Approved</th><th style="width:150px">Stock</th><th style="width:160px">Issue Qty</th><th style="width:40px"></th></tr></thead>
                         <tbody id="issRowsBody">
                             @php
                                 // Color/Size/Remaining come from the requisition, not the submitted
@@ -146,6 +146,8 @@
                                         return [
                                             'requisition_item_id' => $i->id,
                                             'item_id'              => $i->item_id,
+                                            'color_id'             => $i->color_id,
+                                            'size_id'              => $i->size_id,
                                             'color'                => $i->color?->name,
                                             'size'                 => $i->size?->name,
                                             'remaining'            => $remaining,
@@ -172,8 +174,9 @@
                                     </td>
                                     <td>{{ $line['color'] ?? '—' }}</td>
                                     <td>{{ $line['size'] ?? '—' }}</td>
-                                    <td>{{ $line['remaining'] ?? '—' }}</td>
-                                    <td><input type="number" step="0.0001" min="0.0001" name="items[{{ $index }}][issued_qty]" class="form-control form-control-sm" value="{{ $line['issued_qty'] ?? ($line['remaining'] ?? '') }}" required></td>
+                                    <td>{{ isset($line['remaining']) ? inv_qty($line['remaining']) : '—' }}</td>
+                                    <td data-role="stock" @if($requisition) data-requisition="{{ $requisition->id }}" @endif @if(isset($line['requisition_item_id'])) data-item-id="{{ $line['item_id'] }}" data-color-id="{{ $line['color_id'] }}" data-size-id="{{ $line['size_id'] }}" @endif></td>
+                                    <td><input type="number" step="0.0001" min="0.0001" name="items[{{ $index }}][issued_qty]" class="form-control form-control-sm" value="{{ $line['issued_qty'] ?? ($line['remaining'] ?? '') }}" data-stock-qty="current" required></td>
                                     <td><button type="button" class="btn-custom danger" data-line-items-remove><i class="fa-solid fa-xmark"></i></button></td>
                                 </tr>
                             @endforeach
@@ -194,7 +197,8 @@
                         <td>—</td>
                         <td>—</td>
                         <td>—</td>
-                        <td><input type="number" step="0.0001" min="0.0001" name="items[__INDEX__][issued_qty]" class="form-control form-control-sm" required></td>
+                        <td data-role="stock"></td>
+                        <td><input type="number" step="0.0001" min="0.0001" name="items[__INDEX__][issued_qty]" class="form-control form-control-sm" data-stock-qty="current" required></td>
                         <td><button type="button" class="btn-custom danger" data-line-items-remove><i class="fa-solid fa-xmark"></i></button></td>
                     </tr>
                 </template>
@@ -216,6 +220,7 @@
 
 @include('sfl-inventory::admin.partials.select2-init')
 @include('sfl-inventory::admin.partials.line-items-script')
+@include('sfl-inventory::admin.partials.stock-hint-script')
 @push('js')
 <script>
     document.querySelector('select[name="department_id"]')?.addEventListener('change', function () {

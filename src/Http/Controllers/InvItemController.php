@@ -6,6 +6,8 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
+use ME\SflInventory\Exports\InvReportExport;
+use Maatwebsite\Excel\Facades\Excel;
 use ME\SflInventory\Http\Requests\InvItemMergeRequest;
 use ME\SflInventory\Http\Requests\InvItemRequest;
 use ME\SflInventory\Models\InvBrand;
@@ -14,29 +16,24 @@ use ME\SflInventory\Models\InvColor;
 use ME\SflInventory\Models\InvDepartment;
 use ME\SflInventory\Models\InvItem;
 use ME\SflInventory\Models\InvItemCategory;
+use ME\SflInventory\Models\InvRequisitionItem;
 use ME\SflInventory\Models\InvSize;
 use ME\SflInventory\Models\InvStore;
 use ME\SflInventory\Models\InvSupplier;
 use ME\SflInventory\Models\InvUnit;
+use ME\SflInventory\Services\StockService;
 
 class InvItemController extends Controller
 {
+    public function __construct(private readonly StockService $stock)
+    {
+    }
+
     public function index(Request $request): View
     {
         $this->authorize('inv_item.list');
 
-        $items = InvItem::query()
-            ->with(['category', 'unit', 'brand', 'color', 'size', 'department', 'supplier', 'buyer', 'openingStore'])
-            ->when($request->filled('item_code'), fn ($q) => $q->where('item_code', 'like', '%' . $request->item_code . '%'))
-            ->when($request->filled('item_name'), fn ($q) => $q->where('item_name', 'like', '%' . $request->item_name . '%'))
-            ->when($request->filled('category_id'), fn ($q) => $q->where('category_id', $request->category_id))
-            ->when($request->filled('unit_id'), fn ($q) => $q->where('unit_id', $request->unit_id))
-            ->when($request->filled('department_id'), fn ($q) => $q->where('department_id', $request->department_id))
-            ->when($request->filled('supplier_id'), fn ($q) => $q->where('supplier_id', $request->supplier_id))
-            ->when($request->filled('buyer_id'), fn ($q) => $q->where('buyer_id', $request->buyer_id))
-            ->when($request->filled('store_id'), fn ($q) => $q->where('opening_store_id', $request->store_id))
-            ->when($request->filled('item_type'), fn ($q) => $q->where('item_type', $request->item_type))
-            ->when($request->filled('status'), fn ($q) => $q->where('is_active', $request->status === 'active'))
+        $items = $this->filteredItems($request)
             ->latest('id')
             ->paginate(20)
             ->withQueryString();
@@ -47,11 +44,62 @@ class InvItemController extends Controller
         $units = InvUnit::active()->orderBy('name')->get();
         $stores = InvStore::active()->orderBy('name')->get();
         $buyers = InvBuyer::active()->orderBy('name')->get();
+        $filterItems = InvItem::orderBy('item_name')->get(['id', 'item_code', 'item_name']);
 
         $trashedItems = InvItem::onlyTrashed()->latest('deleted_at')->get()
             ->map(fn ($item) => ['id' => $item->id, 'title' => $item->item_code . ' — ' . $item->item_name, 'subtitle' => null, 'deleted_at' => $item->deleted_at]);
 
-        return view('sfl-inventory::admin.items.index', compact('items', 'categories', 'departments', 'suppliers', 'units', 'stores', 'buyers', 'trashedItems'));
+        return view('sfl-inventory::admin.items.index', compact('items', 'filterItems', 'categories', 'departments', 'suppliers', 'units', 'stores', 'buyers', 'trashedItems'));
+    }
+
+    /** Item list Print (printMaster2) — same filters as the list, every row. */
+    public function print(Request $request): View
+    {
+        $this->authorize('inv_item.export');
+
+        return $this->printView($request);
+    }
+
+    /** Item list Excel download — the print view's table, same filters. */
+    public function export(Request $request)
+    {
+        $this->authorize('inv_item.export');
+
+        $request->merge(['print' => 1, 'excel_export' => 1]);
+
+        return Excel::download(new InvReportExport($this->printView($request), 'Item Master'), 'item-master-' . now()->format('Y-m-d') . '.xlsx');
+    }
+
+    private function printView(Request $request): View
+    {
+        $items = $this->filteredItems($request)->orderBy('item_code')->get();
+
+        $stock = DB::table('inv_stock_transactions')
+            ->whereIn('item_id', $items->pluck('id'))
+            ->groupBy('item_id')
+            ->selectRaw('item_id, SUM(qty_in) - SUM(qty_out) as balance')
+            ->pluck('balance', 'item_id');
+
+        return view('sfl-inventory::admin.items.print', ['items' => $items, 'stock' => $stock, 'printMode' => true]);
+    }
+
+    /** The Item Master list query with every list filter applied — shared by the list, Print and Excel. */
+    private function filteredItems(Request $request)
+    {
+        return InvItem::query()
+            ->with(['category', 'unit', 'brand', 'color', 'size', 'department', 'supplier', 'buyer', 'openingStore'])
+            ->when($request->filled('item_id'), fn ($q) => $q->whereKey($request->item_id))
+            ->when($request->filled('item_code'), fn ($q) => $q->where('item_code', 'like', '%' . $request->item_code . '%'))
+            ->when($request->filled('item_name'), fn ($q) => $q->where('item_name', 'like', '%' . $request->item_name . '%'))
+            ->when($request->filled('category_id'), fn ($q) => $q->where('category_id', $request->category_id))
+            ->when($request->filled('unit_id'), fn ($q) => $q->where('unit_id', $request->unit_id))
+            ->when($request->filled('department_id'), fn ($q) => $q->where('department_id', $request->department_id))
+            ->when($request->filled('supplier_id'), fn ($q) => $q->where('supplier_id', $request->supplier_id))
+            ->when($request->filled('buyer_id'), fn ($q) => $q->where('buyer_id', $request->buyer_id))
+            ->when($request->input('store_id') === 'none', fn ($q) => $q->whereNull('opening_store_id'))
+            ->when($request->filled('store_id') && $request->input('store_id') !== 'none', fn ($q) => $q->where('opening_store_id', $request->store_id))
+            ->when($request->filled('item_type'), fn ($q) => $q->where('item_type', $request->item_type))
+            ->when($request->filled('status'), fn ($q) => $q->where('is_active', $request->status === 'active'));
     }
 
     public function create(): View
@@ -79,9 +127,31 @@ class InvItemController extends Controller
 
     public function update(InvItemRequest $request, InvItem $item): RedirectResponse
     {
-        $item->update($request->validated());
+        $data = $request->validated();
+        $oldStoreId = $item->opening_store_id ? (int) $item->opening_store_id : null;
+        $newStoreId = ! empty($data['opening_store_id']) ? (int) $data['opening_store_id'] : null;
+        $storeChanged = $newStoreId !== null && $newStoreId !== $oldStoreId;
 
-        return redirect()->route('inventory.items.index')->with('success', 'Item updated successfully.');
+        $moved = DB::transaction(function () use ($item, $data, $storeChanged, $newStoreId) {
+            $item->update($data);
+
+            return $storeChanged ? $this->stock->consolidateItemStock($item, $newStoreId) : 0;
+        });
+
+        $message = 'Item updated successfully.';
+        if ($storeChanged) {
+            $storeName = InvStore::find($newStoreId)?->name;
+            $message = "Item updated. Store changed to {$storeName}" . ($moved ? " — {$moved} stock balance(s) moved into it, reports now show the item there." : '.');
+
+            $openRequisitions = InvRequisitionItem::where('item_id', $item->id)
+                ->whereHas('requisition', fn ($q) => $q->where('store_id', '!=', $newStoreId)->whereIn('status', ['pending', 'approved', 'partially_issued']))
+                ->count();
+            if ($openRequisitions) {
+                $message .= " Note: {$openRequisitions} open requisition line(s) still point at the old store.";
+            }
+        }
+
+        return redirect()->route('inventory.items.index')->with('success', $message);
     }
 
     public function destroy(InvItem $item): RedirectResponse

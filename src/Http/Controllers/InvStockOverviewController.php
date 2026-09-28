@@ -2,12 +2,14 @@
 
 namespace ME\SflInventory\Http\Controllers;
 
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 use ME\SflInventory\Models\InvColor;
 use ME\SflInventory\Models\InvItem;
 use ME\SflInventory\Models\InvItemCategory;
+use ME\SflInventory\Models\InvRequisition;
 use ME\SflInventory\Models\InvSize;
 use ME\SflInventory\Models\InvStore;
 use ME\SflInventory\Services\StockService;
@@ -72,6 +74,47 @@ class InvStockOverviewController extends Controller
         $allSizes = InvSize::active()->ordered()->get();
 
         return view('sfl-inventory::admin.stock-overview.index', compact('rows', 'items', 'stores', 'colors', 'sizes', 'categories', 'allStores', 'allItems', 'allColors', 'allSizes'));
+    }
+
+    /**
+     * Live Current / Reserved / Available for one item(+variant) in one store
+     * — feeds the stock column on the Requisition, Requisition Approval and
+     * Issue forms. $exclude_requisition_id leaves that requisition's own
+     * reservation out, so approving it doesn't count against itself.
+     */
+    public function balance(Request $request): JsonResponse
+    {
+        abort_unless(auth()->user()->canAny(['inv_requisition.add', 'inv_requisition.edit', 'inv_requisition.approve', 'inv_issue.add', 'inv_stock_overview.view']), 403);
+
+        $data = $request->validate([
+            'store_id' => ['required', 'integer'],
+            'item_id'  => ['required', 'integer'],
+            'color_id' => ['nullable', 'integer'],
+            'size_id'  => ['nullable', 'integer'],
+            'exclude_requisition_id' => ['nullable', 'integer'],
+            'requisition_id' => ['nullable', 'integer'],
+        ]);
+
+        $colorId = isset($data['color_id']) ? (int) $data['color_id'] : null;
+        $sizeId = isset($data['size_id']) ? (int) $data['size_id'] : null;
+
+        $snapshot = $this->stock->stockSnapshot(
+            (int) $data['item_id'],
+            (int) $data['store_id'],
+            $colorId,
+            $sizeId,
+            isset($data['exclude_requisition_id']) ? (int) $data['exclude_requisition_id'] : null,
+        );
+
+        // Buyer Store: also the balance left under the requisition's buyer + style.
+        $requisition = isset($data['requisition_id']) ? InvRequisition::find($data['requisition_id']) : null;
+        if ($requisition && InvStore::whereKey($data['store_id'])->value('type') === InvStore::TYPE_BUYER) {
+            $snapshot['style'] = $this->stock->styleBalance(
+                (int) $data['item_id'], (int) $data['store_id'], $requisition->buyer_id, $requisition->style, $requisition->mer_style_id, $colorId, $sizeId
+            ) + ['label' => $requisition->style ?: '(no style)'];
+        }
+
+        return response()->json($snapshot);
     }
 
     /**

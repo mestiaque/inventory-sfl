@@ -135,6 +135,15 @@
                             <tr><td colspan="12" class="text-center text-muted">No broken needle entries found.</td></tr>
                         @endforelse
                     </tbody>
+                    @if($entries->total())
+                        <tfoot>
+                            <tr class="font-weight-bold">
+                                <td colspan="8" class="text-right">Total: {{ $entries->total() }} entr{{ $entries->total() === 1 ? 'y' : 'ies' }}{{ $entries->hasPages() ? ' (all pages)' : '' }}</td>
+                                <td class="text-right">{{ inv_qty($grandTotal) }}</td>
+                                <td colspan="3"></td>
+                            </tr>
+                        </tfoot>
+                    @endif
                 </table>
             </div>
 

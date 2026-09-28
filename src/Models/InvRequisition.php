@@ -83,6 +83,19 @@ class InvRequisition extends Model
     }
 
     /**
+     * Approved, but not a single unit issued against it yet — the only
+     * post-approval state that can still be deleted (with the special
+     * inv_requisition.delete_approved permission). Uses the eager-loaded
+     * items when present so the index list doesn't query per row.
+     */
+    public function isApprovedButUnissued(): bool
+    {
+        return in_array($this->status, ['approved', 'partially_issued'], true)
+            && (float) $this->items->sum('issued_qty') === 0.0
+            && ! ($this->issues_exists ?? $this->isReferenced());
+    }
+
+    /**
      * Recomputed whenever a challan against this requisition is prepared,
      * cancelled, or approved: approved -> partially_issued (some qty
      * committed) -> issued (every line fully committed). Bidirectional —

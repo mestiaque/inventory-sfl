@@ -18,6 +18,14 @@
                         <i class="fa-solid fa-trash"></i> Trash ({{ $trashedItems->count() }})
                     </button>
                 @endcan
+                @can('inv_item.export')
+                    <a href="{{ route('inventory.items.export', request()->query()) }}" class="btn btn-outline-success btn-sm">
+                        <i class="fa-solid fa-file-excel"></i> Excel
+                    </a>
+                    <a href="{{ route('inventory.items.print', request()->query()) }}" target="_blank" class="btn btn-outline-secondary btn-sm">
+                        <i class="fa-solid fa-print"></i> Print
+                    </a>
+                @endcan
                 @can('inv_item.merge')
                     <a href="{{ route('inventory.items.merge-form') }}" class="btn btn-outline-warning btn-sm">
                         <i class="fa-solid fa-code-merge"></i> Merge Duplicates
@@ -33,10 +41,12 @@
         <div class="card-body">
             <form method="GET" class="row mb-3 align-items-end">
                 <div class="col-md-3 mb-2">
-                    <input type="text" name="item_code" class="form-control form-control-sm" placeholder="Search Code" value="{{ request('item_code') }}">
-                </div>
-                <div class="col-md-3 mb-2">
-                    <input type="text" name="item_name" class="form-control form-control-sm" placeholder="Search Name" value="{{ request('item_name') }}">
+                    <select name="item_id" class="form-control form-control-sm inv-select2">
+                        <option value="">All Items (search code or name)</option>
+                        @foreach($filterItems as $filterItem)
+                            <option value="{{ $filterItem->id }}" @selected(request('item_id') == $filterItem->id)>{{ $filterItem->item_code }} — {{ $filterItem->item_name }}</option>
+                        @endforeach
+                    </select>
                 </div>
                 <div class="col-md-3 mb-2">
                     <select name="category_id" class="form-control form-control-sm inv-select2">
@@ -81,6 +91,7 @@
                 <div class="col-md-3 mb-2">
                     <select name="store_id" class="form-control form-control-sm inv-select2">
                         <option value="">All Stores</option>
+                        <option value="none" @selected(request('store_id') === 'none')>— No store assigned —</option>
                         @foreach($stores as $store)
                             <option value="{{ $store->id }}" @selected(request('store_id') == $store->id)>{{ $store->name }}</option>
                         @endforeach

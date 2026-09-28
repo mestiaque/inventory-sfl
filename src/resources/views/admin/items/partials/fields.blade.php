@@ -120,17 +120,30 @@
         </div>
     @endunless
 
-    @if(isset($item) && !$item->opening_store_id)
-        <div class="col-md-3 mb-3">
-            <label class="form-label">Store</label>
-            <select name="opening_store_id" class="form-control form-control-sm inv-select2">
-                <option value="">— None —</option>
-                @foreach($stores as $store)
-                    <option value="{{ $store->id }}" @selected(old('opening_store_id') == $store->id)>{{ $store->name }}</option>
-                @endforeach
-            </select>
-            <div class="form-text">This item has no store assigned yet. Set it here.</div>
-        </div>
+    @if(isset($item))
+        @if(!$item->opening_store_id || auth()->user()->can('inv_item.change_store'))
+            <div class="col-md-3 mb-3">
+                <label class="form-label">Store</label>
+                <select name="opening_store_id" class="form-control form-control-sm inv-select2">
+                    @unless($item->opening_store_id)<option value="">— None —</option>@endunless
+                    @foreach($stores as $store)
+                        <option value="{{ $store->id }}" @selected(old('opening_store_id', $item->opening_store_id) == $store->id)>{{ $store->name }}</option>
+                    @endforeach
+                </select>
+                <div class="form-text">
+                    @if($item->opening_store_id)
+                        Changing the store moves this item's whole stock balance (from every store) into the new store, so all reports show it there.
+                    @else
+                        This item has no store assigned yet. Set it here — any existing stock moves into it.
+                    @endif
+                </div>
+            </div>
+        @else
+            <div class="col-md-3 mb-3">
+                <label class="form-label">Store</label>
+                <input type="text" class="form-control form-control-sm" value="{{ $item->openingStore?->name }}" disabled>
+            </div>
+        @endif
     @endif
 
     @can('inv_barcode.use')

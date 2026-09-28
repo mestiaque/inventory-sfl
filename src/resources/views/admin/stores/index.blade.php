@@ -62,7 +62,7 @@
                                 <td>{{ $loop->iteration + $stores->firstItem() - 1 }}</td>
                                 <td>{{ $store->name }}</td>
                                 <td>{{ $store->code }}</td>
-                                <td>{{ ['raw_material' => 'For Buyer', 'accessories' => 'For Accessories', 'finished_goods' => 'For Finished Goods'][$store->type] ?? ucfirst($store->type) }}</td>
+                                <td>{{ $store->typeLabel() }}</td>
                                 <td>{{ $store->address }}</td>
                                 <td>
                                     <span class="badge badge-{{ $store->is_active ? 'success' : 'secondary' }}">
@@ -94,7 +94,7 @@
                                             <dl class="row mb-0">
                                                 <dt class="col-sm-4">Name</dt><dd class="col-sm-8">{{ $store->name }}</dd>
                                                 <dt class="col-sm-4">Code</dt><dd class="col-sm-8">{{ $store->code }}</dd>
-                                                <dt class="col-sm-4">Store For</dt><dd class="col-sm-8">{{ ['raw_material' => 'For Buyer', 'accessories' => 'For Accessories', 'finished_goods' => 'For Finished Goods'][$store->type] ?? ucfirst($store->type) }}</dd>
+                                                <dt class="col-sm-4">Store For</dt><dd class="col-sm-8">{{ $store->typeLabel() }}</dd>
                                                 <dt class="col-sm-4">Address</dt><dd class="col-sm-8">{{ $store->address ?: '—' }}</dd>
                                                 <dt class="col-sm-4">Status</dt>
                                                 <dd class="col-sm-8">

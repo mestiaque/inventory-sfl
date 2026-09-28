@@ -3,6 +3,7 @@
 namespace ME\SflInventory\Services;
 
 use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
 use ME\SflInventory\Models\InvItem;
 use ME\SflInventory\Models\InvRequisitionItem;
 use ME\SflInventory\Models\InvStockTransaction;
@@ -98,8 +99,12 @@ class StockService
      */
     public function latestRate(int $itemId, ?int $storeId = null, ?int $colorId = null, ?int $sizeId = null): float
     {
+        // store_change inflows carry the purchase price over when an item's
+        // store is changed (consolidateItemStock() below), so they
+        // count as a price source for the new store too.
         $query = InvStockTransaction::where('item_id', $itemId)
-            ->whereIn('transaction_type', ['grn', 'opening'])
+            ->where(fn ($q) => $q->whereIn('transaction_type', ['grn', 'opening'])
+                ->orWhere(fn ($q2) => $q2->where('transaction_type', 'store_change')->where('qty_in', '>', 0)))
             ->where('rate', '>', 0);
         if ($storeId) {
             $query->where('store_id', $storeId);
@@ -143,10 +148,12 @@ class StockService
      * Quantity committed to approved-but-not-yet-fully-issued requisitions
      * against a store, per item(+variant).
      */
-    public function reservedStock(int $itemId, int $storeId, ?int $colorId = null, ?int $sizeId = null): float
+    public function reservedStock(int $itemId, int $storeId, ?int $colorId = null, ?int $sizeId = null, ?int $excludeRequisitionId = null): float
     {
         return (float) InvRequisitionItem::query()
             ->join('inv_requisitions', 'inv_requisitions.id', '=', 'inv_requisition_items.requisition_id')
+            ->whereNull('inv_requisitions.deleted_at')
+            ->when($excludeRequisitionId, fn ($q) => $q->where('inv_requisitions.id', '!=', $excludeRequisitionId))
             ->where('inv_requisitions.store_id', $storeId)
             ->where('inv_requisition_items.item_id', $itemId)
             ->when($colorId !== null, fn ($q) => $q->where('inv_requisition_items.color_id', $colorId))
@@ -156,9 +163,127 @@ class StockService
             ->value('reserved');
     }
 
-    public function availableStock(int $itemId, int $storeId, ?int $colorId = null, ?int $sizeId = null): float
+    public function availableStock(int $itemId, int $storeId, ?int $colorId = null, ?int $sizeId = null, ?int $excludeRequisitionId = null): float
     {
-        return $this->currentStock($itemId, $storeId, $colorId, $sizeId) - $this->reservedStock($itemId, $storeId, $colorId, $sizeId);
+        return $this->currentStock($itemId, $storeId, $colorId, $sizeId) - $this->reservedStock($itemId, $storeId, $colorId, $sizeId, $excludeRequisitionId);
+    }
+
+    /**
+     * Makes the item's new store its only store: every item+variant balance
+     * sitting in any other store (positive or negative) is moved into
+     * $storeId with a paired store_change out/in, so Main Store Inventory and
+     * every stock report show the whole balance under the current store.
+     * The ledger stays insert-only — old rows keep their original store as
+     * history. Returns how many balances were moved.
+     */
+    public function consolidateItemStock(InvItem $item, int $storeId): int
+    {
+        $balances = DB::table('inv_stock_transactions')
+            ->where('item_id', $item->id)
+            ->where('store_id', '!=', $storeId)
+            ->select('store_id', 'color_id', 'size_id', DB::raw('SUM(qty_in) - SUM(qty_out) as balance'))
+            ->groupBy('store_id', 'color_id', 'size_id')
+            ->havingRaw('ABS(SUM(qty_in) - SUM(qty_out)) > 0.0001')
+            ->get();
+
+        $stores = \ME\SflInventory\Models\InvStore::whereIn('id', $balances->pluck('store_id')->push($storeId))->pluck('name', 'id');
+
+        foreach ($balances as $row) {
+            $colorId = $row->color_id !== null ? (int) $row->color_id : null;
+            $sizeId = $row->size_id !== null ? (int) $row->size_id : null;
+            $qty = abs((float) $row->balance);
+            // Carry the real purchase price across, so the new store's
+            // report value (priced at latestRate) matches the old one.
+            $rate = $this->latestRate($item->id, (int) $row->store_id, $colorId, $sizeId)
+                ?: $this->latestRate($item->id);
+            $note = "Item store changed: {$stores[$row->store_id]} → {$stores[$storeId]}";
+
+            foreach ([[(int) $row->store_id, $row->balance < 0], [$storeId, $row->balance > 0]] as [$postStore, $isInflow]) {
+                $this->post([
+                    'item_id'          => $item->id,
+                    'color_id'         => $colorId,
+                    'size_id'          => $sizeId,
+                    'store_id'         => $postStore,
+                    'transaction_date' => now()->toDateString(),
+                    'transaction_type' => 'store_change',
+                    'qty_in'           => $isInflow ? $qty : 0,
+                    'qty_out'          => $isInflow ? 0 : $qty,
+                    'rate'             => $rate,
+                    'reference_type'   => 'inv_item',
+                    'reference_id'     => $item->id,
+                    'remarks'          => $note,
+                    'created_by'       => auth()->id(),
+                ]);
+            }
+        }
+
+        return $balances->count();
+    }
+
+    /**
+     * Buyer Store stock is owned per buyer + style: an item received under
+     * one style can't be issued against another. Returns what was received
+     * (posted GRNs) and issued (every live challan — a challan claims its
+     * qty the moment it's prepared) for this item(+variant) in this store
+     * under the given style, and the balance left for it.
+     *
+     * A style is identified by its Merchandising style id when there is one;
+     * older, unlinked documents by buyer + style text.
+     *
+     * @return array{received: float, issued: float, balance: float}
+     */
+    public function styleBalance(int $itemId, int $storeId, ?int $buyerId, ?string $style, ?int $merStyleId, ?int $colorId = null, ?int $sizeId = null, ?int $excludeIssueId = null): array
+    {
+        $style = trim((string) $style);
+        $sameStyle = function ($q, string $t) use ($buyerId, $style, $merStyleId) {
+            $q->where(function ($w) use ($t, $buyerId, $style, $merStyleId) {
+                if ($merStyleId) {
+                    $w->where("{$t}.mer_style_id", $merStyleId);
+                }
+                $w->orWhere(function ($old) use ($t, $buyerId, $style, $merStyleId) {
+                    if ($merStyleId) {
+                        $old->whereNull("{$t}.mer_style_id");
+                    }
+                    $buyerId === null ? $old->whereNull("{$t}.buyer_id") : $old->where("{$t}.buyer_id", $buyerId);
+                    $old->whereRaw("TRIM(COALESCE({$t}.style, '')) = ?", [$style]);
+                });
+            });
+        };
+        $variant = function ($q, string $t) use ($colorId, $sizeId) {
+            $q->when($colorId !== null, fn ($w) => $w->where("{$t}.color_id", $colorId))
+                ->when($sizeId !== null, fn ($w) => $w->where("{$t}.size_id", $sizeId));
+        };
+
+        $received = (float) DB::table('inv_grn_items as gi')
+            ->join('inv_grns as g', 'g.id', '=', 'gi.grn_id')
+            ->whereNull('g.deleted_at')
+            ->where('g.status', 'posted')
+            ->where('g.store_id', $storeId)
+            ->where('gi.item_id', $itemId)
+            ->tap(fn ($q) => $variant($q, 'gi'))
+            ->tap(fn ($q) => $sameStyle($q, 'g'))
+            ->sum('gi.received_qty');
+
+        $issued = (float) DB::table('inv_issue_items as ii')
+            ->join('inv_issues as i', 'i.id', '=', 'ii.issue_id')
+            ->whereNull('i.deleted_at')
+            ->where('i.store_id', $storeId)
+            ->where('ii.item_id', $itemId)
+            ->when($excludeIssueId, fn ($q) => $q->where('i.id', '!=', $excludeIssueId))
+            ->tap(fn ($q) => $variant($q, 'ii'))
+            ->tap(fn ($q) => $sameStyle($q, 'i'))
+            ->sum('ii.issued_qty');
+
+        return ['received' => $received, 'issued' => $issued, 'balance' => $received - $issued];
+    }
+
+    /** @return array{current: float, reserved: float, available: float} */
+    public function stockSnapshot(int $itemId, int $storeId, ?int $colorId = null, ?int $sizeId = null, ?int $excludeRequisitionId = null): array
+    {
+        $current = $this->currentStock($itemId, $storeId, $colorId, $sizeId);
+        $reserved = $this->reservedStock($itemId, $storeId, $colorId, $sizeId, $excludeRequisitionId);
+
+        return ['current' => $current, 'reserved' => $reserved, 'available' => $current - $reserved];
     }
 
     /**

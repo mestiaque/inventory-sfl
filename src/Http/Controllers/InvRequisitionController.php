@@ -11,6 +11,7 @@ use Illuminate\View\View;
 use ME\SflInventory\Http\Requests\InvRequisitionApprovalRequest;
 use ME\SflInventory\Http\Requests\InvRequisitionRequest;
 use ME\SflInventory\Models\InvBuyer;
+use ME\SflInventory\Services\MerchandisingLink;
 use ME\SflInventory\Models\InvColor;
 use ME\SflInventory\Models\InvDepartment;
 use ME\SflInventory\Models\InvItem;
@@ -32,6 +33,7 @@ class InvRequisitionController extends Controller
 
         $requisitions = InvRequisition::query()
             ->with(['department', 'store', 'buyer', 'requester', 'approver', 'items.item.unit', 'items.color', 'items.size'])
+            ->withExists('issues')
             ->when($request->filled('search'), fn ($q) => $q->where('requisition_no', 'like', '%' . $request->search . '%'))
             ->when($request->filled('department_id'), fn ($q) => $q->where('department_id', $request->department_id))
             ->when($request->filled('buyer_id'), fn ($q) => $q->where('buyer_id', $request->buyer_id))
@@ -63,7 +65,7 @@ class InvRequisitionController extends Controller
 
     public function store(InvRequisitionRequest $request): RedirectResponse
     {
-        $data = $request->validated();
+        $data = $this->applyMerchandisingLink($request, $request->validated());
 
         $autoApprove = $request->boolean('auto_approve') && auth()->user()->can('inv_requisition.approve');
 
@@ -129,14 +131,14 @@ class InvRequisitionController extends Controller
 
         $requisition->load('items.item', 'items.color', 'items.size');
 
-        return view('sfl-inventory::admin.requisitions.edit', ['requisition' => $requisition] + $this->formOptions());
+        return view('sfl-inventory::admin.requisitions.edit', ['requisition' => $requisition] + $this->formOptions($requisition->items->pluck('item_id')));
     }
 
     public function update(InvRequisitionRequest $request, InvRequisition $requisition): RedirectResponse
     {
         abort_if($requisition->status !== 'pending', 403, 'Only pending requisitions can be edited.');
 
-        $data = $request->validated();
+        $data = $this->applyMerchandisingLink($request, $request->validated());
 
         DB::transaction(function () use ($data, $requisition) {
             $requisition->update([
@@ -233,9 +235,25 @@ class InvRequisitionController extends Controller
         return view('sfl-inventory::admin.requisitions.print', compact('requisition', 'departments'));
     }
 
+    /**
+     * Pending/rejected: normal delete permission. Approved but nothing
+     * issued yet: needs the special delete_approved permission — deleting it
+     * releases the stock it was reserving. Anything with a real issue
+     * against it can never be deleted here.
+     */
     public function destroy(InvRequisition $requisition): RedirectResponse
     {
-        $this->authorize('inv_requisition.delete');
+        $requisition->load('items');
+
+        if (in_array($requisition->status, ['approved', 'partially_issued', 'issued'], true)) {
+            $this->authorize('inv_requisition.delete_approved');
+
+            if (! $requisition->isApprovedButUnissued()) {
+                return back()->with('error', "{$requisition->requisition_no} already has stock issued against it and cannot be deleted.");
+            }
+        } else {
+            $this->authorize('inv_requisition.delete');
+        }
 
         if ($requisition->isReferenced()) {
             return back()->with('error', 'This requisition has issues against it and cannot be deleted.');
@@ -243,7 +261,7 @@ class InvRequisitionController extends Controller
 
         $requisition->delete();
 
-        return back()->with('success', 'Requisition deleted successfully.');
+        return back()->with('success', "Requisition {$requisition->requisition_no} deleted successfully.");
     }
 
     public function restore(InvRequisition $requisition): RedirectResponse
@@ -298,7 +316,27 @@ class InvRequisitionController extends Controller
             ]);
     }
 
-    private function formOptions(): array
+    /**
+     * Merchandising-linked requisition: the inventory buyer, style text and
+     * order ref are derived from the Merchandising buyer / style / PO picked.
+     * The Issue later inherits them, and its "received under this style"
+     * check matches the Buyer Store receive that was derived the same way.
+     */
+    private function applyMerchandisingLink(InvRequisitionRequest $request, array $data): array
+    {
+        if (! $request->usesMerchandising()) {
+            return $data;
+        }
+
+        $link = app(MerchandisingLink::class);
+        $data['buyer_id'] = ! empty($data['mer_buyer_id']) ? $link->inventoryBuyerId((int) $data['mer_buyer_id']) : null;
+        $data['style'] = ! empty($data['mer_style_id']) ? $link->styleNo((int) $data['mer_style_id']) : null;
+        $data['order_ref'] = ! empty($data['mer_sales_contract_po_id']) ? $link->orderRef((int) $data['mer_sales_contract_po_id']) : null;
+
+        return $data;
+    }
+
+    private function formOptions(iterable $keepItemIds = []): array
     {
         $employees = class_exists(\ME\Hr\Models\HrEmployee::class)
             ? \ME\Hr\Models\HrEmployee::query()->where('status', 1)->orderBy('name')->get()
@@ -309,20 +347,17 @@ class InvRequisitionController extends Controller
             // Requisitions only ever draw raw material (Warehouse) or
             // accessories — the Finished Goods store is never a source here.
             'stores'      => InvStore::active()->whereIn('type', ['raw_material', 'accessories'])->orderBy('name')->get(),
-            'items'       => InvItem::active()->with('unit')->orderBy('item_name')->get(),
+            'items'       => InvItem::selectable($keepItemIds)->with('unit')->orderBy('item_name')->get(),
             'buyers'      => InvBuyer::active()->orderBy('name')->get(),
             'colors'      => InvColor::active()->orderBy('name')->get(),
             'sizes'       => InvSize::active()->ordered()->get(),
             'employees'   => $employees,
-            'merStylesOptions' => class_exists(\ME\MerchandisingTrace\Models\Style::class)
-                ? \ME\MerchandisingTrace\Models\Style::query()->orderBy('style_no')->get(['id', 'style_no', 'name'])
-                : collect(),
-            'merSalesContractPosOptions' => class_exists(\ME\MerchandisingTrace\Models\SalesContractPo::class)
-                ? \ME\MerchandisingTrace\Models\SalesContractPo::query()->latest('id')->limit(500)->get(['id', 'po_no'])
-                : collect(),
-            'merBuyersOptions' => class_exists(\ME\MerchandisingTrace\Models\Buyer::class)
-                ? \ME\MerchandisingTrace\Models\Buyer::query()->orderBy('name')->get(['id', 'name'])
-                : collect(),
+            // Buyer / Style / PO from Merchandising (see MerchandisingLink).
+            'merLinked'                  => app(MerchandisingLink::class)->available(),
+            'merBuyersOptions'           => app(MerchandisingLink::class)->buyers(),
+            'merStylesOptions'           => app(MerchandisingLink::class)->styles(),
+            'merSalesContractPosOptions' => app(MerchandisingLink::class)->pos(),
+            'merReceivedStyleIds'        => app(MerchandisingLink::class)->available() ? app(MerchandisingLink::class)->receivedStyleIds() : [],
         ];
     }
 }

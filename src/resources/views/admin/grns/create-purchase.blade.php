@@ -38,7 +38,7 @@
                             <label class="form-label">Store <span class="text-danger">*</span></label>
                             <select name="{{ $accessoriesStore ? '' : 'store_id' }}" class="form-control form-control-sm inv-select2" required @disabled($accessoriesStore)>
                                 <option value="">— Select —</option>
-                                @foreach($stores as $store)
+                                @foreach($stores->where('type', \ME\SflInventory\Models\InvStore::TYPE_GENERAL) as $store)
                                     <option value="{{ $store->id }}" @selected(old('store_id', $accessoriesStore?->id) == $store->id)>{{ $store->name }}</option>
                                 @endforeach
                             </select>

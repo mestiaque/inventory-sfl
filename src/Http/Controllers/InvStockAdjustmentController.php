@@ -31,6 +31,7 @@ class InvStockAdjustmentController extends Controller
         $adjustments = InvStockAdjustment::query()
             ->with('store')
             ->when($request->filled('search'), fn ($q) => $q->where('adjustment_no', 'like', '%' . $request->search . '%'))
+            ->when($request->filled('item_id'), fn ($q) => $q->whereHas('items', fn ($iq) => $iq->where('item_id', $request->item_id)))
             ->when($request->filled('store_id'), fn ($q) => $q->where('store_id', $request->store_id))
             ->when($request->filled('type'), fn ($q) => $q->where('type', $request->type))
             ->when($request->filled('status'), fn ($q) => $q->where('status', $request->status))
@@ -46,7 +47,9 @@ class InvStockAdjustmentController extends Controller
         $trashedAdjustments = InvStockAdjustment::onlyTrashed()->with('store')->latest('deleted_at')->get()
             ->map(fn ($adjustment) => ['id' => $adjustment->id, 'title' => $adjustment->adjustment_no, 'subtitle' => $adjustment->store?->name, 'deleted_at' => $adjustment->deleted_at]);
 
-        return view('sfl-inventory::admin.adjustments.index', compact('adjustments', 'stores', 'trashedAdjustments'));
+        $filterItems = InvItem::active()->orderBy('item_name')->get(['id', 'item_code', 'item_name']);
+
+        return view('sfl-inventory::admin.adjustments.index', compact('filterItems', 'adjustments', 'stores', 'trashedAdjustments'));
     }
 
     public function create(): View

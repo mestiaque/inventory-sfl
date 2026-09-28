@@ -3,10 +3,16 @@
 namespace ME\SflInventory\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use ME\SflInventory\Http\Requests\Concerns\ValidatesItemStore;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\Validator;
+use ME\SflInventory\Models\InvStore;
+use ME\SflInventory\Services\MerchandisingLink;
 
 class InvGrnRequest extends FormRequest
 {
+    use ValidatesItemStore;
+
     public function authorize(): bool
     {
         $ability = $this->route('grn') ? 'inv_grn.edit' : 'inv_grn.add';
@@ -26,7 +32,11 @@ class InvGrnRequest extends FormRequest
             'source_type'                   => ['required', 'in:purchase,buyer_supplied'],
             'store_id'                      => ['required', 'integer', 'exists:inv_stores,id'],
             'supplier_id'                   => ['required_if:source_type,purchase', 'nullable', 'integer', 'exists:inv_suppliers,id'],
-            'buyer_id'                      => ['required_if:source_type,buyer_supplied', 'nullable', 'integer', 'exists:inv_buyers,id'],
+            // With Merchandising installed a Buyer Store receive names the buyer from
+            // Merchandising (mer_buyer_id) and the inventory buyer is derived from it.
+            'buyer_id'                      => $this->usesMerchandisingBuyer()
+                ? ['nullable', 'integer', 'exists:inv_buyers,id']
+                : ['required_if:source_type,buyer_supplied', 'nullable', 'integer', 'exists:inv_buyers,id'],
             'style'                         => ['nullable', 'string', 'max:150'],
             'order_ref'                     => ['nullable', 'string', 'max:150'],
             'mer_style_id'                  => ['nullable', 'integer'],
@@ -49,6 +59,54 @@ class InvGrnRequest extends FormRequest
             'items.*.batch_no'              => ['nullable', 'string', 'max:100'],
             'items.*.expiry_date'           => ['nullable', 'date'],
         ];
+    }
+
+    /** The receive kind — taken from the saved GRN on edit, never from the form. */
+    public function sourceType(): ?string
+    {
+        return $this->route('grn')?->source_type ?? $this->input('source_type');
+    }
+
+    /**
+     * Buyer Store receives must name a Merchandising buyer + style: always for
+     * new ones; on edit only if the GRN was already linked (older, unlinked
+     * receipts stay editable the old way).
+     */
+    public function usesMerchandisingBuyer(): bool
+    {
+        if ($this->sourceType() !== 'buyer_supplied' || ! app(MerchandisingLink::class)->available()) {
+            return false;
+        }
+
+        $grn = $this->route('grn');
+
+        return ! $grn || $grn->mer_buyer_id;
+    }
+
+    public function withValidator(Validator $validator): void
+    {
+        $validator->after(function (Validator $v) {
+            // Each receive kind goes into its own store kind only.
+            $wanted = InvStore::storeTypeFor((string) $this->sourceType());
+            $store = $this->filled('store_id') ? InvStore::find($this->input('store_id')) : null;
+            if ($wanted && $store && $store->type !== $wanted) {
+                $v->errors()->add('store_id', "{$store->name} is not a " . InvStore::TYPE_LABELS[$wanted] . ' — this receive must go into one.');
+            }
+
+            $grn = $this->route('grn');
+            $this->validateItemStores($v, $grn?->store_id ?? ($store?->id), $grn?->items->pluck('item_id') ?? []);
+
+            if ($this->usesMerchandisingBuyer()) {
+                $errors = app(MerchandisingLink::class)->validateBuyerReceive(
+                    $this->integer('mer_buyer_id') ?: null,
+                    $this->integer('mer_style_id') ?: null,
+                    $this->integer('mer_sales_contract_po_id') ?: null,
+                );
+                foreach ($errors as $field => $message) {
+                    $v->errors()->add($field, $message);
+                }
+            }
+        });
     }
 
     public function messages(): array

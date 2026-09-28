@@ -26,6 +26,22 @@
             @endunless
         </div>
         <div class="card-body">
+            @unless($printMode)
+                <form method="GET" class="row mb-3 align-items-end">
+                    <div class="col-md-4 mb-2">
+                        <select name="item_id" class="form-control form-control-sm inv-select2">
+                            <option value="">All Items</option>
+                            @foreach($filterItems as $filterItem)
+                                <option value="{{ $filterItem->id }}" @selected(request('item_id') == $filterItem->id)>{{ $filterItem->item_code }} — {{ $filterItem->item_name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="col-md-3 mb-2 d-flex align-items-end flex-wrap gap-1">
+                        <button type="submit" class="btn btn-secondary btn-sm">Filter</button>
+                        <a href="{{ url()->current() }}" class="btn btn-light btn-sm">Reset</a>
+                    </div>
+                </form>
+            @endunless
             <div class="table-responsive">
                 <table class="table table-bordered table-sm align-middle">
                     <thead><tr><th>Category</th><th class="text-right">Items</th><th class="text-right">Total Qty</th><th class="text-right">Total Value</th></tr></thead>
@@ -51,4 +67,7 @@
         </div>
     </div>
 </div>
+@unless($printMode)
+    @include('sfl-inventory::admin.partials.select2-init')
+@endunless
 @endsection

@@ -24,7 +24,7 @@
                         <label class="form-label">Store <span class="text-danger">*</span></label>
                         <select name="{{ $buyerStore ? '' : 'store_id' }}" class="form-control form-control-sm inv-select2" required @disabled($buyerStore)>
                             <option value="">— Select —</option>
-                            @foreach($stores as $store)
+                            @foreach($stores->where('type', \ME\SflInventory\Models\InvStore::TYPE_BUYER) as $store)
                                 <option value="{{ $store->id }}" @selected(old('store_id', $buyerStore?->id) == $store->id)>{{ $store->name }}</option>
                             @endforeach
                         </select>
@@ -32,56 +32,7 @@
                             <input type="hidden" name="store_id" value="{{ $buyerStore->id }}">
                         @endif
                     </div>
-                    <div class="col-md-3 mb-3">
-                        <label class="form-label">Buyer <span class="text-danger">*</span></label>
-                        <select name="buyer_id" class="form-control form-control-sm inv-select2" required>
-                            <option value="">— Select —</option>
-                            @foreach($buyers as $buyer)
-                                <option value="{{ $buyer->id }}" @selected(old('buyer_id') == $buyer->id)>{{ $buyer->name }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-                    <div class="col-md-3 mb-3">
-                        <label class="form-label">Style</label>
-                        <input type="text" name="style" class="form-control form-control-sm" value="{{ old('style') }}" placeholder="e.g. Style-A">
-                    </div>
-                    <div class="col-md-3 mb-3">
-                        <label class="form-label">Purchase order ref</label>
-                        <input type="text" name="order_ref" class="form-control form-control-sm" value="{{ old('order_ref') }}">
-                    </div>
-                    @if(($merStylesOptions ?? collect())->isNotEmpty())
-                    <div class="col-md-3 mb-3">
-                        <label class="form-label">Merchandising Style</label>
-                        <select name="mer_style_id" class="form-control form-control-sm inv-select2">
-                            <option value="">— None —</option>
-                            @foreach($merStylesOptions as $s)
-                                <option value="{{ $s->id }}" @selected(old('mer_style_id') == $s->id)>{{ $s->style_no }} — {{ $s->name }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-                    @endif
-                    @if(($merSalesContractPosOptions ?? collect())->isNotEmpty())
-                    <div class="col-md-3 mb-3">
-                        <label class="form-label">Sales Contract PO</label>
-                        <select name="mer_sales_contract_po_id" class="form-control form-control-sm inv-select2">
-                            <option value="">— None —</option>
-                            @foreach($merSalesContractPosOptions as $po)
-                                <option value="{{ $po->id }}" @selected(old('mer_sales_contract_po_id') == $po->id)>{{ $po->po_no }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-                    @endif
-                    @if(($merBuyersOptions ?? collect())->isNotEmpty())
-                    <div class="col-md-3 mb-3">
-                        <label class="form-label">Merchandising Buyer</label>
-                        <select name="mer_buyer_id" class="form-control form-control-sm inv-select2">
-                            <option value="">— None —</option>
-                            @foreach($merBuyersOptions as $b)
-                                <option value="{{ $b->id }}" @selected(old('mer_buyer_id') == $b->id)>{{ $b->name }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-                    @endif
+                    @include('sfl-inventory::admin.grns.partials.buyer-link-fields')
                     <div class="col-md-3 mb-3">
                         <label class="form-label">Receive Date <span class="text-danger">*</span></label>
                         <input type="date" name="receive_date" class="form-control form-control-sm" value="{{ old('receive_date', now()->toDateString()) }}" required>
