@@ -6,6 +6,7 @@ use App\Approvals\BaseApprovalHandler;
 use App\Models\Approval;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
+use ME\SflInventory\Approvals\Concerns\ResolvesConfiguredRecipients;
 use ME\SflInventory\Models\InvPurchaseRequisition;
 use ME\SflInventory\Models\InvPurchaseRequisitionItem;
 
@@ -16,22 +17,20 @@ use ME\SflInventory\Models\InvPurchaseRequisitionItem;
  * dedicated approval page (per-line quantity, reject-with-remarks — see
  * InvPurchaseRequisitionController::approvalForm/approval). That page remains
  * the primary way to act on a request; this handler only covers:
- *   - who gets emailed: nobody from here — see recipients()
+ *   - who gets emailed when a purchase requisition is submitted (recipients)
+ *     — see src/Config/mail.php to override who that is
+ *   - what the email shows (mailContent)
  *   - what happens if someone uses the central Approvals list's quick
  *     Approve/Reject buttons instead (onApproved/onRejected) — a full-quantity
  *     approve, since the central button has no per-line quantity input.
  */
 class InvPurchaseRequisitionApprovalHandler extends BaseApprovalHandler
 {
-    /**
-     * Empty on purpose: approvers get the detailed memo email from
-     * PurchaseRequisitionApprovalMailService instead (same recipients —
-     * see its recipients()), so the generic central email would only be a
-     * duplicate. The central Approval record itself is still created.
-     */
+    use ResolvesConfiguredRecipients;
+
     public function recipients(?Model $approvable, Approval $approval): array
     {
-        return [];
+        return $this->resolveRecipients('inventory.purchase_requisition', 'inv_purchase_requisition.approve');
     }
 
     public function onApproved(Approval $approval): void
@@ -67,5 +66,38 @@ class InvPurchaseRequisitionApprovalHandler extends BaseApprovalHandler
             'approved_at'      => $approval->approved_at,
             'approval_remarks' => $approval->remarks,
         ]);
+    }
+
+    public function mailContent(?Model $approvable, Approval $approval): array
+    {
+        if (! $approvable instanceof InvPurchaseRequisition) {
+            return [];
+        }
+
+        $approvable->loadMissing(['department', 'requester', 'items.item.unit', 'items.color', 'items.size']);
+
+        return [
+            'badge'   => 'PURCHASE REQUISITION',
+            'number'  => $approvable->requisition_no,
+            'date'    => $approvable->requisition_date?->format('d.m.Y'),
+            'meta'    => [
+                'Requested by' => $approvable->requester?->name,
+                'Department'   => $approvable->department?->name,
+                'Items'        => $approvable->items->count(),
+            ],
+            'columns' => [['label' => 'Item'], ['label' => 'Qty', 'align' => 'right'], ['label' => 'UOM'], ['label' => 'Est. Rate', 'align' => 'right'], ['label' => 'Est. Amount (Tk)', 'align' => 'right']],
+            'rows'    => $approvable->items->map(fn ($line) => [
+                (fn ($line) => ['text' => $line->item?->item_name ?? '-', 'sub' => collect([$line->item?->item_code, $line->color?->name, $line->size?->name])->filter()->implode(' · ')])($line),
+                inv_qty($line->requested_qty),
+                $line->item?->unit?->short_name ?: '-',
+                number_format((float) $line->estimated_rate, 2),
+                number_format($line->estimated_amount, 2),
+            ])->all(),
+            'total'   => ['label' => 'Estimated Total', 'value' => $approvable->estimated_total, 'money' => true],
+            'notes'   => [
+                'Justification' => $approvable->remarks,
+                'Note'          => 'Estimated / market price given by the requester — the actual price is entered at GRN (store receive).',
+            ],
+        ];
     }
 }

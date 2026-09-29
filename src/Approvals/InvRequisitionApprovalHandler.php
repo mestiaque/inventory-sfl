@@ -66,4 +66,36 @@ class InvRequisitionApprovalHandler extends BaseApprovalHandler
             'approval_remarks' => $approval->remarks,
         ]);
     }
+
+    public function mailContent(?Model $approvable, Approval $approval): array
+    {
+        if (! $approvable instanceof InvRequisition) {
+            return [];
+        }
+
+        $approvable->loadMissing(['department', 'store', 'buyer', 'requester', 'receiver', 'items.item.unit', 'items.color', 'items.size']);
+        $stock = app(\ME\SflInventory\Services\StockService::class);
+
+        return [
+            'badge'   => 'STORE REQUISITION',
+            'number'  => $approvable->requisition_no,
+            'date'    => $approvable->requisition_date?->format('d.m.Y'),
+            'meta'    => [
+                'Requested by' => $approvable->requester?->name,
+                'Department'   => $approvable->department?->name,
+                'Issue from'   => $approvable->store?->name,
+                'Receiver'     => $approvable->receiver?->name,
+                'Buyer / Style' => collect([$approvable->buyer?->name, $approvable->style])->filter()->implode(' / '),
+            ],
+            'columns' => [['label' => 'Item'], ['label' => 'Requested', 'align' => 'right'], ['label' => 'UOM'], ['label' => 'Available in store', 'align' => 'right']],
+            'rows'    => $approvable->items->map(fn ($line) => [
+                (fn ($line) => ['text' => $line->item?->item_name ?? '-', 'sub' => collect([$line->item?->item_code, $line->color?->name, $line->size?->name])->filter()->implode(' · ')])($line),
+                inv_qty($line->requested_qty),
+                $line->item?->unit?->short_name ?: '-',
+                inv_qty($stock->availableStock($line->item_id, $approvable->store_id, $line->color_id, $line->size_id, $approvable->id)),
+            ])->all(),
+            'total'   => ['label' => 'Total Requested Qty', 'value' => (float) $approvable->items->sum('requested_qty'), 'money' => false],
+            'notes'   => ['Remarks' => $approvable->remarks],
+        ];
+    }
 }

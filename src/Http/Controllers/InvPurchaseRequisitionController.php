@@ -17,7 +17,6 @@ use ME\SflInventory\Models\InvPurchaseOrder;
 use ME\SflInventory\Models\InvPurchaseRequisition;
 use ME\SflInventory\Models\InvPurchaseRequisitionItem;
 use ME\SflInventory\Models\InvSize;
-use ME\SflInventory\Services\PurchaseRequisitionApprovalMailService;
 
 class InvPurchaseRequisitionController extends Controller
 {
@@ -105,7 +104,6 @@ class InvPurchaseRequisitionController extends Controller
             'route_params' => ['purchase_requisition' => $purchaseRequisition->id],
             'requested_by' => auth()->id(),
         ]);
-        app(PurchaseRequisitionApprovalMailService::class)->send($purchaseRequisition);
 
         return redirect()->route('inventory.purchase-requisitions.index')->with('success', "Purchase requisition {$purchaseRequisition->requisition_no} submitted and sent for approval.");
     }

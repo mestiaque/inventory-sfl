@@ -90,4 +90,37 @@ class InvGrnApprovalHandler extends BaseApprovalHandler
             'approval_remarks' => $approval->remarks,
         ]);
     }
+
+    public function mailContent(?Model $approvable, Approval $approval): array
+    {
+        if (! $approvable instanceof InvGrn) {
+            return [];
+        }
+
+        $approvable->loadMissing(['store', 'supplier', 'purchaseOrder', 'creator', 'receiver', 'items.item.unit', 'items.color', 'items.size', 'items.purchaseOrderItem']);
+
+        return [
+            'badge'   => 'GOODS RECEIVE (GRN)',
+            'number'  => $approvable->grn_number,
+            'date'    => $approvable->receive_date?->format('d.m.Y'),
+            'meta'    => [
+                'Supplier'        => $approvable->supplier?->name,
+                'Store Order'     => $approvable->purchaseOrder?->po_number,
+                'Store'           => $approvable->store?->name,
+                'Challan/Invoice' => $approvable->challan_invoice_no,
+                'Received by'     => $approvable->receiver?->name ?? $approvable->creator?->name,
+            ],
+            'columns' => [['label' => 'Item'], ['label' => 'Qty', 'align' => 'right'], ['label' => 'UOM'], ['label' => 'Est. Rate', 'align' => 'right'], ['label' => 'Actual Rate', 'align' => 'right'], ['label' => 'Amount (Tk)', 'align' => 'right']],
+            'rows'    => $approvable->items->map(fn ($line) => [
+                (fn ($line) => ['text' => $line->item?->item_name ?? '-', 'sub' => collect([$line->item?->item_code, $line->color?->name, $line->size?->name])->filter()->implode(' · ')])($line),
+                inv_qty($line->received_qty),
+                $line->item?->unit?->short_name ?: '-',
+                (float) $line->purchaseOrderItem?->rate > 0 ? number_format((float) $line->purchaseOrderItem->rate, 2) : '-',
+                number_format((float) $line->rate, 2),
+                number_format((float) $line->received_qty * (float) $line->rate, 2),
+            ])->all(),
+            'total'   => ['label' => 'Total', 'value' => (float) $approvable->items->sum(fn ($line) => (float) $line->received_qty * (float) $line->rate), 'money' => true],
+            'notes'   => ['Remarks' => $approvable->remarks],
+        ];
+    }
 }
