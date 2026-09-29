@@ -85,6 +85,7 @@
                                 </td>
                                 <td class="text-right">
                                     <button type="button" class="btn-custom success" data-toggle="modal" data-target="#viewPreqModal{{ $purchaseRequisition->id }}"><i class="fa-solid fa-eye"></i></button>
+                                    @if(view()->exists('components.approval-remind'))<x-approval-remind :model="$purchaseRequisition" />@endif
                                     @if($purchaseRequisition->status === 'pending')
                                         @can('inv_purchase_requisition.edit')
                                             <a href="{{ route('inventory.purchase-requisitions.edit', $purchaseRequisition) }}" class="btn-custom yellow"><i class="fa-solid fa-pen"></i></a>

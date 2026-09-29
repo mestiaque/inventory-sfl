@@ -118,6 +118,7 @@
                                 <td>{{ $grn->creator?->name ?? '—' }}</td>
                                 <td class="text-right">
                                     <a href="{{ route('inventory.grns.show', $grn) }}" class="btn-custom success"><i class="fa-solid fa-eye"></i></a>
+                                    @if(view()->exists('components.approval-remind'))<x-approval-remind :model="$grn" />@endif
                                     @can('inv_grn.approve')
                                         @if($grn->source_type === 'purchase' && $grn->status === 'pending')
                                             <a href="{{ route('inventory.grns.approval-form', $grn) }}" class="btn-custom success" title="Receive Approval"><i class="fa-solid fa-check"></i></a>
