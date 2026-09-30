@@ -25,7 +25,10 @@ class InvRequisitionRequest extends FormRequest
     {
         return [
             'department_id'          => ['required', 'integer', 'exists:inv_departments,id'],
-            'requisition_for'        => ['nullable', 'in:fabrics,accessories,machine_parts,equipment,stationery'],
+            // Any active "Requisition For" option — or the one an edited requisition already has.
+            'requisition_for'        => ['nullable', 'string', \Illuminate\Validation\Rule::in(
+                \ME\SflInventory\Models\InvRequisitionPurpose::active()->pluck('code')->push($this->route('requisition')?->requisition_for)->filter()->all()
+            )],
             'store_id'               => ['required', 'integer', 'exists:inv_stores,id'],
             'received_by'            => ['nullable', 'integer', 'exists:hr_employees,id'],
             'buyer_id'               => ['nullable', 'integer', 'exists:inv_buyers,id'],

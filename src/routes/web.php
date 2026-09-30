@@ -23,6 +23,7 @@ use ME\SflInventory\Http\Controllers\InvPurchaseOrderController;
 use ME\SflInventory\Http\Controllers\InvPurchaseRequisitionController;
 use ME\SflInventory\Http\Controllers\InvReportController;
 use ME\SflInventory\Http\Controllers\InvRequisitionController;
+use ME\SflInventory\Http\Controllers\InvRequisitionPurposeController;
 use ME\SflInventory\Http\Controllers\InvShipmentController;
 use ME\SflInventory\Http\Controllers\InvSignatureController;
 use ME\SflInventory\Http\Controllers\InvSizeController;
@@ -57,6 +58,10 @@ Route::middleware($route['middleware'] ?? ['web', 'auth'])
         Route::resource('units', InvUnitController::class)->only(['index', 'store', 'update', 'destroy']);
         Route::post('units/{unit}/restore', [InvUnitController::class, 'restore'])->name('units.restore')->withTrashed();
         Route::delete('units/{unit}/force', [InvUnitController::class, 'forceDestroy'])->name('units.force-destroy')->withTrashed();
+        Route::resource('requisition-purposes', InvRequisitionPurposeController::class)->only(['index', 'store', 'update', 'destroy'])
+            ->parameters(['requisition-purposes' => 'requisition_purpose']);
+        Route::post('requisition-purposes/{requisition_purpose}/restore', [InvRequisitionPurposeController::class, 'restore'])->name('requisition-purposes.restore')->withTrashed();
+        Route::delete('requisition-purposes/{requisition_purpose}/force', [InvRequisitionPurposeController::class, 'forceDestroy'])->name('requisition-purposes.force-destroy')->withTrashed();
         Route::resource('brands', InvBrandController::class)->only(['index', 'store', 'update', 'destroy']);
         Route::post('brands/{brand}/restore', [InvBrandController::class, 'restore'])->name('brands.restore')->withTrashed();
         Route::delete('brands/{brand}/force', [InvBrandController::class, 'forceDestroy'])->name('brands.force-destroy')->withTrashed();

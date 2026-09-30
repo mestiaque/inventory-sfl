@@ -33,6 +33,10 @@ return [
             'label' => 'Units',
             'permissions' => $crud + ['force_delete' => 'Force Delete'],
         ],
+        'inv_requisition_purpose' => [
+            'label' => 'Requisition For (Master)',
+            'permissions' => $crud + ['force_delete' => 'Force Delete'],
+        ],
         'inv_brand' => [
             'label' => 'Brands',
             'permissions' => $crud + ['force_delete' => 'Force Delete'],

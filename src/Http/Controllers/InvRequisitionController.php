@@ -230,9 +230,17 @@ class InvRequisitionController extends Controller
 
         $requisition->load(['items.item.color', 'items.item.size', 'items.color', 'items.size', 'department', 'buyer', 'requester', 'receiver', 'approver']);
 
-        $departments = InvDepartment::active()->orderBy('name')->get();
+        // Every active department / "Requisition For" option from the masters —
+        // plus the requisition's own, even if it's been made inactive since —
+        // so the right box is always there to tick.
+        $departments = InvDepartment::active()->orWhere('id', $requisition->department_id)->orderBy('name')->get();
+        $purposes = \ME\SflInventory\Models\InvRequisitionPurpose::withTrashed()
+            ->where(fn ($q) => $q->where('is_active', true)->whereNull('deleted_at'))
+            ->when($requisition->requisition_for, fn ($q) => $q->orWhere('code', $requisition->requisition_for))
+            ->ordered()->get();
+        $designation = $this->designationOf($requisition->requester);
 
-        return view('sfl-inventory::admin.requisitions.print', compact('requisition', 'departments'));
+        return view('sfl-inventory::admin.requisitions.print', compact('requisition', 'departments', 'purposes', 'designation'));
     }
 
     /**
@@ -294,6 +302,33 @@ class InvRequisitionController extends Controller
     }
 
     /**
+     * The requester's designation: the user's employee_id is the HR
+     * employee's employee_id, and the designation comes from that employee.
+     * Falls back to the designation set on the user account itself.
+     */
+    private function designationOf(?\App\Models\User $user): ?string
+    {
+        if (! $user) {
+            return null;
+        }
+
+        if ($user->employee_id && class_exists(\ME\Hr\Models\HrEmployee::class)) {
+            $designation = \ME\Hr\Models\HrEmployee::query()
+                ->where('employee_id', $user->employee_id)
+                ->with('designation')
+                ->first()?->designation?->name;
+
+            if ($designation) {
+                return $designation;
+            }
+        }
+
+        return $user->hr_designation_id
+            ? DB::table('hr_designations')->where('id', $user->hr_designation_id)->value('name')
+            : null;
+    }
+
+    /**
      * Mirrors the decision made on this dedicated approval form (with its
      * per-line quantities) back onto the central Approvals record, so it
      * stops showing as pending there too. Updated directly — not through
@@ -344,6 +379,7 @@ class InvRequisitionController extends Controller
 
         return [
             'departments' => InvDepartment::active()->orderBy('name')->get(),
+            'purposes'    => \ME\SflInventory\Models\InvRequisitionPurpose::active()->ordered()->get(),
             // Requisitions only ever draw raw material (Warehouse) or
             // accessories — the Finished Goods store is never a source here.
             'stores'      => InvStore::active()->whereIn('type', ['raw_material', 'accessories'])->orderBy('name')->get(),

@@ -48,6 +48,7 @@ return [
                         ['title' => 'Stores', 'icon' => 'fa-solid fa-warehouse', 'icon_color' => 'text-info', 'permission' => 'inv_store', 'route' => "$base/stores"],
                         ['title' => 'Item Categories', 'icon' => 'fa-solid fa-sitemap', 'icon_color' => 'text-info', 'permission' => 'inv_item_category', 'route' => "$base/item-categories"],
                         ['title' => 'Units', 'icon' => 'fa-solid fa-ruler', 'icon_color' => 'text-info', 'permission' => 'inv_unit', 'route' => "$base/units"],
+                        ['title' => 'Requisition For', 'icon' => 'fa-solid fa-list-check', 'icon_color' => 'text-info', 'permission' => 'inv_requisition_purpose', 'route' => "$base/requisition-purposes"],
                         ['title' => 'Brands', 'icon' => 'fa-solid fa-tags', 'icon_color' => 'text-info', 'permission' => 'inv_brand', 'route' => "$base/brands"],
                         ['title' => 'Colors', 'icon' => 'fa-solid fa-palette', 'icon_color' => 'text-info', 'permission' => 'inv_color', 'route' => "$base/colors"],
                         ['title' => 'Sizes', 'icon' => 'fa-solid fa-ruler-combined', 'icon_color' => 'text-info', 'permission' => 'inv_size', 'route' => "$base/sizes"],

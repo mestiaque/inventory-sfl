@@ -34,21 +34,21 @@
 
 <div class="req-meta-row">
     <div>Name: <span class="field-line">{{ $requisition->requester?->name }}</span></div>
-    <div>Designation: <span class="field-line">&nbsp;</span></div>
+    <div>Designation: <span class="field-line">{{ $designation ?: "\u{00A0}" }}</span></div>
     <div>Date: <span class="field-line">{{ $requisition->requisition_date?->format('d-m-Y') }}</span></div>
 </div>
 
 <div class="req-checkbox-row">
     Department:
     @foreach($departments as $dept)
-        {{ $dept->name }}<span class="box">{{ $requisition->department_id === $dept->id ? '✓' : '' }}</span>
+        {{ $dept->name }}<span class="box">{{ (int) $requisition->department_id === (int) $dept->id ? '✓' : '' }}</span>
     @endforeach
 </div>
 
 <div class="req-checkbox-row text-end" style="text-align:right;">
     Requisition For:
-    @foreach(['Fabrics' => 'fabrics', 'Accessories' => 'accessories', 'MachineParts' => 'machine_parts', 'Equipment' => 'equipment', 'Stationery' => 'stationery'] as $label => $value)
-        {{ $label }}<span class="box">{{ $requisition->requisition_for === $value ? '✓' : '' }}</span>
+    @foreach($purposes as $purpose)
+        {{ $purpose->name }}<span class="box">{{ (string) $requisition->requisition_for === (string) $purpose->code ? '✓' : '' }}</span>
     @endforeach
 </div>
 

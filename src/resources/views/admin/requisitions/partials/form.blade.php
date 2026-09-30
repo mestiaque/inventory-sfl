@@ -36,7 +36,14 @@
         <label class="form-label">Requisition For</label>
         <select name="requisition_for" class="form-control form-control-sm inv-select2">
             <option value="">— None —</option>
-            @foreach(['fabrics' => 'Fabrics', 'accessories' => 'Accessories', 'machine_parts' => 'MachineParts', 'equipment' => 'Equipment', 'stationery' => 'Stationery'] as $value => $label)
+            @php
+                $purposeOptions = $purposes->pluck('name', 'code');
+                // Keep an edited requisition's option even if it's been made inactive since.
+                if (($requisition->requisition_for ?? null) && ! $purposeOptions->has($requisition->requisition_for)) {
+                    $purposeOptions->put($requisition->requisition_for, $requisition->purpose?->name ?? ucwords(str_replace('_', ' ', $requisition->requisition_for)));
+                }
+            @endphp
+            @foreach($purposeOptions as $value => $label)
                 <option value="{{ $value }}" @selected(old('requisition_for', $requisition->requisition_for ?? '') === $value)>{{ $label }}</option>
             @endforeach
         </select>

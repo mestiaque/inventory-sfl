@@ -44,6 +44,12 @@ class InvRequisition extends Model
         return $this->belongsTo(InvBuyer::class, 'buyer_id');
     }
 
+    /** "Requisition For" master row (requisition_for stores its code). */
+    public function purpose(): BelongsTo
+    {
+        return $this->belongsTo(InvRequisitionPurpose::class, 'requisition_for', 'code')->withTrashed();
+    }
+
     public function items(): HasMany
     {
         return $this->hasMany(InvRequisitionItem::class, 'requisition_id');

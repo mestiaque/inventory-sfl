@@ -154,7 +154,7 @@
                         <dt class="col-sm-3">Department</dt><dd class="col-sm-9">{{ $requisition->department?->name ?? '—' }}</dd>
                         <dt class="col-sm-3">Issue From Store</dt><dd class="col-sm-9">{{ $requisition->store?->name ?? '—' }}</dd>
                         <dt class="col-sm-3">Requisition Date</dt><dd class="col-sm-9">{{ $requisition->requisition_date?->format('d M Y') }}</dd>
-                        <dt class="col-sm-3">Requisition For</dt><dd class="col-sm-9">{{ $requisition->requisition_for ? ucwords(str_replace('_', ' ', $requisition->requisition_for)) : '—' }}</dd>
+                        <dt class="col-sm-3">Requisition For</dt><dd class="col-sm-9">{{ $requisition->requisition_for ? ($requisition->purpose?->name ?? ucwords(str_replace('_', ' ', $requisition->requisition_for))) : '—' }}</dd>
                         <dt class="col-sm-3">Buyer</dt><dd class="col-sm-9">{{ $requisition->buyer?->name ?? '—' }}</dd>
                         <dt class="col-sm-3">Style / Order Ref</dt><dd class="col-sm-9">{{ collect([$requisition->style, $requisition->order_ref])->filter()->implode(' / ') ?: '—' }}</dd>
                         <dt class="col-sm-3">Requested By</dt><dd class="col-sm-9">{{ $requisition->requester?->name ?? '—' }}</dd>
