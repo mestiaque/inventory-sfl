@@ -54,7 +54,7 @@ class InvRequisitionRequest extends FormRequest
      */
     public function usesMerchandising(): bool
     {
-        if (! app(MerchandisingLink::class)->available()) {
+        if (! config('sfl-inventory.requisition_merchandising_link') || ! app(MerchandisingLink::class)->available()) {
             return false;
         }
 

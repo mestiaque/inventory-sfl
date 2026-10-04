@@ -35,4 +35,8 @@ return [
 
     // An item with no outbound movement in this many days is flagged as dead stock.
     'dead_stock_days' => 90,
+
+    // Store Requisition: pick Buyer / Style / PO from Merchandising (true), or
+    // the Inventory buyer list with free-text style / order ref (false).
+    'requisition_merchandising_link' => env('SFL_INVENTORY_REQUISITION_MER_LINK', false),
 ];
