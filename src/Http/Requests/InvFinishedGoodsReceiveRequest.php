@@ -21,9 +21,9 @@ class InvFinishedGoodsReceiveRequest extends FormRequest
             'style'             => ['nullable', 'string', 'max:150'],
             'buyer_id'          => ['nullable', 'integer', 'exists:inv_buyers,id'],
             'order_ref'         => ['nullable', 'string', 'max:150'],
-            'mer_style_id'            => ['nullable', 'integer'],
-            'mer_sales_contract_po_id' => ['nullable', 'integer'],
-            'mer_buyer_id'            => ['nullable', 'integer'],
+            'msfl_style_id'            => ['nullable', 'integer'],
+            'msfl_order_po_id' => ['nullable', 'integer'],
+            'msfl_buyer_id'            => ['nullable', 'integer'],
             'store_id'          => ['required', 'integer', 'exists:inv_stores,id'],
             'remarks'           => ['nullable', 'string'],
             'items'             => ['required', 'array', 'min:1'],
@@ -46,9 +46,9 @@ class InvFinishedGoodsReceiveRequest extends FormRequest
             if (app(MerchandisingLink::class)->available() && ! $v->errors()->has('items')) {
                 $qty = (float) collect($this->input('items', []))->sum(fn ($l) => (float) ($l['quantity'] ?? 0));
                 $errors = app(MerchandisingLink::class)->validateFinishReceive(
-                    $this->integer('mer_buyer_id') ?: null,
-                    $this->integer('mer_style_id') ?: null,
-                    $this->integer('mer_sales_contract_po_id') ?: null,
+                    $this->integer('msfl_buyer_id') ?: null,
+                    $this->integer('msfl_style_id') ?: null,
+                    $this->integer('msfl_order_po_id') ?: null,
                     $qty,
                 );
                 foreach ($errors as $field => $message) {

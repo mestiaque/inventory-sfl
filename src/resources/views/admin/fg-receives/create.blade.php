@@ -22,29 +22,29 @@
                         {{-- Buyer + Style required, PO optional — all from Merchandising; checked against production's packed qty. --}}
                         <div class="col-md-3 mb-3">
                             <label class="form-label">Buyer <span class="text-danger">*</span> <small class="text-muted">(Merchandising)</small></label>
-                            <select name="mer_buyer_id" id="fgrBuyer" class="form-control form-control-sm inv-select2" required>
+                            <select name="msfl_buyer_id" id="fgrBuyer" class="form-control form-control-sm inv-select2" required>
                                 <option value="">— Select buyer —</option>
                                 @foreach($merBuyersOptions as $b)
-                                    <option value="{{ $b->id }}" @selected(old('mer_buyer_id') == $b->id)>{{ $b->name }}</option>
+                                    <option value="{{ $b->id }}" @selected(old('msfl_buyer_id') == $b->id)>{{ $b->name }}</option>
                                 @endforeach
                             </select>
                         </div>
                         <div class="col-md-3 mb-3">
                             <label class="form-label">Style <span class="text-danger">*</span></label>
-                            <select name="mer_style_id" id="fgrStyle" class="form-control form-control-sm inv-select2" required>
+                            <select name="msfl_style_id" id="fgrStyle" class="form-control form-control-sm inv-select2" required>
                                 <option value="">— Select style —</option>
                                 @foreach($merStylesOptions as $s)
-                                    <option value="{{ $s->id }}" data-buyer="{{ $s->buyer_id }}" @selected(old('mer_style_id') == $s->id)>{{ $s->style_no }} — {{ $s->name }}</option>
+                                    <option value="{{ $s->id }}" data-buyer="{{ $s->buyer_id }}" @selected(old('msfl_style_id') == $s->id)>{{ $s->style_no }} — {{ $s->name }}</option>
                                 @endforeach
                             </select>
                         </div>
                         <div class="col-md-3 mb-3">
                             <label class="form-label">Order (PO) <small class="text-muted">optional</small></label>
-                            <select name="mer_sales_contract_po_id" id="fgrPo" class="form-control form-control-sm inv-select2">
+                            <select name="msfl_order_po_id" id="fgrPo" class="form-control form-control-sm inv-select2">
                                 <option value="">— All orders of the style —</option>
-                                @foreach($merSalesContractPosOptions as $po)
-                                    <option value="{{ $po->id }}" data-style="{{ $po->style_id }}" @selected(old('mer_sales_contract_po_id') == $po->id)>
-                                        {{ $po->po_no }}{{ $po->salesContract ? ' — ' . $po->salesContract->contract_no : '' }}
+                                @foreach($merOrderPosOptions as $po)
+                                    <option value="{{ $po->id }}" data-style="{{ $po->style_id }}" @selected(old('msfl_order_po_id') == $po->id)>
+                                        {{ $po->po_no }}{{ $po->order ? ' — ' . $po->order->order_no : '' }}
                                     </option>
                                 @endforeach
                             </select>

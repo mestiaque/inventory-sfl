@@ -6,9 +6,10 @@ use Illuminate\Support\Collection;
 use ME\SflInventory\Models\InvBuyer;
 
 /**
- * Bridge to the Merchandising package for the Buyer Store: goods received
- * from a buyer must belong to a Buyer / Style (and optionally a PO) that
- * Merchandising already knows — picked once, never retyped.
+ * Bridge to Merchandising v2 (merchandising-sfl, which also runs production)
+ * for the Buyer and Finish stores: goods must belong to a Buyer / Style (and
+ * optionally an order PO) that Merchandising already knows — picked once,
+ * never retyped.
  *
  * Everything here is a no-op when Merchandising isn't installed, so this
  * package keeps working on its own (the legacy inventory-buyer + free-text
@@ -18,16 +19,16 @@ class MerchandisingLink
 {
     public function available(): bool
     {
-        return class_exists(\ME\MerchandisingTrace\Models\Buyer::class)
-            && class_exists(\ME\MerchandisingTrace\Models\Style::class)
-            && class_exists(\ME\MerchandisingTrace\Models\SalesContractPo::class);
+        return class_exists(\ME\MerchandisingSfl\Models\Buyer::class)
+            && class_exists(\ME\MerchandisingSfl\Models\Style::class)
+            && class_exists(\ME\MerchandisingSfl\Models\OrderPo::class);
     }
 
-    /** Approved + active Merchandising buyers (unapproved ones can't receive). */
+    /** Active Merchandising buyers. */
     public function buyers(): Collection
     {
         return $this->available()
-            ? \ME\MerchandisingTrace\Models\Buyer::query()->active()->orderBy('name')->get(['id', 'code', 'name'])
+            ? \ME\MerchandisingSfl\Models\Buyer::query()->active()->orderBy('name')->get(['id', 'code', 'name'])
             : collect();
     }
 
@@ -35,25 +36,22 @@ class MerchandisingLink
     public function styles(): Collection
     {
         return $this->available()
-            ? \ME\MerchandisingTrace\Models\Style::query()->active()->orderBy('style_no')->get(['id', 'style_no', 'name', 'buyer_id'])
+            ? \ME\MerchandisingSfl\Models\Style::query()->active()->orderBy('style_no')->get(['id', 'style_no', 'name', 'buyer_id'])
             : collect();
     }
 
-    /**
-     * PO lines, each carrying style_id and its contract number. Store staff see
-     * every merchandiser's POs — the merchandiser row-scope is for merchandisers.
-     */
+    /** Order PO lines of open orders, each carrying style_id and its order number. */
     public function pos(): Collection
     {
         if (! $this->available()) {
             return collect();
         }
 
-        return \ME\MerchandisingTrace\Models\SalesContractPo::withoutGlobalScopes()
-            ->with(['salesContract' => fn ($q) => $q->withoutGlobalScopes()->select('id', 'contract_no', 'lc_no')])
-            ->whereNotIn('status', ['closed'])
+        return \ME\MerchandisingSfl\Models\OrderPo::query()
+            ->with(['order:id,order_no,status'])
+            ->whereHas('order', fn ($q) => $q->whereIn('status', ['draft', 'confirmed']))
             ->latest('id')
-            ->get(['id', 'po_no', 'style_id', 'sales_contract_id']);
+            ->get(['id', 'po_no', 'style_id', 'order_id']);
     }
 
     /**
@@ -64,8 +62,8 @@ class MerchandisingLink
     public function receivedStyleIds(): array
     {
         return \ME\SflInventory\Models\InvGrn::query()
-            ->where('source_type', 'buyer_supplied')->where('status', 'posted')->whereNotNull('mer_style_id')
-            ->distinct()->pluck('mer_style_id')->map(fn ($id) => (int) $id)->all();
+            ->where('source_type', 'buyer_supplied')->where('status', 'posted')->whereNotNull('msfl_style_id')
+            ->distinct()->pluck('msfl_style_id')->map(fn ($id) => (int) $id)->all();
     }
 
     /**
@@ -79,7 +77,7 @@ class MerchandisingLink
 
         if (! $errors && ! in_array((int) $styleId, $this->receivedStyleIds(), true)) {
             $styleNo = $this->styleNo((int) $styleId);
-            $errors['mer_style_id'] = "Nothing has been received into the Buyer Store for style {$styleNo} yet — receive it (GRN) first.";
+            $errors['msfl_style_id'] = "Nothing has been received into the Buyer Store for style {$styleNo} yet — receive it (GRN) first.";
         }
 
         return $errors;
@@ -87,48 +85,36 @@ class MerchandisingLink
 
     /**
      * Finish Store vs production for a style (all its orders) or one PO:
-     *   packed    = pieces production has packed (Merchandising's synced
-     *               production progress) — null when production has no record
-     *               yet for these orders (then nothing is enforced);
+     *   packed    = pieces Merchandising v2 Production has packed — null when
+     *               none of these orders has started production (cutting)
+     *               yet, so nothing is enforced for them;
      *   received  = pieces already received into the Finish Store for them;
      *   remaining = packed − received.
-     * $refresh re-syncs the orders' production progress first (used when
-     * saving, so the check uses today's figure, not the last hourly sync).
+     * Production lives in the same system, so the figure is always current.
      */
     public function finishSummary(int $styleId, ?int $poId, bool $refresh = false): array
     {
-        $pos = \ME\MerchandisingTrace\Models\SalesContractPo::withoutGlobalScopes()
+        $pos = \ME\MerchandisingSfl\Models\OrderPo::query()
             ->when($poId, fn ($q) => $q->whereKey($poId), fn ($q) => $q->where('style_id', $styleId))
             ->get();
 
-        if ($refresh && class_exists(\ME\MerchandisingTrace\Services\ProductionProgressSyncService::class)) {
-            $sync = app(\ME\MerchandisingTrace\Services\ProductionProgressSyncService::class);
-            foreach ($pos as $po) {
-                try {
-                    $sync->syncFor($po);
-                } catch (\Throwable $e) {
-                    report($e); // production not reachable — fall back to the last synced figure
-                }
-            }
-        }
-
-        $progress = \ME\MerchandisingTrace\Models\PoProductionProgress::query()->whereIn('sales_contract_po_id', $pos->pluck('id'))->get();
+        $flow = app(\ME\MerchandisingSfl\Services\ProductionFlow::class);
+        $started = \ME\MerchandisingSfl\Models\Production\Cutting::query()->whereIn('order_po_id', $pos->pluck('id'))->exists();
+        $packed = $started ? (int) $pos->sum(fn ($po) => $flow->summary($po)['packing']['pass']) : null;
 
         $received = (float) \ME\SflInventory\Models\InvFinishedGoodsReceiveItem::query()
             ->whereHas('receive', fn ($q) => $poId
-                ? $q->where('mer_sales_contract_po_id', $poId)
-                : $q->where('mer_style_id', $styleId))
+                ? $q->where('msfl_order_po_id', $poId)
+                : $q->where('msfl_style_id', $styleId))
             ->sum('quantity');
-
-        $packed = $progress->isEmpty() ? null : (int) $progress->sum('packed_qty');
 
         return [
             'scope' => $poId ? 'po' : 'style',
-            'order_qty' => (int) $pos->sum(fn ($po) => $po->effectiveQty()),
+            'order_qty' => (int) $pos->sum('po_qty'),
             'packed' => $packed,
             'received' => $received,
             'remaining' => $packed === null ? null : max(0, $packed - $received),
-            'synced_at' => ($last = $progress->max('synced_at')) ? \Illuminate\Support\Carbon::parse($last)->format('d-M-Y H:i') : null,
+            'synced_at' => null,
         ];
     }
 
@@ -167,24 +153,24 @@ class MerchandisingLink
     {
         $errors = [];
 
-        $buyer = $buyerId ? \ME\MerchandisingTrace\Models\Buyer::query()->active()->find($buyerId) : null;
+        $buyer = $buyerId ? \ME\MerchandisingSfl\Models\Buyer::query()->active()->find($buyerId) : null;
         if (! $buyer) {
-            $errors['mer_buyer_id'] = 'Select the buyer from Merchandising (only approved, active buyers can receive).';
+            $errors['msfl_buyer_id'] = 'Select the buyer from Merchandising (only active buyers can receive).';
 
             return $errors;
         }
 
-        $style = $styleId ? \ME\MerchandisingTrace\Models\Style::query()->find($styleId) : null;
+        $style = $styleId ? \ME\MerchandisingSfl\Models\Style::query()->find($styleId) : null;
         if (! $style || (int) $style->buyer_id !== (int) $buyer->id) {
-            $errors['mer_style_id'] = "Select a style of {$buyer->name} from Merchandising.";
+            $errors['msfl_style_id'] = "Select a style of {$buyer->name} from Merchandising.";
 
             return $errors;
         }
 
         if ($poId) {
-            $po = \ME\MerchandisingTrace\Models\SalesContractPo::withoutGlobalScopes()->find($poId);
+            $po = \ME\MerchandisingSfl\Models\OrderPo::query()->find($poId);
             if (! $po || (int) $po->style_id !== (int) $style->id) {
-                $errors['mer_sales_contract_po_id'] = "That PO is not an order of style {$style->style_no}.";
+                $errors['msfl_order_po_id'] = "That PO is not an order of style {$style->style_no}.";
             }
         }
 
@@ -198,7 +184,7 @@ class MerchandisingLink
      */
     public function inventoryBuyerId(int $merBuyerId): int
     {
-        $merBuyer = \ME\MerchandisingTrace\Models\Buyer::query()->findOrFail($merBuyerId);
+        $merBuyer = \ME\MerchandisingSfl\Models\Buyer::query()->findOrFail($merBuyerId);
 
         $invBuyer = InvBuyer::query()->whereRaw('LOWER(TRIM(name)) = ?', [mb_strtolower(trim($merBuyer->name))])->first();
 
@@ -223,15 +209,14 @@ class MerchandisingLink
 
     public function styleNo(int $styleId): ?string
     {
-        return \ME\MerchandisingTrace\Models\Style::query()->whereKey($styleId)->value('style_no');
+        return \ME\MerchandisingSfl\Models\Style::query()->whereKey($styleId)->value('style_no');
     }
 
-    /** "PO-123 (SC-000045)" — the order reference printed on the GRN. */
+    /** "PO-123 (ORD-2026-0001)" — the order reference printed on the GRN. */
     public function orderRef(int $poId): ?string
     {
-        $po = \ME\MerchandisingTrace\Models\SalesContractPo::withoutGlobalScopes()
-            ->with(['salesContract' => fn ($q) => $q->withoutGlobalScopes()])->find($poId);
+        $po = \ME\MerchandisingSfl\Models\OrderPo::query()->with('order:id,order_no')->find($poId);
 
-        return $po ? trim($po->po_no . ($po->salesContract ? " ({$po->salesContract->contract_no})" : '')) : null;
+        return $po ? trim($po->po_no . ($po->order ? " ({$po->order->order_no})" : '')) : null;
     }
 }

@@ -166,9 +166,9 @@ class InvGrnController extends Controller
             $grn->update([
                 'style'              => $data['style'] ?? null,
                 'order_ref'          => $data['order_ref'] ?? null,
-                'mer_style_id'              => $data['mer_style_id'] ?? null,
-                'mer_sales_contract_po_id'  => $data['mer_sales_contract_po_id'] ?? null,
-                'mer_buyer_id'              => $data['mer_buyer_id'] ?? null,
+                'msfl_style_id'              => $data['msfl_style_id'] ?? null,
+                'msfl_order_po_id'  => $data['msfl_order_po_id'] ?? null,
+                'msfl_buyer_id'              => $data['msfl_buyer_id'] ?? null,
                 'challan_invoice_no' => $data['challan_invoice_no'] ?? null,
                 'receive_date'       => $data['receive_date'],
                 'received_by'        => $data['received_by'] ?? null,
@@ -211,9 +211,9 @@ class InvGrnController extends Controller
                 'buyer_id'           => $data['source_type'] === 'buyer_supplied' ? $data['buyer_id'] : null,
                 'style'              => $data['style'] ?? null,
                 'order_ref'          => $data['order_ref'] ?? null,
-                'mer_style_id'              => $data['mer_style_id'] ?? null,
-                'mer_sales_contract_po_id'  => $data['mer_sales_contract_po_id'] ?? null,
-                'mer_buyer_id'              => $data['mer_buyer_id'] ?? null,
+                'msfl_style_id'              => $data['msfl_style_id'] ?? null,
+                'msfl_order_po_id'  => $data['msfl_order_po_id'] ?? null,
+                'msfl_buyer_id'              => $data['msfl_buyer_id'] ?? null,
                 'challan_invoice_no' => $data['challan_invoice_no'] ?? null,
                 'receive_date'       => $data['receive_date'],
                 'received_by'        => $data['received_by'] ?? null,
@@ -564,10 +564,10 @@ class InvGrnController extends Controller
 
         $link = app(MerchandisingLink::class);
         if ($isNew) {
-            $data['buyer_id'] = $link->inventoryBuyerId((int) $data['mer_buyer_id']);
+            $data['buyer_id'] = $link->inventoryBuyerId((int) $data['msfl_buyer_id']);
         }
-        $data['style'] = $link->styleNo((int) $data['mer_style_id']);
-        $data['order_ref'] = ! empty($data['mer_sales_contract_po_id']) ? $link->orderRef((int) $data['mer_sales_contract_po_id']) : null;
+        $data['style'] = $link->styleNo((int) $data['msfl_style_id']);
+        $data['order_ref'] = ! empty($data['msfl_order_po_id']) ? $link->orderRef((int) $data['msfl_order_po_id']) : null;
 
         return $data;
     }
@@ -592,7 +592,7 @@ class InvGrnController extends Controller
             'merLinked'                  => app(MerchandisingLink::class)->available(),
             'merBuyersOptions'           => app(MerchandisingLink::class)->buyers(),
             'merStylesOptions'           => app(MerchandisingLink::class)->styles(),
-            'merSalesContractPosOptions' => app(MerchandisingLink::class)->pos(),
+            'merOrderPosOptions' => app(MerchandisingLink::class)->pos(),
         ];
     }
 }

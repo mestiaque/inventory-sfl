@@ -219,11 +219,11 @@ class StockService
         $sameStyle = function ($q, string $t) use ($buyerId, $style, $merStyleId) {
             $q->where(function ($w) use ($t, $buyerId, $style, $merStyleId) {
                 if ($merStyleId) {
-                    $w->where("{$t}.mer_style_id", $merStyleId);
+                    $w->where("{$t}.msfl_style_id", $merStyleId);
                 }
                 $w->orWhere(function ($old) use ($t, $buyerId, $style, $merStyleId) {
                     if ($merStyleId) {
-                        $old->whereNull("{$t}.mer_style_id");
+                        $old->whereNull("{$t}.msfl_style_id");
                     }
                     $buyerId === null ? $old->whereNull("{$t}.buyer_id") : $old->where("{$t}.buyer_id", $buyerId);
                     $old->whereRaw("TRIM(COALESCE({$t}.style, '')) = ?", [$style]);

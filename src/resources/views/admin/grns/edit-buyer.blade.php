@@ -28,7 +28,7 @@
                         <label class="form-label">Store</label>
                         <input type="text" class="form-control form-control-sm" value="{{ $grn->store?->name }}" disabled>
                     </div>
-                    @unless(($merLinked ?? false) && $grn->mer_buyer_id)
+                    @unless(($merLinked ?? false) && $grn->msfl_buyer_id)
                         <div class="col-md-3 mb-3">
                             <label class="form-label">Buyer</label>
                             <input type="text" class="form-control form-control-sm" value="{{ $grn->buyer?->name }}" disabled>

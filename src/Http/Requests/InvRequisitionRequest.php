@@ -34,9 +34,9 @@ class InvRequisitionRequest extends FormRequest
             'buyer_id'               => ['nullable', 'integer', 'exists:inv_buyers,id'],
             'style'                  => ['nullable', 'string', 'max:150'],
             'order_ref'              => ['nullable', 'string', 'max:150'],
-            'mer_style_id'            => ['nullable', 'integer'],
-            'mer_sales_contract_po_id' => ['nullable', 'integer'],
-            'mer_buyer_id'            => ['nullable', 'integer'],
+            'msfl_style_id'            => ['nullable', 'integer'],
+            'msfl_order_po_id' => ['nullable', 'integer'],
+            'msfl_buyer_id'            => ['nullable', 'integer'],
             'requisition_date'       => ['required', 'date'],
             'remarks'                => ['nullable', 'string'],
             'items'                  => ['required', 'array', 'min:1'],
@@ -60,7 +60,7 @@ class InvRequisitionRequest extends FormRequest
 
         $requisition = $this->route('requisition');
 
-        return ! $requisition || $requisition->mer_buyer_id || $requisition->mer_style_id;
+        return ! $requisition || $requisition->msfl_buyer_id || $requisition->msfl_style_id;
     }
 
     /** Requisition drawn from the Buyer Store — Buyer + Style then required (PO optional). */
@@ -84,9 +84,9 @@ class InvRequisitionRequest extends FormRequest
             }
 
             $link = app(MerchandisingLink::class);
-            $buyerId = $this->integer('mer_buyer_id') ?: null;
-            $styleId = $this->integer('mer_style_id') ?: null;
-            $poId = $this->integer('mer_sales_contract_po_id') ?: null;
+            $buyerId = $this->integer('msfl_buyer_id') ?: null;
+            $styleId = $this->integer('msfl_style_id') ?: null;
+            $poId = $this->integer('msfl_order_po_id') ?: null;
 
             if ($this->fromBuyerStore()) {
                 $errors = $link->validateBuyerRequisition($buyerId, $styleId, $poId);
@@ -130,10 +130,10 @@ class InvRequisitionRequest extends FormRequest
         $style = null;
         if ($this->fromBuyerStore()) {
             $link = app(MerchandisingLink::class);
-            $merStyleId = $this->integer('mer_style_id') ?: null;
+            $merStyleId = $this->integer('msfl_style_id') ?: null;
             $style = $this->usesMerchandising()
                 ? [
-                    'buyer_id' => $this->integer('mer_buyer_id') ? $link->inventoryBuyerId($this->integer('mer_buyer_id')) : null,
+                    'buyer_id' => $this->integer('msfl_buyer_id') ? $link->inventoryBuyerId($this->integer('msfl_buyer_id')) : null,
                     'style'    => $merStyleId ? $link->styleNo($merStyleId) : null,
                     'mer'      => $merStyleId,
                 ]

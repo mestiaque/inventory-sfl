@@ -33,15 +33,15 @@ class InvGrnRequest extends FormRequest
             'store_id'                      => ['required', 'integer', 'exists:inv_stores,id'],
             'supplier_id'                   => ['required_if:source_type,purchase', 'nullable', 'integer', 'exists:inv_suppliers,id'],
             // With Merchandising installed a Buyer Store receive names the buyer from
-            // Merchandising (mer_buyer_id) and the inventory buyer is derived from it.
+            // Merchandising (msfl_buyer_id) and the inventory buyer is derived from it.
             'buyer_id'                      => $this->usesMerchandisingBuyer()
                 ? ['nullable', 'integer', 'exists:inv_buyers,id']
                 : ['required_if:source_type,buyer_supplied', 'nullable', 'integer', 'exists:inv_buyers,id'],
             'style'                         => ['nullable', 'string', 'max:150'],
             'order_ref'                     => ['nullable', 'string', 'max:150'],
-            'mer_style_id'                  => ['nullable', 'integer'],
-            'mer_sales_contract_po_id'      => ['nullable', 'integer'],
-            'mer_buyer_id'                  => ['nullable', 'integer'],
+            'msfl_style_id'                  => ['nullable', 'integer'],
+            'msfl_order_po_id'      => ['nullable', 'integer'],
+            'msfl_buyer_id'                  => ['nullable', 'integer'],
             'challan_invoice_no'            => ['nullable', 'string', 'max:100'],
             'receive_date'                  => ['required', 'date'],
             'received_by'                   => ['nullable', 'integer', 'exists:hr_employees,id'],
@@ -80,7 +80,7 @@ class InvGrnRequest extends FormRequest
 
         $grn = $this->route('grn');
 
-        return ! $grn || $grn->mer_buyer_id;
+        return ! $grn || $grn->msfl_buyer_id;
     }
 
     public function withValidator(Validator $validator): void
@@ -98,9 +98,9 @@ class InvGrnRequest extends FormRequest
 
             if ($this->usesMerchandisingBuyer()) {
                 $errors = app(MerchandisingLink::class)->validateBuyerReceive(
-                    $this->integer('mer_buyer_id') ?: null,
-                    $this->integer('mer_style_id') ?: null,
-                    $this->integer('mer_sales_contract_po_id') ?: null,
+                    $this->integer('msfl_buyer_id') ?: null,
+                    $this->integer('msfl_style_id') ?: null,
+                    $this->integer('msfl_order_po_id') ?: null,
                 );
                 foreach ($errors as $field => $message) {
                     $v->errors()->add($field, $message);

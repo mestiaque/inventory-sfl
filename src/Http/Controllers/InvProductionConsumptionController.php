@@ -64,9 +64,9 @@ class InvProductionConsumptionController extends Controller
                 'issue_id'         => $data['issue_id'] ?? null,
                 'style'            => $data['style'] ?? null,
                 'order_ref'        => $data['order_ref'] ?? null,
-                'mer_style_id'              => $data['mer_style_id'] ?? null,
-                'mer_sales_contract_po_id'  => $data['mer_sales_contract_po_id'] ?? null,
-                'mer_buyer_id'              => $data['mer_buyer_id'] ?? null,
+                'msfl_style_id'              => $data['msfl_style_id'] ?? null,
+                'msfl_order_po_id'  => $data['msfl_order_po_id'] ?? null,
+                'msfl_buyer_id'              => $data['msfl_buyer_id'] ?? null,
                 'consumption_date' => $data['consumption_date'],
                 'remarks'          => $data['remarks'] ?? null,
                 'created_by'       => auth()->id(),
@@ -190,15 +190,10 @@ class InvProductionConsumptionController extends Controller
             'departments' => InvDepartment::active()->orderBy('name')->get(),
             'stores'      => InvStore::active()->orderBy('name')->get(),
             'items'       => InvItem::active()->orderBy('item_name')->get(),
-            'merStylesOptions' => class_exists(\ME\MerchandisingTrace\Models\Style::class)
-                ? \ME\MerchandisingTrace\Models\Style::query()->orderBy('style_no')->get(['id', 'style_no', 'name'])
-                : collect(),
-            'merSalesContractPosOptions' => class_exists(\ME\MerchandisingTrace\Models\SalesContractPo::class)
-                ? \ME\MerchandisingTrace\Models\SalesContractPo::query()->latest('id')->limit(500)->get(['id', 'po_no'])
-                : collect(),
-            'merBuyersOptions' => class_exists(\ME\MerchandisingTrace\Models\Buyer::class)
-                ? \ME\MerchandisingTrace\Models\Buyer::query()->orderBy('name')->get(['id', 'name'])
-                : collect(),
+            // Merchandising v2 links (empty when it isn't installed).
+            'merStylesOptions' => app(\ME\SflInventory\Services\MerchandisingLink::class)->styles(),
+            'merOrderPosOptions' => app(\ME\SflInventory\Services\MerchandisingLink::class)->pos(),
+            'merBuyersOptions' => app(\ME\SflInventory\Services\MerchandisingLink::class)->buyers(),
         ];
     }
 }

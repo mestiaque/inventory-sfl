@@ -78,9 +78,9 @@ class InvRequisitionController extends Controller
                 'buyer_id'         => $data['buyer_id'] ?? null,
                 'style'            => $data['style'] ?? null,
                 'order_ref'        => $data['order_ref'] ?? null,
-                'mer_style_id'              => $data['mer_style_id'] ?? null,
-                'mer_sales_contract_po_id'  => $data['mer_sales_contract_po_id'] ?? null,
-                'mer_buyer_id'              => $data['mer_buyer_id'] ?? null,
+                'msfl_style_id'              => $data['msfl_style_id'] ?? null,
+                'msfl_order_po_id'  => $data['msfl_order_po_id'] ?? null,
+                'msfl_buyer_id'              => $data['msfl_buyer_id'] ?? null,
                 'requested_by'     => auth()->id(),
                 'received_by'      => $data['received_by'] ?? null,
                 'status'           => $autoApprove ? 'approved' : 'pending',
@@ -149,9 +149,9 @@ class InvRequisitionController extends Controller
                 'buyer_id'         => $data['buyer_id'] ?? null,
                 'style'            => $data['style'] ?? null,
                 'order_ref'        => $data['order_ref'] ?? null,
-                'mer_style_id'              => $data['mer_style_id'] ?? null,
-                'mer_sales_contract_po_id'  => $data['mer_sales_contract_po_id'] ?? null,
-                'mer_buyer_id'              => $data['mer_buyer_id'] ?? null,
+                'msfl_style_id'              => $data['msfl_style_id'] ?? null,
+                'msfl_order_po_id'  => $data['msfl_order_po_id'] ?? null,
+                'msfl_buyer_id'              => $data['msfl_buyer_id'] ?? null,
                 'received_by'      => $data['received_by'] ?? null,
                 'remarks'          => $data['remarks'] ?? null,
             ]);
@@ -364,9 +364,9 @@ class InvRequisitionController extends Controller
         }
 
         $link = app(MerchandisingLink::class);
-        $data['buyer_id'] = ! empty($data['mer_buyer_id']) ? $link->inventoryBuyerId((int) $data['mer_buyer_id']) : null;
-        $data['style'] = ! empty($data['mer_style_id']) ? $link->styleNo((int) $data['mer_style_id']) : null;
-        $data['order_ref'] = ! empty($data['mer_sales_contract_po_id']) ? $link->orderRef((int) $data['mer_sales_contract_po_id']) : null;
+        $data['buyer_id'] = ! empty($data['msfl_buyer_id']) ? $link->inventoryBuyerId((int) $data['msfl_buyer_id']) : null;
+        $data['style'] = ! empty($data['msfl_style_id']) ? $link->styleNo((int) $data['msfl_style_id']) : null;
+        $data['order_ref'] = ! empty($data['msfl_order_po_id']) ? $link->orderRef((int) $data['msfl_order_po_id']) : null;
 
         return $data;
     }
@@ -392,7 +392,7 @@ class InvRequisitionController extends Controller
             'merLinked'                  => app(MerchandisingLink::class)->available(),
             'merBuyersOptions'           => app(MerchandisingLink::class)->buyers(),
             'merStylesOptions'           => app(MerchandisingLink::class)->styles(),
-            'merSalesContractPosOptions' => app(MerchandisingLink::class)->pos(),
+            'merOrderPosOptions' => app(MerchandisingLink::class)->pos(),
             'merReceivedStyleIds'        => app(MerchandisingLink::class)->available() ? app(MerchandisingLink::class)->receivedStyleIds() : [],
         ];
     }

@@ -65,21 +65,21 @@
                         @if(($merStylesOptions ?? collect())->isNotEmpty())
                         <div class="col-md-3 mb-3">
                             <label class="form-label">Merchandising Style</label>
-                            <select name="mer_style_id" class="form-control form-control-sm inv-select2">
+                            <select name="msfl_style_id" class="form-control form-control-sm inv-select2">
                                 <option value="">— None —</option>
                                 @foreach($merStylesOptions as $s)
-                                    <option value="{{ $s->id }}" @selected(old('mer_style_id') == $s->id)>{{ $s->style_no }} — {{ $s->name }}</option>
+                                    <option value="{{ $s->id }}" @selected(old('msfl_style_id') == $s->id)>{{ $s->style_no }} — {{ $s->name }}</option>
                                 @endforeach
                             </select>
                         </div>
                         @endif
-                        @if(($merSalesContractPosOptions ?? collect())->isNotEmpty())
+                        @if(($merOrderPosOptions ?? collect())->isNotEmpty())
                         <div class="col-md-3 mb-3">
                             <label class="form-label">Sales Contract PO</label>
-                            <select name="mer_sales_contract_po_id" class="form-control form-control-sm inv-select2">
+                            <select name="msfl_order_po_id" class="form-control form-control-sm inv-select2">
                                 <option value="">— None —</option>
-                                @foreach($merSalesContractPosOptions as $po)
-                                    <option value="{{ $po->id }}" @selected(old('mer_sales_contract_po_id') == $po->id)>{{ $po->po_no }}</option>
+                                @foreach($merOrderPosOptions as $po)
+                                    <option value="{{ $po->id }}" @selected(old('msfl_order_po_id') == $po->id)>{{ $po->po_no }}</option>
                                 @endforeach
                             </select>
                         </div>
@@ -87,10 +87,10 @@
                         @if(($merBuyersOptions ?? collect())->isNotEmpty())
                         <div class="col-md-3 mb-3">
                             <label class="form-label">Merchandising Buyer</label>
-                            <select name="mer_buyer_id" class="form-control form-control-sm inv-select2">
+                            <select name="msfl_buyer_id" class="form-control form-control-sm inv-select2">
                                 <option value="">— None —</option>
                                 @foreach($merBuyersOptions as $b)
-                                    <option value="{{ $b->id }}" @selected(old('mer_buyer_id') == $b->id)>{{ $b->name }}</option>
+                                    <option value="{{ $b->id }}" @selected(old('msfl_buyer_id') == $b->id)>{{ $b->name }}</option>
                                 @endforeach
                             </select>
                         </div>

@@ -70,10 +70,10 @@ class InvFinishedGoodsReceiveController extends Controller
         // Merchandising-linked: inventory buyer, style text and order ref come
         // from the Merchandising buyer / style / PO picked — never retyped.
         $link = app(MerchandisingLink::class);
-        if ($link->available() && ! empty($data['mer_buyer_id']) && ! empty($data['mer_style_id'])) {
-            $data['buyer_id'] = $link->inventoryBuyerId((int) $data['mer_buyer_id']);
-            $data['style'] = $link->styleNo((int) $data['mer_style_id']);
-            $data['order_ref'] = ! empty($data['mer_sales_contract_po_id']) ? $link->orderRef((int) $data['mer_sales_contract_po_id']) : null;
+        if ($link->available() && ! empty($data['msfl_buyer_id']) && ! empty($data['msfl_style_id'])) {
+            $data['buyer_id'] = $link->inventoryBuyerId((int) $data['msfl_buyer_id']);
+            $data['style'] = $link->styleNo((int) $data['msfl_style_id']);
+            $data['order_ref'] = ! empty($data['msfl_order_po_id']) ? $link->orderRef((int) $data['msfl_order_po_id']) : null;
         }
 
         $receive = DB::transaction(function () use ($data) {
@@ -82,9 +82,9 @@ class InvFinishedGoodsReceiveController extends Controller
                 'style'        => $data['style'] ?? null,
                 'buyer_id'     => $data['buyer_id'] ?? null,
                 'order_ref'    => $data['order_ref'] ?? null,
-                'mer_style_id'              => $data['mer_style_id'] ?? null,
-                'mer_sales_contract_po_id'  => $data['mer_sales_contract_po_id'] ?? null,
-                'mer_buyer_id'              => $data['mer_buyer_id'] ?? null,
+                'msfl_style_id'              => $data['msfl_style_id'] ?? null,
+                'msfl_order_po_id'  => $data['msfl_order_po_id'] ?? null,
+                'msfl_buyer_id'              => $data['msfl_buyer_id'] ?? null,
                 'store_id'     => $data['store_id'],
                 'remarks'      => $data['remarks'] ?? null,
                 'created_by'   => auth()->id(),
@@ -142,7 +142,7 @@ class InvFinishedGoodsReceiveController extends Controller
             'merLinked'                  => app(MerchandisingLink::class)->available(),
             'merBuyersOptions'           => app(MerchandisingLink::class)->buyers(),
             'merStylesOptions'           => app(MerchandisingLink::class)->styles(),
-            'merSalesContractPosOptions' => app(MerchandisingLink::class)->pos(),
+            'merOrderPosOptions' => app(MerchandisingLink::class)->pos(),
         ];
     }
 }

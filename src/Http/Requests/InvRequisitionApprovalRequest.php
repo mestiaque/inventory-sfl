@@ -58,7 +58,7 @@ class InvRequisitionApprovalRequest extends FormRequest
             foreach ($wanted as $w) {
                 $line = $w['line'];
                 if ($buyerStore) {
-                    $balance = $stock->styleBalance($line->item_id, $requisition->store_id, $requisition->buyer_id, $requisition->style, $requisition->mer_style_id, $line->color_id, $line->size_id);
+                    $balance = $stock->styleBalance($line->item_id, $requisition->store_id, $requisition->buyer_id, $requisition->style, $requisition->msfl_style_id, $line->color_id, $line->size_id);
                     if ($w['qty'] > $balance['balance'] + 0.0001) {
                         $v->errors()->add(
                             "items.{$w['index']}.approved_qty",

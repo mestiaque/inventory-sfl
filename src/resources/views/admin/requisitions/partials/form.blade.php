@@ -49,35 +49,35 @@
         </select>
     </div>
     @php $req = $requisition ?? null; @endphp
-    @if(($merLinked ?? false) && (! $req || $req->mer_buyer_id || $req->mer_style_id))
+    @if(($merLinked ?? false) && (! $req || $req->msfl_buyer_id || $req->msfl_style_id))
         {{-- Buyer / Style / PO from Merchandising. Required for the Buyer Store (PO optional), optional for the General Store. --}}
         <div class="col-md-3 mb-3">
             <label class="form-label">Buyer <span class="text-danger req-buyer-star">*</span> <small class="text-muted">(Merchandising)</small></label>
-            <select name="mer_buyer_id" id="reqMerBuyer" class="form-control form-control-sm inv-select2">
+            <select name="msfl_buyer_id" id="reqMerBuyer" class="form-control form-control-sm inv-select2">
                 <option value="">— None —</option>
                 @foreach($merBuyersOptions as $b)
-                    <option value="{{ $b->id }}" @selected(old('mer_buyer_id', $req->mer_buyer_id ?? '') == $b->id)>{{ $b->name }}</option>
+                    <option value="{{ $b->id }}" @selected(old('msfl_buyer_id', $req->msfl_buyer_id ?? '') == $b->id)>{{ $b->name }}</option>
                 @endforeach
             </select>
         </div>
         <div class="col-md-3 mb-3">
             <label class="form-label">Style <span class="text-danger req-buyer-star">*</span></label>
-            <select name="mer_style_id" id="reqMerStyle" class="form-control form-control-sm inv-select2">
+            <select name="msfl_style_id" id="reqMerStyle" class="form-control form-control-sm inv-select2">
                 <option value="">— None —</option>
                 @foreach($merStylesOptions as $s)
                     <option value="{{ $s->id }}" data-buyer="{{ $s->buyer_id }}" data-received="{{ in_array($s->id, $merReceivedStyleIds ?? [], true) ? 1 : 0 }}"
-                        @selected(old('mer_style_id', $req->mer_style_id ?? '') == $s->id)>{{ $s->style_no }} — {{ $s->name }}</option>
+                        @selected(old('msfl_style_id', $req->msfl_style_id ?? '') == $s->id)>{{ $s->style_no }} — {{ $s->name }}</option>
                 @endforeach
             </select>
             <div class="form-text" id="reqStyleHint"></div>
         </div>
         <div class="col-md-3 mb-3">
             <label class="form-label">Order (PO) <small class="text-muted">optional</small></label>
-            <select name="mer_sales_contract_po_id" id="reqMerPo" class="form-control form-control-sm inv-select2">
+            <select name="msfl_order_po_id" id="reqMerPo" class="form-control form-control-sm inv-select2">
                 <option value="">— All orders of the style —</option>
-                @foreach($merSalesContractPosOptions as $po)
-                    <option value="{{ $po->id }}" data-style="{{ $po->style_id }}" @selected(old('mer_sales_contract_po_id', $req->mer_sales_contract_po_id ?? '') == $po->id)>
-                        {{ $po->po_no }}{{ $po->salesContract ? ' — ' . $po->salesContract->contract_no : '' }}
+                @foreach($merOrderPosOptions as $po)
+                    <option value="{{ $po->id }}" data-style="{{ $po->style_id }}" @selected(old('msfl_order_po_id', $req->msfl_order_po_id ?? '') == $po->id)>
+                        {{ $po->po_no }}{{ $po->order ? ' — ' . $po->order->order_no : '' }}
                     </option>
                 @endforeach
             </select>
@@ -157,9 +157,9 @@
         </div>
         @if($req)
             {{-- Older, unlinked requisition: keep whatever Merchandising links it already had. --}}
-            <input type="hidden" name="mer_style_id" value="{{ $req->mer_style_id }}">
-            <input type="hidden" name="mer_sales_contract_po_id" value="{{ $req->mer_sales_contract_po_id }}">
-            <input type="hidden" name="mer_buyer_id" value="{{ $req->mer_buyer_id }}">
+            <input type="hidden" name="msfl_style_id" value="{{ $req->msfl_style_id }}">
+            <input type="hidden" name="msfl_order_po_id" value="{{ $req->msfl_order_po_id }}">
+            <input type="hidden" name="msfl_buyer_id" value="{{ $req->msfl_buyer_id }}">
         @endif
     @endif
     <div class="col-12 mb-3">

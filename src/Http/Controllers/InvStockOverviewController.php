@@ -110,7 +110,7 @@ class InvStockOverviewController extends Controller
         $requisition = isset($data['requisition_id']) ? InvRequisition::find($data['requisition_id']) : null;
         if ($requisition && InvStore::whereKey($data['store_id'])->value('type') === InvStore::TYPE_BUYER) {
             $snapshot['style'] = $this->stock->styleBalance(
-                (int) $data['item_id'], (int) $data['store_id'], $requisition->buyer_id, $requisition->style, $requisition->mer_style_id, $colorId, $sizeId
+                (int) $data['item_id'], (int) $data['store_id'], $requisition->buyer_id, $requisition->style, $requisition->msfl_style_id, $colorId, $sizeId
             ) + ['label' => $requisition->style ?: '(no style)'];
         }
 
