@@ -389,7 +389,7 @@ class InvRequisitionController extends Controller
             'sizes'       => InvSize::active()->ordered()->get(),
             'employees'   => $employees,
             // Buyer / Style / PO from Merchandising (see MerchandisingLink).
-            'merLinked'                  => app(MerchandisingLink::class)->available(),
+            'merLinked'                  => config('sfl-inventory.requisition_merchandising_link') && app(MerchandisingLink::class)->available(),
             'merBuyersOptions'           => app(MerchandisingLink::class)->buyers(),
             'merStylesOptions'           => app(MerchandisingLink::class)->styles(),
             'merOrderPosOptions' => app(MerchandisingLink::class)->pos(),
