@@ -105,25 +105,33 @@
                     return;
                 }
                 const optStore = opt.getAttribute('data-store');
-                const visible = !storeId || !optStore || optStore === storeId;
+                // A page may narrow further (e.g. Requisition: only the picked
+                // buyer's / style's items) via window.invItemOptionFilter(option).
+                const visible = (!storeId || !optStore || optStore === storeId)
+                    && (typeof window.invItemOptionFilter !== 'function' || window.invItemOptionFilter(opt));
                 opt.hidden = !visible;
                 opt.disabled = !visible;
                 if (opt.value === itemSelect.value && visible) {
                     selectedStillValid = true;
                 }
             });
-            if (!selectedStillValid && itemSelect.value) {
+            const cleared = !selectedStillValid && !!itemSelect.value;
+            if (cleared) {
                 itemSelect.value = '';
             }
             if ($(itemSelect).hasClass('select2-hidden-accessible')) {
                 $(itemSelect).select2('destroy');
             }
             invSelect2Init(row);
+            if (cleared) {
+                $(itemSelect).trigger('change');
+            }
         }
 
         function filterAllRowsByStore() {
             document.querySelectorAll('tbody[id$="RowsBody"] tr').forEach(filterRowItemsByStore);
         }
+        window.invRefilterLineItems = filterAllRowsByStore;
 
         function bindRow(row) {
             row.querySelectorAll('[data-role="qty"], [data-role="rate"]').forEach(function (input) {

@@ -12,6 +12,7 @@ use ME\SflInventory\Models\InvItemCategory;
 use ME\SflInventory\Models\InvRequisition;
 use ME\SflInventory\Models\InvSize;
 use ME\SflInventory\Models\InvStore;
+use ME\SflInventory\Services\MerchandisingLink;
 use ME\SflInventory\Services\StockService;
 
 class InvStockOverviewController extends Controller
@@ -93,6 +94,11 @@ class InvStockOverviewController extends Controller
             'size_id'  => ['nullable', 'integer'],
             'exclude_requisition_id' => ['nullable', 'integer'],
             'requisition_id' => ['nullable', 'integer'],
+            // Live Buyer / Style from a requisition form that isn't saved yet.
+            'buyer_id'       => ['nullable', 'integer'],
+            'style'          => ['nullable', 'string', 'max:150'],
+            'msfl_buyer_id'  => ['nullable', 'integer'],
+            'msfl_style_id'  => ['nullable', 'integer'],
         ]);
 
         $colorId = isset($data['color_id']) ? (int) $data['color_id'] : null;
@@ -112,6 +118,18 @@ class InvStockOverviewController extends Controller
             $snapshot['style'] = $this->stock->styleBalance(
                 (int) $data['item_id'], (int) $data['store_id'], $requisition->buyer_id, $requisition->style, $requisition->msfl_style_id, $colorId, $sizeId
             ) + ['label' => $requisition->style ?: '(no style)'];
+        } elseif (! $requisition && (! empty($data['style']) || ! empty($data['msfl_style_id']))
+            && InvStore::whereKey($data['store_id'])->value('type') === InvStore::TYPE_BUYER) {
+            $merStyleId = ! empty($data['msfl_style_id']) ? (int) $data['msfl_style_id'] : null;
+            $link = app(MerchandisingLink::class);
+            $buyerId = ! empty($data['msfl_buyer_id']) && $link->available()
+                ? $link->findInventoryBuyerId((int) $data['msfl_buyer_id'])
+                : (! empty($data['buyer_id']) ? (int) $data['buyer_id'] : null);
+            $style = $merStyleId && $link->available() ? $link->styleNo($merStyleId) : ($data['style'] ?? null);
+
+            $snapshot['style'] = $this->stock->styleBalance(
+                (int) $data['item_id'], (int) $data['store_id'], $buyerId, $style, $merStyleId, $colorId, $sizeId
+            ) + ['label' => $style ?: '(no style)'];
         }
 
         return response()->json($snapshot);

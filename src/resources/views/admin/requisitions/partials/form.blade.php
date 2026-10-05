@@ -65,7 +65,7 @@
             <select name="msfl_style_id" id="reqMerStyle" class="form-control form-control-sm inv-select2">
                 <option value="">— None —</option>
                 @foreach($merStylesOptions as $s)
-                    <option value="{{ $s->id }}" data-buyer="{{ $s->buyer_id }}" data-received="{{ in_array($s->id, $merReceivedStyleIds ?? [], true) ? 1 : 0 }}"
+                    <option value="{{ $s->id }}" data-buyer="{{ $s->buyer_id }}" data-style-no="{{ $s->style_no }}" data-received="{{ in_array($s->id, $merReceivedStyleIds ?? [], true) ? 1 : 0 }}"
                         @selected(old('msfl_style_id', $req->msfl_style_id ?? '') == $s->id)>{{ $s->style_no }} — {{ $s->name }}</option>
                 @endforeach
             </select>
@@ -206,7 +206,7 @@
                             @endforeach
                         </select>
                     </td>
-                    <td data-role="stock" @if(isset($requisition)) data-exclude-requisition="{{ $requisition->id }}" @endif></td>
+                    <td data-role="stock" data-live-style @if(isset($requisition)) data-exclude-requisition="{{ $requisition->id }}" @endif></td>
                     <td><input type="number" step="0.0001" min="0.0001" name="items[{{ $index }}][requested_qty]" class="form-control form-control-sm" value="{{ $line['requested_qty'] ?? '' }}" data-stock-qty="available" required></td>
                     <td><button type="button" class="btn-custom danger" data-line-items-remove><i class="fa-solid fa-xmark"></i></button></td>
                 </tr>
@@ -242,10 +242,72 @@
                 @endforeach
             </select>
         </td>
-        <td data-role="stock" @if(isset($requisition)) data-exclude-requisition="{{ $requisition->id }}" @endif></td>
+        <td data-role="stock" data-live-style @if(isset($requisition)) data-exclude-requisition="{{ $requisition->id }}" @endif></td>
         <td><input type="number" step="0.0001" min="0.0001" name="items[__INDEX__][requested_qty]" class="form-control form-control-sm" data-stock-qty="available" required></td>
         <td><button type="button" class="btn-custom danger" data-line-items-remove><i class="fa-solid fa-xmark"></i></button></td>
     </tr>
 </template>
+
+@push('js')
+<script>
+    // Buyer Store stock belongs to a buyer + style: once a buyer (and style)
+    // is picked, the item lists only show what that buyer / style actually
+    // received (posted GRNs). Same style identity as StockService::styleBalance().
+    // Applied by line-items-script on top of its own store filter.
+    (function () {
+        const rowsByItem = {};
+        @json($styleItemRows ?? []).forEach(function (r) { (rowsByItem[r.i] = rowsByItem[r.i] || []).push(r); });
+        const merBuyerInvIds = @json((object) ($merBuyerInvIds ?? []));
+        const buyerType = @json(\ME\SflInventory\Models\InvStore::TYPE_BUYER);
+        const field = function (name) { return document.querySelector('[name="' + name + '"]'); };
+
+        function fromBuyerStore() {
+            const store = document.getElementById('reqStore');
+            const opt = store && store.options[store.selectedIndex];
+            return !!opt && opt.dataset.type === buyerType;
+        }
+
+        function context() {
+            const merBuyer = field('msfl_buyer_id');
+            const merStyle = field('msfl_style_id');
+            if (merBuyer && merBuyer.tagName === 'SELECT') {
+                const styleOpt = merStyle && merStyle.options[merStyle.selectedIndex];
+                return {
+                    picked: !!merBuyer.value || !!merStyle.value,
+                    buyer: merBuyer.value ? (merBuyerInvIds[merBuyer.value] || null) : null,
+                    mer: merStyle.value ? parseInt(merStyle.value, 10) : null,
+                    style: merStyle.value && styleOpt ? (styleOpt.dataset.styleNo || '').trim().toLowerCase() : '',
+                };
+            }
+            const buyer = field('buyer_id');
+            const style = field('style');
+            const buyerId = buyer && buyer.value ? parseInt(buyer.value, 10) : null;
+            const styleText = style ? style.value.trim().toLowerCase() : '';
+            return { picked: !!buyerId || !!styleText, buyer: buyerId, mer: null, style: styleText };
+        }
+
+        function matches(r, ctx) {
+            if (ctx.mer || ctx.style) {
+                if (ctx.mer && r.m === ctx.mer) { return true; }
+                if (ctx.mer && r.m !== null) { return false; }
+                return r.b === ctx.buyer && r.s === ctx.style;
+            }
+            return r.b === ctx.buyer;
+        }
+
+        window.invItemOptionFilter = function (opt) {
+            if (!fromBuyerStore()) { return true; }
+            const ctx = context();
+            if (!ctx.picked) { return true; }
+            return (rowsByItem[opt.value] || []).some(function (r) { return matches(r, ctx); });
+        };
+
+        $(document).on('change', '[name="buyer_id"], [name="style"], [name="msfl_buyer_id"], [name="msfl_style_id"]', function () {
+            // After the Merchandising script has rebuilt the Style list for a new buyer.
+            setTimeout(function () { if (window.invRefilterLineItems) { window.invRefilterLineItems(); } }, 0);
+        });
+    })();
+</script>
+@endpush
 
 @include('sfl-inventory::admin.partials.stock-hint-script')

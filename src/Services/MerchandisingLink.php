@@ -177,6 +177,14 @@ class MerchandisingLink
         return $errors;
     }
 
+    /** The inventory buyer matching a Merchandising buyer by name, without creating one. */
+    public function findInventoryBuyerId(int $merBuyerId): ?int
+    {
+        $name = \ME\MerchandisingSfl\Models\Buyer::query()->whereKey($merBuyerId)->value('name');
+
+        return $name === null ? null : InvBuyer::query()->whereRaw('LOWER(TRIM(name)) = ?', [mb_strtolower(trim($name))])->value('id');
+    }
+
     /**
      * Inventory keeps its own buyer list (reports group by it). Map the
      * Merchandising buyer onto it by name, creating the inventory buyer the

@@ -12,6 +12,9 @@
       reservation out of Available; data-requisition="{id}" adds the Buyer
       Store style balance for that requisition's buyer + style, which then
       also caps the qty.
+    - Optional data-live-style on the cell (unsaved requisition form): the
+      page's Buyer / Style fields are sent instead, so the Buyer Store style
+      balance follows whatever is picked right now.
     - The row's qty input carries data-stock-qty="available" or "current" —
       which figure it must not exceed.
 --}}
@@ -63,6 +66,12 @@
             if (sizeId) { params.set('size_id', sizeId); }
             if (cell.dataset.excludeRequisition) { params.set('exclude_requisition_id', cell.dataset.excludeRequisition); }
             if (cell.dataset.requisition) { params.set('requisition_id', cell.dataset.requisition); }
+            if (cell.dataset.liveStyle !== undefined) {
+                ['buyer_id', 'style', 'msfl_buyer_id', 'msfl_style_id'].forEach(function (name) {
+                    const field = document.querySelector('[name="' + name + '"]');
+                    if (field && field.value.trim()) { params.set(name, field.value.trim()); }
+                });
+            }
 
             cell.innerHTML = '<span class="text-muted small">…</span>';
             fetch(url + '?' + params, { headers: { 'Accept': 'application/json' }, credentials: 'same-origin' })
@@ -94,6 +103,13 @@
         });
         $(document).on('input', '[data-stock-qty]', function () { checkQty(this.closest('tr')); });
         $(document).on('change', 'select[name="store_id"]', function () { allRows().forEach(refresh); });
+        // Buyer / Style changed on a live form — re-read each row's style balance
+        // (after the page's own handlers have rebuilt dependent dropdowns).
+        $(document).on('change', '[name="buyer_id"], [name="style"], [name="msfl_buyer_id"], [name="msfl_style_id"]', function () {
+            setTimeout(function () {
+                allRows().forEach(function (r) { if (r.querySelector('[data-role="stock"]').dataset.liveStyle !== undefined) { refresh(r); } });
+            }, 0);
+        });
         // Rows added later by the line-items script start empty — show the placeholder.
         $(document).on('click', '[data-line-items-add]', function () { setTimeout(function () { allRows().forEach(function (r) { if (!r.querySelector('[data-role="stock"]').innerHTML.trim()) { refresh(r); } }); }, 0); });
 

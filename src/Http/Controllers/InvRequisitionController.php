@@ -394,6 +394,38 @@ class InvRequisitionController extends Controller
             'merStylesOptions'           => app(MerchandisingLink::class)->styles(),
             'merOrderPosOptions' => app(MerchandisingLink::class)->pos(),
             'merReceivedStyleIds'        => app(MerchandisingLink::class)->available() ? app(MerchandisingLink::class)->receivedStyleIds() : [],
+            'styleItemRows'              => $this->styleItemRows(),
+            'merBuyerInvIds'             => $this->merBuyerInvIds(),
         ];
+    }
+
+    /**
+     * Which items each buyer + style has received (posted GRNs) — lets the
+     * Buyer Store requisition form list only that buyer's / style's items.
+     * Same style identity as StockService::styleBalance().
+     */
+    private function styleItemRows(): array
+    {
+        return DB::table('inv_grn_items as gi')
+            ->join('inv_grns as g', 'g.id', '=', 'gi.grn_id')
+            ->whereNull('g.deleted_at')
+            ->where('g.status', 'posted')
+            ->where(fn ($q) => $q->whereNotNull('g.buyer_id')->orWhereNotNull('g.msfl_style_id')->orWhereRaw("TRIM(COALESCE(g.style, '')) != ''"))
+            ->distinct()
+            ->get(['g.buyer_id', 'g.msfl_style_id', DB::raw("TRIM(COALESCE(g.style, '')) as style"), 'gi.item_id'])
+            ->map(fn ($r) => ['b' => $r->buyer_id ? (int) $r->buyer_id : null, 'm' => $r->msfl_style_id ? (int) $r->msfl_style_id : null, 's' => mb_strtolower($r->style), 'i' => (int) $r->item_id])
+            ->all();
+    }
+
+    /** Merchandising buyer id => matching inventory buyer id (by name), for the form's item filter. */
+    private function merBuyerInvIds(): array
+    {
+        $link = app(MerchandisingLink::class);
+        if (! $link->available()) {
+            return [];
+        }
+        $invByName = InvBuyer::query()->get(['id', 'name'])->mapWithKeys(fn ($b) => [mb_strtolower(trim($b->name)) => $b->id]);
+
+        return $link->buyers()->mapWithKeys(fn ($b) => [$b->id => $invByName[mb_strtolower(trim($b->name))] ?? null])->all();
     }
 }

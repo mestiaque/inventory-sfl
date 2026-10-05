@@ -211,6 +211,12 @@ class StockService
      * A style is identified by its Merchandising style id when there is one;
      * older, unlinked documents by buyer + style text.
      *
+     * Not narrowed by the document's store_id: an item lives in exactly one
+     * store, and correcting its store (moveItemHistoryToStore()) moves the
+     * ledger but leaves old GRN / challan headers on the previous store —
+     * filtering on them made the style look empty while Current Stock (and
+     * the Buyer + Style report) still showed it. $storeId is kept for callers.
+     *
      * @return array{received: float, issued: float, balance: float}
      */
     public function styleBalance(int $itemId, int $storeId, ?int $buyerId, ?string $style, ?int $merStyleId, ?int $colorId = null, ?int $sizeId = null, ?int $excludeIssueId = null): array
@@ -239,7 +245,6 @@ class StockService
             ->join('inv_grns as g', 'g.id', '=', 'gi.grn_id')
             ->whereNull('g.deleted_at')
             ->where('g.status', 'posted')
-            ->where('g.store_id', $storeId)
             ->where('gi.item_id', $itemId)
             ->tap(fn ($q) => $variant($q, 'gi'))
             ->tap(fn ($q) => $sameStyle($q, 'g'))
@@ -248,7 +253,6 @@ class StockService
         $issued = (float) DB::table('inv_issue_items as ii')
             ->join('inv_issues as i', 'i.id', '=', 'ii.issue_id')
             ->whereNull('i.deleted_at')
-            ->where('i.store_id', $storeId)
             ->where('ii.item_id', $itemId)
             ->when($excludeIssueId, fn ($q) => $q->where('i.id', '!=', $excludeIssueId))
             ->tap(fn ($q) => $variant($q, 'ii'))
