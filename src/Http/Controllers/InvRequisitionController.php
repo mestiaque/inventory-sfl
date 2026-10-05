@@ -396,7 +396,23 @@ class InvRequisitionController extends Controller
             'merReceivedStyleIds'        => app(MerchandisingLink::class)->available() ? app(MerchandisingLink::class)->receivedStyleIds() : [],
             'styleItemRows'              => $this->styleItemRows(),
             'merBuyerInvIds'             => $this->merBuyerInvIds(),
+            'receivedStyles'             => $this->receivedStyles(),
         ];
+    }
+
+    /** Buyer + style pairs received (posted GRNs) — the Style dropdown, filtered by the picked buyer. */
+    private function receivedStyles(): \Illuminate\Support\Collection
+    {
+        return DB::table('inv_grns')
+            ->whereNull('deleted_at')
+            ->where('status', 'posted')
+            ->whereNotNull('buyer_id')
+            ->whereRaw("TRIM(COALESCE(style, '')) != ''")
+            ->distinct()
+            ->get(['buyer_id', DB::raw('TRIM(style) as style')])
+            ->unique(fn ($r) => $r->buyer_id . '|' . mb_strtolower($r->style))
+            ->sortBy('style', SORT_NATURAL)
+            ->values();
     }
 
     /**

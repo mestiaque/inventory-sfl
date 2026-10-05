@@ -66,6 +66,7 @@ class StockService
 
     public function currentStock(int $itemId, ?int $storeId = null, ?int $colorId = null, ?int $sizeId = null): float
     {
+        [$colorId, $sizeId] = $this->lookupVariant($itemId, $colorId, $sizeId);
         $query = InvStockTransaction::where('item_id', $itemId);
         if ($storeId) {
             $query->where('store_id', $storeId);
@@ -99,6 +100,7 @@ class StockService
      */
     public function latestRate(int $itemId, ?int $storeId = null, ?int $colorId = null, ?int $sizeId = null): float
     {
+        [$colorId, $sizeId] = $this->lookupVariant($itemId, $colorId, $sizeId);
         // store_change inflows (from the older transfer-style item store
         // change) carried the purchase price over, so they count as a
         // price source for their store too.
@@ -133,6 +135,7 @@ class StockService
 
     private function ledgerDerivedValue(int $itemId, ?int $storeId = null, ?int $colorId = null, ?int $sizeId = null): float
     {
+        [$colorId, $sizeId] = $this->lookupVariant($itemId, $colorId, $sizeId);
         $query = InvStockTransaction::where('item_id', $itemId);
         if ($storeId) {
             $query->where('store_id', $storeId);
@@ -150,6 +153,8 @@ class StockService
      */
     public function reservedStock(int $itemId, int $storeId, ?int $colorId = null, ?int $sizeId = null, ?int $excludeRequisitionId = null): float
     {
+        [$colorId, $sizeId] = $this->lookupVariant($itemId, $colorId, $sizeId);
+
         return (float) InvRequisitionItem::query()
             ->join('inv_requisitions', 'inv_requisitions.id', '=', 'inv_requisition_items.requisition_id')
             ->whereNull('inv_requisitions.deleted_at')
@@ -221,6 +226,7 @@ class StockService
      */
     public function styleBalance(int $itemId, int $storeId, ?int $buyerId, ?string $style, ?int $merStyleId, ?int $colorId = null, ?int $sizeId = null, ?int $excludeIssueId = null): array
     {
+        [$colorId, $sizeId] = $this->lookupVariant($itemId, $colorId, $sizeId);
         $style = trim((string) $style);
         $sameStyle = function ($q, string $t) use ($buyerId, $style, $merStyleId) {
             $q->where(function ($w) use ($t, $buyerId, $style, $merStyleId) {
@@ -257,6 +263,40 @@ class StockService
             ->when($excludeIssueId, fn ($q) => $q->where('i.id', '!=', $excludeIssueId))
             ->tap(fn ($q) => $variant($q, 'ii'))
             ->tap(fn ($q) => $sameStyle($q, 'i'))
+            ->sum('ii.issued_qty');
+
+        return ['received' => $received, 'issued' => $issued, 'balance' => $received - $issued];
+    }
+
+    /**
+     * Buyer Store balance for one buyer across all its styles — what the
+     * requisition form shows once a buyer is picked but no style yet.
+     *
+     * @return array{received: float, issued: float, balance: float}
+     */
+    public function buyerBalance(int $itemId, int $buyerId, ?int $colorId = null, ?int $sizeId = null): array
+    {
+        [$colorId, $sizeId] = $this->lookupVariant($itemId, $colorId, $sizeId);
+        $variant = function ($q, string $t) use ($colorId, $sizeId) {
+            $q->when($colorId !== null, fn ($w) => $w->where("{$t}.color_id", $colorId))
+                ->when($sizeId !== null, fn ($w) => $w->where("{$t}.size_id", $sizeId));
+        };
+
+        $received = (float) DB::table('inv_grn_items as gi')
+            ->join('inv_grns as g', 'g.id', '=', 'gi.grn_id')
+            ->whereNull('g.deleted_at')
+            ->where('g.status', 'posted')
+            ->where('g.buyer_id', $buyerId)
+            ->where('gi.item_id', $itemId)
+            ->tap(fn ($q) => $variant($q, 'gi'))
+            ->sum('gi.received_qty');
+
+        $issued = (float) DB::table('inv_issue_items as ii')
+            ->join('inv_issues as i', 'i.id', '=', 'ii.issue_id')
+            ->whereNull('i.deleted_at')
+            ->where('i.buyer_id', $buyerId)
+            ->where('ii.item_id', $itemId)
+            ->tap(fn ($q) => $variant($q, 'ii'))
             ->sum('ii.issued_qty');
 
         return ['received' => $received, 'issued' => $issued, 'balance' => $received - $issued];
@@ -305,6 +345,38 @@ class StockService
         $days = (int) config('sfl-inventory.dead_stock_days', 90);
 
         return $lastOutbound === null || Carbon::parse($lastOutbound)->lt(now()->subDays($days));
+    }
+
+    /** @var array<int, array{0: ?int, 1: ?int}> item id => its fixed [color_id, size_id] */
+    private array $fixedVariants = [];
+
+    /**
+     * A legacy item with its own fixed color/size has only that one variant,
+     * but its GRN / issue / ledger rows were mostly saved with NULL there
+     * (createGrnItems() and the ledger don't always carry it) while
+     * requisitions resolve it via InvItem::resolvedVariant(). Filtering on
+     * the fixed value then finds nothing — "received 0" though the stock is
+     * there. So a filter equal to the item's own fixed value is dropped:
+     * it can't tell anything apart anyway.
+     *
+     * @return array{0: ?int, 1: ?int}
+     */
+    private function lookupVariant(int $itemId, ?int $colorId, ?int $sizeId): array
+    {
+        if ($colorId === null && $sizeId === null) {
+            return [null, null];
+        }
+        $this->fixedVariants[$itemId] ??= (function () use ($itemId) {
+            $item = InvItem::query()->whereKey($itemId)->first(['color_id', 'size_id']);
+
+            return [$item?->color_id ? (int) $item->color_id : null, $item?->size_id ? (int) $item->size_id : null];
+        })();
+        [$fixedColor, $fixedSize] = $this->fixedVariants[$itemId];
+
+        return [
+            $colorId !== null && $colorId === $fixedColor ? null : $colorId,
+            $sizeId !== null && $sizeId === $fixedSize ? null : $sizeId,
+        ];
     }
 
     private function applyVariant($query, ?int $colorId, ?int $sizeId): void

@@ -79,13 +79,23 @@
                 .then(function (s) {
                     cell.dataset.current = s.current;
                     cell.dataset.available = s.available;
+                    if (s.scoped && s.style) {
+                        // Buyer Store requisition: only this buyer's / style's stock.
+                        cell.dataset.styleBalance = s.style.balance;
+                        cell.innerHTML =
+                            '<div class="small text-muted">' + s.style.label + '</div>' +
+                            '<div class="small">Received: ' + fmt(s.style.received) + ' · Issued: ' + fmt(s.style.issued) + '</div>' +
+                            '<div class="small">Stock: <strong class="' + (s.style.balance <= 0 ? 'text-danger' : 'text-success') + '">' + fmt(s.style.balance) + '</strong></div>';
+                        checkQty(row);
+                        return;
+                    }
                     cell.innerHTML =
                         '<div class="small">Current: <strong class="' + (s.current <= 0 ? 'text-danger' : '') + '">' + fmt(s.current) + '</strong></div>' +
                         '<div class="small text-muted">Reserved: ' + fmt(s.reserved) + '</div>' +
                         '<div class="small">Available: <strong class="' + (s.available <= 0 ? 'text-danger' : 'text-success') + '">' + fmt(s.available) + '</strong></div>';
                     if (s.style) {
                         cell.dataset.styleBalance = s.style.balance;
-                        cell.innerHTML += '<div class="small border-top mt-1 pt-1" title="Received ' + fmt(s.style.received) + ', issued ' + fmt(s.style.issued) + '">Style ' + s.style.label +
+                        cell.innerHTML += '<div class="small border-top mt-1 pt-1" title="Received ' + fmt(s.style.received) + ', issued ' + fmt(s.style.issued) + '">' + s.style.label +
                             ': <strong class="' + (s.style.balance <= 0 ? 'text-danger' : 'text-success') + '">' + fmt(s.style.balance) + '</strong></div>';
                     }
                     checkQty(row);

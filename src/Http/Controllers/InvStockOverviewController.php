@@ -117,9 +117,11 @@ class InvStockOverviewController extends Controller
         if ($requisition && InvStore::whereKey($data['store_id'])->value('type') === InvStore::TYPE_BUYER) {
             $snapshot['style'] = $this->stock->styleBalance(
                 (int) $data['item_id'], (int) $data['store_id'], $requisition->buyer_id, $requisition->style, $requisition->msfl_style_id, $colorId, $sizeId
-            ) + ['label' => $requisition->style ?: '(no style)'];
-        } elseif (! $requisition && (! empty($data['style']) || ! empty($data['msfl_style_id']))
+            ) + ['label' => 'Style ' . ($requisition->style ?: '(no style)')];
+        } elseif (! $requisition && (! empty($data['style']) || ! empty($data['msfl_style_id']) || ! empty($data['buyer_id']) || ! empty($data['msfl_buyer_id']))
             && InvStore::whereKey($data['store_id'])->value('type') === InvStore::TYPE_BUYER) {
+            // Live requisition form, Buyer Store: only the picked buyer's /
+            // style's stock — never another style's.
             $merStyleId = ! empty($data['msfl_style_id']) ? (int) $data['msfl_style_id'] : null;
             $link = app(MerchandisingLink::class);
             $buyerId = ! empty($data['msfl_buyer_id']) && $link->available()
@@ -127,9 +129,15 @@ class InvStockOverviewController extends Controller
                 : (! empty($data['buyer_id']) ? (int) $data['buyer_id'] : null);
             $style = $merStyleId && $link->available() ? $link->styleNo($merStyleId) : ($data['style'] ?? null);
 
-            $snapshot['style'] = $this->stock->styleBalance(
-                (int) $data['item_id'], (int) $data['store_id'], $buyerId, $style, $merStyleId, $colorId, $sizeId
-            ) + ['label' => $style ?: '(no style)'];
+            if ($style || $merStyleId) {
+                $snapshot['style'] = $this->stock->styleBalance(
+                    (int) $data['item_id'], (int) $data['store_id'], $buyerId, $style, $merStyleId, $colorId, $sizeId
+                ) + ['label' => 'Style ' . $style];
+            } else {
+                $balance = $buyerId ? $this->stock->buyerBalance((int) $data['item_id'], $buyerId, $colorId, $sizeId) : ['received' => 0.0, 'issued' => 0.0, 'balance' => 0.0];
+                $snapshot['style'] = $balance + ['label' => 'Buyer ' . ($buyerId ? \ME\SflInventory\Models\InvBuyer::whereKey($buyerId)->value('name') : '')];
+            }
+            $snapshot['scoped'] = true;
         }
 
         return response()->json($snapshot);

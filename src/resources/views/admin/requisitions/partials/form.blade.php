@@ -139,7 +139,7 @@
     @else
         <div class="col-md-3 mb-3">
             <label class="form-label">Buyer</label>
-            <select name="buyer_id" class="form-control form-control-sm inv-select2">
+            <select name="buyer_id" id="reqBuyer" class="form-control form-control-sm inv-select2">
                 <option value="">— None —</option>
                 @foreach($buyers as $buyer)
                     <option value="{{ $buyer->id }}" @selected(old('buyer_id', $req->buyer_id ?? '') == $buyer->id)>{{ $buyer->name }}</option>
@@ -149,8 +149,41 @@
         </div>
         <div class="col-md-3 mb-3">
             <label class="form-label">Style</label>
-            <input type="text" name="style" class="form-control form-control-sm" value="{{ old('style', $req->style ?? '') }}" placeholder="e.g. Style-A">
+            @php
+                $currentStyle = trim((string) old('style', $req->style ?? ''));
+                $styleOpts = collect($receivedStyles ?? []);
+                $currentBuyer = (int) old('buyer_id', $req->buyer_id ?? 0);
+                if ($currentStyle !== '' && ! $styleOpts->contains(fn ($o) => (int) $o->buyer_id === $currentBuyer && mb_strtolower($o->style) === mb_strtolower($currentStyle))) {
+                    $styleOpts->push((object) ['buyer_id' => $currentBuyer ?: null, 'style' => $currentStyle]);
+                }
+            @endphp
+            <select name="style" id="reqStyle" class="form-control form-control-sm inv-select2">
+                <option value="">— None —</option>
+                @foreach($styleOpts as $o)
+                    <option value="{{ $o->style }}" data-buyer="{{ $o->buyer_id }}" @selected($currentStyle !== '' && $currentBuyer === (int) $o->buyer_id && mb_strtolower($currentStyle) === mb_strtolower($o->style))>{{ $o->style }}</option>
+                @endforeach
+            </select>
+            <div class="form-text">Styles received for the selected buyer.</div>
         </div>
+        @push('js')
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                const buyer = document.getElementById('reqBuyer');
+                const style = document.getElementById('reqStyle');
+                const all = Array.from(style.options).map(function (o) { return o.cloneNode(true); });
+                // Select2 can't hide options, so rebuild from the full copy: only the picked buyer's styles.
+                function rebuild() {
+                    const keep = style.value;
+                    style.innerHTML = '';
+                    all.forEach(function (o) { if (!o.value || (buyer.value && o.dataset.buyer === buyer.value)) { style.appendChild(o.cloneNode(true)); } });
+                    style.value = Array.from(style.options).some(function (o) { return o.value === keep; }) ? keep : '';
+                    if (typeof $ !== 'undefined') { $(style).trigger('change.select2'); }
+                }
+                if (typeof $ !== 'undefined') { $(buyer).on('change', rebuild); } else { buyer.addEventListener('change', rebuild); }
+                rebuild();
+            });
+        </script>
+        @endpush
         <div class="col-md-3 mb-3">
             <label class="form-label">Order Ref</label>
             <input type="text" name="order_ref" class="form-control form-control-sm" value="{{ old('order_ref', $req->order_ref ?? '') }}">
@@ -261,10 +294,11 @@
         const buyerType = @json(\ME\SflInventory\Models\InvStore::TYPE_BUYER);
         const field = function (name) { return document.querySelector('[name="' + name + '"]'); };
 
+        // No store picked yet counts too — the filter only stands aside for a General Store.
         function fromBuyerStore() {
             const store = document.getElementById('reqStore');
             const opt = store && store.options[store.selectedIndex];
-            return !!opt && opt.dataset.type === buyerType;
+            return !store || !store.value || (!!opt && opt.dataset.type === buyerType);
         }
 
         function context() {
@@ -301,6 +335,18 @@
             if (!ctx.picked) { return true; }
             return (rowsByItem[opt.value] || []).some(function (r) { return matches(r, ctx); });
         };
+
+        // Every item lives in exactly one store: picking an item with no store
+        // chosen yet fills Issue From Store from it, so its stock can show.
+        // Bound before stock-hint-script's row handler, so that sees the store.
+        $(document).on('change', '#reqRowsBody select[name$="[item_id]"]', function () {
+            const store = document.getElementById('reqStore');
+            const opt = this.options[this.selectedIndex];
+            const itemStore = opt && opt.dataset.store;
+            if (store && !store.value && itemStore && Array.from(store.options).some(function (o) { return o.value === itemStore; })) {
+                $(store).val(itemStore).trigger('change');
+            }
+        });
 
         $(document).on('change', '[name="buyer_id"], [name="style"], [name="msfl_buyer_id"], [name="msfl_style_id"]', function () {
             // After the Merchandising script has rebuilt the Style list for a new buyer.
