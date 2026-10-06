@@ -56,6 +56,10 @@ class InvProductionConsumptionController extends Controller
     public function store(InvProductionConsumptionRequest $request): RedirectResponse
     {
         $data = $request->validated();
+        $link = app(\ME\SflInventory\Services\MerchandisingLink::class);
+        if ($link->available() && $request->has('msfl_buyer_id')) {
+            $data = $link->resolvePick($data); // style text / order ref from the Merchandising pick
+        }
 
         $consumption = DB::transaction(function () use ($data) {
             $consumption = InvProductionConsumption::create([
@@ -190,10 +194,7 @@ class InvProductionConsumptionController extends Controller
             'departments' => InvDepartment::active()->orderBy('name')->get(),
             'stores'      => InvStore::active()->orderBy('name')->get(),
             'items'       => InvItem::active()->orderBy('item_name')->get(),
-            // Merchandising v2 links (empty when it isn't installed).
-            'merStylesOptions' => app(\ME\SflInventory\Services\MerchandisingLink::class)->styles(),
-            'merOrderPosOptions' => app(\ME\SflInventory\Services\MerchandisingLink::class)->pos(),
-            'merBuyersOptions' => app(\ME\SflInventory\Services\MerchandisingLink::class)->buyers(),
-        ];
+            // Buyer → Style → PO from Merchandising (empty when it isn't installed).
+        ] + app(\ME\SflInventory\Services\MerchandisingLink::class)->formOptions();
     }
 }

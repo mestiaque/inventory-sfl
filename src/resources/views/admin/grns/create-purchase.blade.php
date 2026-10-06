@@ -62,38 +62,9 @@
                             <label class="form-label">Receive Date <span class="text-danger">*</span></label>
                             <input type="date" name="receive_date" class="form-control form-control-sm" value="{{ old('receive_date', now()->toDateString()) }}" required>
                         </div>
-                        @if(($merStylesOptions ?? collect())->isNotEmpty())
-                        <div class="col-md-3 mb-3">
-                            <label class="form-label">Merchandising Style</label>
-                            <select name="msfl_style_id" class="form-control form-control-sm inv-select2">
-                                <option value="">— None —</option>
-                                @foreach($merStylesOptions as $s)
-                                    <option value="{{ $s->id }}" @selected(old('msfl_style_id') == $s->id)>{{ $s->style_no }} — {{ $s->name }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-                        @endif
-                        @if(($merOrderPosOptions ?? collect())->isNotEmpty())
-                        <div class="col-md-3 mb-3">
-                            <label class="form-label">Sales Contract PO</label>
-                            <select name="msfl_order_po_id" class="form-control form-control-sm inv-select2">
-                                <option value="">— None —</option>
-                                @foreach($merOrderPosOptions as $po)
-                                    <option value="{{ $po->id }}" @selected(old('msfl_order_po_id') == $po->id)>{{ $po->po_no }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-                        @endif
-                        @if(($merBuyersOptions ?? collect())->isNotEmpty())
-                        <div class="col-md-3 mb-3">
-                            <label class="form-label">Merchandising Buyer</label>
-                            <select name="msfl_buyer_id" class="form-control form-control-sm inv-select2">
-                                <option value="">— None —</option>
-                                @foreach($merBuyersOptions as $b)
-                                    <option value="{{ $b->id }}" @selected(old('msfl_buyer_id') == $b->id)>{{ $b->name }}</option>
-                                @endforeach
-                            </select>
-                        </div>
+                        @if($merLinked ?? false)
+                            {{-- Optional: Buyer → Style → PO from Merchandising. --}}
+                            @include('sfl-inventory::admin.partials.mer-buyer-style', ['pick' => ['id' => 'pgrn']])
                         @endif
                         <div class="col-md-3 mb-3">
                             <label class="form-label">Invoice / Challan No.</label>

@@ -333,6 +333,6 @@ class InvItemController extends Controller
             'departments' => InvDepartment::active()->orderBy('name')->get(),
             'suppliers'   => InvSupplier::active()->orderBy('name')->get(),
             'buyers'      => InvBuyer::active()->orderBy('name')->get(),
-        ];
+        ] + app(\ME\SflInventory\Services\MerchandisingLink::class)->formOptions();
     }
 }

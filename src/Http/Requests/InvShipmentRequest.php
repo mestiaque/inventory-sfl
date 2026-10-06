@@ -3,9 +3,18 @@
 namespace ME\SflInventory\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use ME\SflInventory\Http\Requests\Concerns\PicksMerchandisingStyle;
 
 class InvShipmentRequest extends FormRequest
 {
+    use PicksMerchandisingStyle;
+
+    /** Buyer comes from Merchandising (partials.mer-buyer-select). */
+    protected function prepareForValidation(): void
+    {
+        $this->mapPickedBuyer();
+    }
+
     public function authorize(): bool
     {
         return (bool) $this->user()?->can('inv_shipment.add');

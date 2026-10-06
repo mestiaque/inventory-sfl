@@ -87,6 +87,11 @@ class InvStockOverviewController extends Controller
     {
         abort_unless(auth()->user()->canAny(['inv_requisition.add', 'inv_requisition.edit', 'inv_requisition.approve', 'inv_issue.add', 'inv_stock_overview.view']), 403);
 
+        // An Inventory-only style from the Buyer → Style picker ("inv:<style no>").
+        if (($legacy = app(MerchandisingLink::class)->legacyStylePicked($request->input('msfl_style_id'))) !== null) {
+            $request->merge(['style' => $legacy, 'msfl_style_id' => null]);
+        }
+
         $data = $request->validate([
             'store_id' => ['required', 'integer'],
             'item_id'  => ['required', 'integer'],

@@ -64,9 +64,19 @@
             <label class="form-label">Style <span class="text-danger req-buyer-star">*</span></label>
             <select name="msfl_style_id" id="reqMerStyle" class="form-control form-control-sm inv-select2">
                 <option value="">— None —</option>
+                @php
+                    $legacyPrefix = \ME\SflInventory\Services\MerchandisingLink::LEGACY_STYLE;
+                    $pickedStyle = (string) (old('msfl_style_id') ?? (old('style') ? $legacyPrefix . old('style') : null)
+                        ?? ($req ? app(\ME\SflInventory\Services\MerchandisingLink::class)->pickedStyleValue($req->msfl_style_id, $req->style) : ''));
+                @endphp
                 @foreach($merStylesOptions as $s)
                     <option value="{{ $s->id }}" data-buyer="{{ $s->buyer_id }}" data-style-no="{{ $s->style_no }}" data-received="{{ in_array($s->id, $merReceivedStyleIds ?? [], true) ? 1 : 0 }}"
-                        @selected(old('msfl_style_id', $req->msfl_style_id ?? '') == $s->id)>{{ $s->style_no }} — {{ $s->name }}</option>
+                        @selected($pickedStyle === (string) $s->id)>{{ $s->style_no }} — {{ $s->name }}</option>
+                @endforeach
+                {{-- Styles Inventory already received before they were in Merchandising. --}}
+                @foreach($merLegacyStyles ?? [] as $s)
+                    <option value="{{ $legacyPrefix . $s->style_no }}" data-buyer="{{ $s->buyer_id }}" data-style-no="{{ $s->style_no }}" data-received="{{ $s->received ? 1 : 0 }}"
+                        @selected($pickedStyle === $legacyPrefix . $s->style_no)>{{ $s->style_no }} (Inventory)</option>
                 @endforeach
             </select>
             <div class="form-text" id="reqStyleHint"></div>
@@ -309,7 +319,8 @@
                 return {
                     picked: !!merBuyer.value || !!merStyle.value,
                     buyer: merBuyer.value ? (merBuyerInvIds[merBuyer.value] || null) : null,
-                    mer: merStyle.value ? parseInt(merStyle.value, 10) : null,
+                    // "inv:<style no>" = Inventory-only style: matched by buyer + style text.
+                    mer: /^\d+$/.test(merStyle.value) ? parseInt(merStyle.value, 10) : null,
                     style: merStyle.value && styleOpt ? (styleOpt.dataset.styleNo || '').trim().toLowerCase() : '',
                 };
             }

@@ -3,9 +3,28 @@
 namespace ME\SflInventory\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Validator;
+use ME\SflInventory\Http\Requests\Concerns\PicksMerchandisingStyle;
 
 class InvProductionConsumptionRequest extends FormRequest
 {
+    use PicksMerchandisingStyle;
+
+    /** Buyer → Style → PO from Merchandising (partials.mer-buyer-style), all optional. */
+    protected function prepareForValidation(): void
+    {
+        $this->splitLegacyStyle();
+    }
+
+    public function withValidator(Validator $validator): void
+    {
+        $validator->after(function (Validator $v) {
+            if ($this->has('msfl_buyer_id')) {
+                $this->validatePick($v, false);
+            }
+        });
+    }
+
     public function authorize(): bool
     {
         return (bool) $this->user()?->can('inv_production.add');

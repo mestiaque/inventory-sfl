@@ -27,7 +27,7 @@ class MerchandisingLink
     /** Active Merchandising buyers. */
     public function buyers(): Collection
     {
-        return $this->available()
+        return $this->buyersCache ??= $this->available()
             ? \ME\MerchandisingSfl\Models\Buyer::query()->active()->orderBy('name')->get(['id', 'code', 'name'])
             : collect();
     }
@@ -43,16 +43,104 @@ class MerchandisingLink
     /** Value prefix of an Inventory-only style in a style select ("inv:262717"). */
     public const LEGACY_STYLE = 'inv:';
 
+    /** Value prefix of an Inventory-only buyer kept on an older record ("inv-buyer:7"). */
+    public const LEGACY_BUYER = 'inv-buyer:';
+
+    private ?Collection $legacyStylesCache = null;
+
+    private ?Collection $buyersCache = null;
+
+    /**
+     * Everything the shared Buyer → Style → PO picker (partials.mer-buyer-style)
+     * and the buyer picker (partials.mer-buyer-select) need — merge into a form's view data.
+     */
+    public function formOptions(): array
+    {
+        $on = $this->available();
+
+        return [
+            'merLinked' => $on,
+            'merBuyersOptions' => $on ? $this->buyers() : collect(),
+            'merStylesOptions' => $on ? $this->styles() : collect(),
+            'merLegacyStyles' => $on ? $this->legacyStyles() : collect(),
+            'merOrderPosOptions' => $on ? $this->pos() : collect(),
+        ];
+    }
+
+    /** Select value of a saved record's style: the Merchandising style id, else "inv:<style text>". */
+    public function pickedStyleValue(mixed $merStyleId, ?string $style): string
+    {
+        if ($merStyleId) {
+            return (string) $merStyleId;
+        }
+
+        return trim((string) $style) !== '' ? self::LEGACY_STYLE . trim($style) : '';
+    }
+
+    /** The Merchandising buyer matching an inventory buyer by name (null when none). */
+    public function merBuyerIdFor(?int $invBuyerId): ?int
+    {
+        if (! $invBuyerId || ! $this->available()) {
+            return null;
+        }
+        $name = InvBuyer::withTrashed()->whereKey($invBuyerId)->value('name');
+
+        return $name === null ? null : $this->buyers()->first(fn ($b) => mb_strtolower(trim($b->name)) === mb_strtolower(trim($name)))?->id;
+    }
+
+    /**
+     * Inventory buyer id for a picked buyer value: a Merchandising buyer id
+     * (mapped / created by name), or "inv-buyer:<id>" — an inventory buyer an
+     * older record already has (only accepted when it is $keepInvBuyerId).
+     * Null when nothing (valid) was picked.
+     */
+    public function invBuyerFromPick(mixed $picked, ?int $keepInvBuyerId = null): ?int
+    {
+        $picked = (string) $picked;
+        if ($picked === '') {
+            return null;
+        }
+        if (str_starts_with($picked, self::LEGACY_BUYER)) {
+            $id = (int) substr($picked, strlen(self::LEGACY_BUYER));
+
+            return $keepInvBuyerId && $id === $keepInvBuyerId ? $id : null;
+        }
+
+        return ctype_digit($picked) && $this->buyers()->contains('id', (int) $picked) ? $this->inventoryBuyerId((int) $picked) : null;
+    }
+
+    /**
+     * Fills the inventory side of a Buyer → Style → PO pick: inventory buyer,
+     * style text and order ref, from msfl_buyer_id / msfl_style_id /
+     * msfl_order_po_id (an Inventory-only style already sits in `style`).
+     */
+    public function resolvePick(array $data): array
+    {
+        $data['buyer_id'] = ! empty($data['msfl_buyer_id']) ? $this->inventoryBuyerId((int) $data['msfl_buyer_id']) : null;
+        if (! empty($data['msfl_style_id'])) {
+            $data['style'] = $this->styleNo((int) $data['msfl_style_id']);
+        } elseif (empty($data['msfl_buyer_id'])) {
+            $data['style'] = null;
+        }
+        $data['order_ref'] = ! empty($data['msfl_order_po_id']) ? $this->orderRef((int) $data['msfl_order_po_id']) : null;
+
+        return $data;
+    }
+
     /**
      * Styles Inventory already knows only as text — from older Buyer Store
      * receives (GRN) and Finish Store receives — for Merchandising buyers matched by name, that are not
      * (yet) a Merchandising style of that buyer. Shown next to the v2 styles
-     * until every style lives in Merchandising. Each: style_no, buyer_id (v2).
+     * until every style lives in Merchandising. Each: style_no, buyer_id (v2),
+     * received (in a posted Buyer Store GRN).
      */
     public function legacyStyles(): Collection
     {
         if (! $this->available()) {
             return collect();
+        }
+        if ($this->legacyStylesCache !== null) {
+            return $this->legacyStylesCache;
         }
 
         $merBuyers = $this->buyers()->keyBy(fn ($b) => mb_strtolower(trim($b->name)));
@@ -66,16 +154,18 @@ class MerchandisingLink
         $known = $this->styles()->mapWithKeys(fn ($s) => [$s->buyer_id . '|' . mb_strtolower(trim($s->style_no)) => true]);
 
         $grnStyles = \ME\SflInventory\Models\InvGrn::query()
-            ->where('source_type', 'buyer_supplied')->whereIn('buyer_id', $invToMer->keys())
+            ->where('source_type', 'buyer_supplied')->where('status', 'posted')->whereIn('buyer_id', $invToMer->keys())
             ->whereNotNull('style')->where('style', '<>', '')
-            ->distinct()->get(['buyer_id', 'style']);
+            ->distinct()->get(['buyer_id', 'style'])
+            ->each(fn ($g) => $g->received = true);
         $fgStyles = \ME\SflInventory\Models\InvFinishedGoodsReceive::query()
             ->whereIn('buyer_id', $invToMer->keys())->whereNull('msfl_style_id')
             ->whereNotNull('style')->where('style', '<>', '')
             ->distinct()->get(['buyer_id', 'style']);
 
-        return $grnStyles->concat($fgStyles)
-            ->map(fn ($g) => (object) ['style_no' => trim($g->style), 'buyer_id' => $invToMer[$g->buyer_id]])
+        // GRN rows first, so unique() keeps the "received" flag.
+        return $this->legacyStylesCache = $grnStyles->concat($fgStyles)
+            ->map(fn ($g) => (object) ['style_no' => trim($g->style), 'buyer_id' => $invToMer[$g->buyer_id], 'received' => (bool) ($g->received ?? false)])
             ->reject(fn ($s) => isset($known[$s->buyer_id . '|' . mb_strtolower($s->style_no)]))
             ->unique(fn ($s) => $s->buyer_id . '|' . mb_strtolower($s->style_no))
             ->sortBy('style_no', SORT_NATURAL)
@@ -121,11 +211,17 @@ class MerchandisingLink
      * buyer/style/PO rules as the receive, plus the style must already have
      * been received into the Buyer Store.
      */
-    public function validateBuyerRequisition(?int $buyerId, ?int $styleId, ?int $poId): array
+    public function validateBuyerRequisition(?int $buyerId, ?int $styleId, ?int $poId, ?string $legacyStyle = null): array
     {
-        $errors = $this->validateBuyerReceive($buyerId, $styleId, $poId);
+        $errors = $this->validateBuyerReceive($buyerId, $styleId, $poId, $legacyStyle);
 
-        if (! $errors && ! in_array((int) $styleId, $this->receivedStyleIds(), true)) {
+        if (! $errors && ! $styleId && $legacyStyle !== null && $legacyStyle !== '') {
+            $received = $this->legacyStyles()->contains(fn ($s) => (int) $s->buyer_id === (int) $buyerId && $s->received
+                && mb_strtolower($s->style_no) === mb_strtolower(trim($legacyStyle)));
+            if (! $received) {
+                $errors['msfl_style_id'] = "Nothing has been received into the Buyer Store for style {$legacyStyle} yet — receive it (GRN) first.";
+            }
+        } elseif (! $errors && ! in_array((int) $styleId, $this->receivedStyleIds(), true)) {
             $styleNo = $this->styleNo((int) $styleId);
             $errors['msfl_style_id'] = "Nothing has been received into the Buyer Store for style {$styleNo} yet — receive it (GRN) first.";
         }

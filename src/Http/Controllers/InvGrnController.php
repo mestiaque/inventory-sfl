@@ -558,6 +558,17 @@ class InvGrnController extends Controller
      */
     private function applyMerchandisingLink(InvGrnRequest $request, array $data, bool $isNew): array
     {
+        if ($request->usesPurchasePick()) {
+            // Purchase challan: optional style tag only — the goods aren't a buyer's.
+            if (! empty($data['msfl_style_id'])) {
+                $data['style'] = app(MerchandisingLink::class)->styleNo((int) $data['msfl_style_id']);
+            } elseif (empty($data['msfl_buyer_id'])) {
+                $data['style'] = null;
+            }
+
+            return $data;
+        }
+
         if (! $request->usesMerchandisingBuyer()) {
             return $data;
         }
@@ -592,11 +603,6 @@ class InvGrnController extends Controller
             'sizes'           => InvSize::active()->ordered()->get(),
             'employees'       => $employees,
             // Buyer Store receive: Buyer -> Style -> PO, all from Merchandising (see MerchandisingLink).
-            'merLinked'                  => app(MerchandisingLink::class)->available(),
-            'merBuyersOptions'           => app(MerchandisingLink::class)->buyers(),
-            'merStylesOptions'           => app(MerchandisingLink::class)->styles(),
-            'merLegacyStyles'            => app(MerchandisingLink::class)->legacyStyles(),
-            'merOrderPosOptions' => app(MerchandisingLink::class)->pos(),
-        ];
+        ] + app(MerchandisingLink::class)->formOptions();
     }
 }

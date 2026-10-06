@@ -145,6 +145,6 @@ class InvGatePassController extends Controller
             'stores'  => InvStore::active()->orderBy('name')->get(),
             'fgStore' => $fgStore,
             'items'   => InvItem::active()->ofType('finished_good')->orderBy('item_name')->get(),
-        ];
+        ] + app(\ME\SflInventory\Services\MerchandisingLink::class)->formOptions();
     }
 }

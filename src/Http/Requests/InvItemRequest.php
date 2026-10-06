@@ -3,9 +3,18 @@
 namespace ME\SflInventory\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use ME\SflInventory\Http\Requests\Concerns\PicksMerchandisingStyle;
 
 class InvItemRequest extends FormRequest
 {
+    use PicksMerchandisingStyle;
+
+    /** Buyer comes from Merchandising (partials.mer-buyer-select). */
+    protected function prepareForValidation(): void
+    {
+        $this->mapPickedBuyer($this->route('item')?->buyer_id);
+    }
+
     public function authorize(): bool
     {
         $ability = $this->route('item') ? 'inv_item.edit' : 'inv_item.add';

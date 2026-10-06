@@ -127,6 +127,6 @@ class InvShipmentController extends Controller
             'fgStore'  => $fgStore,
             'items'    => $items,
             'stockMap' => $stockMap,
-        ];
+        ] + app(\ME\SflInventory\Services\MerchandisingLink::class)->formOptions();
     }
 }

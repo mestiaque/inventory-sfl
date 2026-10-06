@@ -26,6 +26,9 @@
 
                 <div class="row">
                     <div class="col-md-3 mb-3">
+                        @if(($merLinked ?? false) && ! $shipment)
+                            @include('sfl-inventory::admin.partials.mer-buyer-select')
+                        @else
                         <label class="form-label">Buyer</label>
                         <select name="buyer_id" class="form-control form-control-sm inv-select2" @if($shipment) disabled @endif>
                             <option value="">— Select —</option>
@@ -35,6 +38,7 @@
                         </select>
                         @if($shipment)
                             <input type="hidden" name="buyer_id" value="{{ $shipment->buyer_id }}">
+                        @endif
                         @endif
                     </div>
                     @php $lockedStoreId = $shipment->store_id ?? $fgStore?->id; @endphp

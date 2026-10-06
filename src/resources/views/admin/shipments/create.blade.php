@@ -21,6 +21,9 @@
 
                 <div class="row">
                     <div class="col-md-3 mb-3">
+                        @if($merLinked ?? false)
+                            @include('sfl-inventory::admin.partials.mer-buyer-select')
+                        @else
                         <label class="form-label">Buyer</label>
                         <select name="buyer_id" class="form-control form-control-sm inv-select2">
                             <option value="">— Select —</option>
@@ -28,6 +31,7 @@
                                 <option value="{{ $buyer->id }}" @selected(old('buyer_id') == $buyer->id)>{{ $buyer->name }}</option>
                             @endforeach
                         </select>
+                        @endif
                     </div>
                     <div class="col-md-3 mb-3">
                         <label class="form-label">Store <span class="text-danger">*</span></label>

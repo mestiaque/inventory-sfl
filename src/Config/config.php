@@ -38,5 +38,6 @@ return [
 
     // Store Requisition: pick Buyer / Style / PO from Merchandising (true), or
     // the Inventory buyer list with free-text style / order ref (false).
-    'requisition_merchandising_link' => env('SFL_INVENTORY_REQUISITION_MER_LINK', false),
+    // Buyers and styles live in Merchandising only, so this is on by default.
+    'requisition_merchandising_link' => env('SFL_INVENTORY_REQUISITION_MER_LINK', true),
 ];

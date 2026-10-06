@@ -3,6 +3,7 @@
 namespace ME\SflInventory\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use ME\SflInventory\Http\Requests\Concerns\PicksMerchandisingStyle;
 use ME\SflInventory\Http\Requests\Concerns\ValidatesItemStore;
 use Illuminate\Validation\Validator;
 use ME\SflInventory\Models\InvItem;
@@ -12,7 +13,16 @@ use ME\SflInventory\Services\StockService;
 
 class InvRequisitionRequest extends FormRequest
 {
+    use PicksMerchandisingStyle;
     use ValidatesItemStore;
+
+    /** An Inventory-only style ("inv:<style no>") goes into the style text. */
+    protected function prepareForValidation(): void
+    {
+        if ($this->usesMerchandising()) {
+            $this->splitLegacyStyle();
+        }
+    }
 
     public function authorize(): bool
     {
@@ -87,12 +97,15 @@ class InvRequisitionRequest extends FormRequest
             $buyerId = $this->integer('msfl_buyer_id') ?: null;
             $styleId = $this->integer('msfl_style_id') ?: null;
             $poId = $this->integer('msfl_order_po_id') ?: null;
+            $legacy = trim((string) $this->input('style')) ?: null;
 
             if ($this->fromBuyerStore()) {
-                $errors = $link->validateBuyerRequisition($buyerId, $styleId, $poId);
-            } elseif ($buyerId || $styleId || $poId) {
+                $errors = $link->validateBuyerRequisition($buyerId, $styleId, $poId, $legacy);
+            } elseif ($buyerId || $styleId || $poId || $legacy) {
                 // General Store: buyer/style optional — but if given, they must be consistent.
-                $errors = $link->validateBuyerReceive($buyerId, $styleId, $poId);
+                $errors = ($buyerId && ! $styleId && ! $poId && ! $legacy)
+                    ? ($link->buyers()->contains('id', $buyerId) ? [] : ['msfl_buyer_id' => 'Select the buyer from Merchandising (only approved buyers).'])
+                    : $link->validateBuyerReceive($buyerId, $styleId, $poId, $legacy);
             } else {
                 $errors = [];
             }
@@ -134,7 +147,7 @@ class InvRequisitionRequest extends FormRequest
             $style = $this->usesMerchandising()
                 ? [
                     'buyer_id' => $this->integer('msfl_buyer_id') ? $link->inventoryBuyerId($this->integer('msfl_buyer_id')) : null,
-                    'style'    => $merStyleId ? $link->styleNo($merStyleId) : null,
+                    'style'    => $merStyleId ? $link->styleNo($merStyleId) : ($this->input('style') ?: null),
                     'mer'      => $merStyleId,
                 ]
                 : ['buyer_id' => $this->integer('buyer_id') ?: null, 'style' => $this->input('style'), 'mer' => null];

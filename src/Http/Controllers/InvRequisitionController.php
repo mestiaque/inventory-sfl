@@ -365,7 +365,9 @@ class InvRequisitionController extends Controller
 
         $link = app(MerchandisingLink::class);
         $data['buyer_id'] = ! empty($data['msfl_buyer_id']) ? $link->inventoryBuyerId((int) $data['msfl_buyer_id']) : null;
-        $data['style'] = ! empty($data['msfl_style_id']) ? $link->styleNo((int) $data['msfl_style_id']) : null;
+        // An Inventory-only style ("inv:…", see the request) keeps the style text picked.
+        $data['style'] = ! empty($data['msfl_style_id']) ? $link->styleNo((int) $data['msfl_style_id'])
+            : (! empty($data['msfl_buyer_id']) ? ($data['style'] ?? null) : null);
         $data['order_ref'] = ! empty($data['msfl_order_po_id']) ? $link->orderRef((int) $data['msfl_order_po_id']) : null;
 
         return $data;
@@ -392,6 +394,7 @@ class InvRequisitionController extends Controller
             'merLinked'                  => config('sfl-inventory.requisition_merchandising_link') && app(MerchandisingLink::class)->available(),
             'merBuyersOptions'           => app(MerchandisingLink::class)->buyers(),
             'merStylesOptions'           => app(MerchandisingLink::class)->styles(),
+            'merLegacyStyles'            => app(MerchandisingLink::class)->legacyStyles(),
             'merOrderPosOptions' => app(MerchandisingLink::class)->pos(),
             'merReceivedStyleIds'        => app(MerchandisingLink::class)->available() ? app(MerchandisingLink::class)->receivedStyleIds() : [],
             'styleItemRows'              => $this->styleItemRows(),

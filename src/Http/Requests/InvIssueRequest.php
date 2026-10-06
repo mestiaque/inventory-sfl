@@ -4,11 +4,21 @@ namespace ME\SflInventory\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Validator;
+use ME\SflInventory\Http\Requests\Concerns\PicksMerchandisingStyle;
 use ME\SflInventory\Http\Requests\Concerns\ValidatesItemStore;
 
 class InvIssueRequest extends FormRequest
 {
+    use PicksMerchandisingStyle;
     use ValidatesItemStore;
+
+    /** Direct issue: Buyer → Style → PO from Merchandising (a requisition's issue inherits them). */
+    protected function prepareForValidation(): void
+    {
+        if (! $this->filled('requisition_id')) {
+            $this->splitLegacyStyle();
+        }
+    }
 
     public function authorize(): bool
     {
@@ -42,6 +52,11 @@ class InvIssueRequest extends FormRequest
 
     public function withValidator(Validator $validator): void
     {
-        $validator->after(fn (Validator $v) => $this->validateItemStores($v, $this->integer('store_id') ?: null));
+        $validator->after(function (Validator $v) {
+            $this->validateItemStores($v, $this->integer('store_id') ?: null);
+            if (! $this->filled('requisition_id') && $this->has('msfl_buyer_id')) {
+                $this->validatePick($v, false);
+            }
+        });
     }
 }

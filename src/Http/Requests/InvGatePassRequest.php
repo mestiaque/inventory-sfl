@@ -3,9 +3,18 @@
 namespace ME\SflInventory\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use ME\SflInventory\Http\Requests\Concerns\PicksMerchandisingStyle;
 
 class InvGatePassRequest extends FormRequest
 {
+    use PicksMerchandisingStyle;
+
+    /** Buyer comes from Merchandising (partials.mer-buyer-select); from a shipment it's the shipment's. */
+    protected function prepareForValidation(): void
+    {
+        $this->mapPickedBuyer();
+    }
+
     public function authorize(): bool
     {
         return (bool) $this->user()?->can('inv_gate_pass.add');

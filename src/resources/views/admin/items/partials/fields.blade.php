@@ -39,14 +39,18 @@
         </select>
     </div>
     <div class="col-md-3 mb-3">
-        <label class="form-label">Buyer</label>
-        <select name="buyer_id" class="form-control form-control-sm inv-select2">
-            <option value="">— None —</option>
-            @foreach($buyers as $buyer)
-                <option value="{{ $buyer->id }}" @selected(old('buyer_id', $item->buyer_id ?? '') == $buyer->id)>{{ $buyer->name }}</option>
-            @endforeach
-        </select>
-        <div class="form-text">Only for buyer-specific items.</div>
+        @if($merLinked ?? false)
+            @include('sfl-inventory::admin.partials.mer-buyer-select', ['currentBuyerId' => $item->buyer_id ?? null, 'help' => 'Only for buyer-specific items.'])
+        @else
+            <label class="form-label">Buyer</label>
+            <select name="buyer_id" class="form-control form-control-sm inv-select2">
+                <option value="">— None —</option>
+                @foreach($buyers as $buyer)
+                    <option value="{{ $buyer->id }}" @selected(old('buyer_id', $item->buyer_id ?? '') == $buyer->id)>{{ $buyer->name }}</option>
+                @endforeach
+            </select>
+            <div class="form-text">Only for buyer-specific items.</div>
+        @endif
     </div>
 
     <div class="col-md-3 mb-3">

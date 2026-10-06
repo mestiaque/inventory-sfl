@@ -93,6 +93,10 @@ class InvIssueController extends Controller
         // the requisition (set once, at the ask step); a direct issue (no
         // requisition) takes them straight from the form.
         $requisition = ! empty($data['requisition_id']) ? InvRequisition::find($data['requisition_id']) : null;
+        $link = app(\ME\SflInventory\Services\MerchandisingLink::class);
+        if (! $requisition && $link->available() && $request->has('msfl_buyer_id')) {
+            $data = $link->resolvePick($data); // direct issue: buyer / style from Merchandising
+        }
 
         $buyerId = $requisition->buyer_id ?? $data['buyer_id'] ?? null;
         $style = $requisition->style ?? $data['style'] ?? null;
@@ -448,10 +452,7 @@ class InvIssueController extends Controller
             'departments' => InvDepartment::active()->orderBy('name')->get(),
             'items'       => InvItem::selectable($keepItemIds)->orderBy('item_name')->get(),
             'buyers'      => InvBuyer::active()->orderBy('name')->get(),
-            // Merchandising v2 links (empty when it isn't installed).
-            'merStylesOptions' => app(\ME\SflInventory\Services\MerchandisingLink::class)->styles(),
-            'merOrderPosOptions' => app(\ME\SflInventory\Services\MerchandisingLink::class)->pos(),
-            'merBuyersOptions' => app(\ME\SflInventory\Services\MerchandisingLink::class)->buyers(),
-        ];
+            // Buyer → Style → PO from Merchandising (empty when it isn't installed).
+        ] + app(\ME\SflInventory\Services\MerchandisingLink::class)->formOptions();
     }
 }

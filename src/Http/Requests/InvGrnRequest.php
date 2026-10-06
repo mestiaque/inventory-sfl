@@ -3,6 +3,7 @@
 namespace ME\SflInventory\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use ME\SflInventory\Http\Requests\Concerns\PicksMerchandisingStyle;
 use ME\SflInventory\Http\Requests\Concerns\ValidatesItemStore;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Validator;
@@ -11,6 +12,7 @@ use ME\SflInventory\Services\MerchandisingLink;
 
 class InvGrnRequest extends FormRequest
 {
+    use PicksMerchandisingStyle;
     use ValidatesItemStore;
 
     public function authorize(): bool
@@ -69,13 +71,19 @@ class InvGrnRequest extends FormRequest
     protected function prepareForValidation(): void
     {
         $legacy = app(MerchandisingLink::class)->legacyStylePicked($this->input('msfl_style_id'));
-        if ($this->usesMerchandisingBuyer() && $legacy !== null) {
+        if (($this->usesMerchandisingBuyer() || $this->usesPurchasePick()) && $legacy !== null) {
             $this->merge([
                 'style' => $legacy,
                 'msfl_style_id' => null,
                 'msfl_order_po_id' => null,
             ]);
         }
+    }
+
+    /** Purchase challan with the optional Merchandising Buyer → Style → PO picker. */
+    public function usesPurchasePick(): bool
+    {
+        return $this->sourceType() === 'purchase' && $this->has('msfl_buyer_id') && app(MerchandisingLink::class)->available();
     }
 
     /** The receive kind — taken from the saved GRN on edit, never from the form. */
@@ -112,6 +120,10 @@ class InvGrnRequest extends FormRequest
 
             $grn = $this->route('grn');
             $this->validateItemStores($v, $grn?->store_id ?? ($store?->id), $grn?->items->pluck('item_id') ?? []);
+
+            if ($this->usesPurchasePick()) {
+                $this->validatePick($v, false);
+            }
 
             if ($this->usesMerchandisingBuyer()) {
                 $errors = app(MerchandisingLink::class)->validateBuyerReceive(
