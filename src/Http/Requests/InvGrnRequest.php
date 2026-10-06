@@ -61,6 +61,23 @@ class InvGrnRequest extends FormRequest
         ];
     }
 
+    /**
+     * The style select also lists Inventory-only styles as "inv:<style no>"
+     * (MerchandisingLink::legacyStyles()): those go into the style text, with
+     * no Merchandising style or PO.
+     */
+    protected function prepareForValidation(): void
+    {
+        $legacy = app(MerchandisingLink::class)->legacyStylePicked($this->input('msfl_style_id'));
+        if ($this->usesMerchandisingBuyer() && $legacy !== null) {
+            $this->merge([
+                'style' => $legacy,
+                'msfl_style_id' => null,
+                'msfl_order_po_id' => null,
+            ]);
+        }
+    }
+
     /** The receive kind — taken from the saved GRN on edit, never from the form. */
     public function sourceType(): ?string
     {
@@ -101,6 +118,7 @@ class InvGrnRequest extends FormRequest
                     $this->integer('msfl_buyer_id') ?: null,
                     $this->integer('msfl_style_id') ?: null,
                     $this->integer('msfl_order_po_id') ?: null,
+                    $this->input('style'),
                 );
                 foreach ($errors as $field => $message) {
                     $v->errors()->add($field, $message);

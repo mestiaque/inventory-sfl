@@ -74,6 +74,10 @@ class InvFinishedGoodsReceiveController extends Controller
             $data['buyer_id'] = $link->inventoryBuyerId((int) $data['msfl_buyer_id']);
             $data['style'] = $link->styleNo((int) $data['msfl_style_id']);
             $data['order_ref'] = ! empty($data['msfl_order_po_id']) ? $link->orderRef((int) $data['msfl_order_po_id']) : null;
+        } elseif ($link->available() && ! empty($data['msfl_buyer_id'])) {
+            // Inventory-only style (see the request): style text stays as picked.
+            $data['buyer_id'] = $link->inventoryBuyerId((int) $data['msfl_buyer_id']);
+            $data['order_ref'] = null;
         }
 
         $receive = DB::transaction(function () use ($data) {
@@ -142,6 +146,7 @@ class InvFinishedGoodsReceiveController extends Controller
             'merLinked'                  => app(MerchandisingLink::class)->available(),
             'merBuyersOptions'           => app(MerchandisingLink::class)->buyers(),
             'merStylesOptions'           => app(MerchandisingLink::class)->styles(),
+            'merLegacyStyles'            => app(MerchandisingLink::class)->legacyStyles(),
             'merOrderPosOptions' => app(MerchandisingLink::class)->pos(),
         ];
     }

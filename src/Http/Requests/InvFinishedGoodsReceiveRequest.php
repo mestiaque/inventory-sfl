@@ -33,6 +33,16 @@ class InvFinishedGoodsReceiveRequest extends FormRequest
     }
 
     /** Finished goods only ever go into a Finish Store, against a Merchandising buyer/style. */
+    /** An Inventory-only style ("inv:<style no>", MerchandisingLink::legacyStyles()) goes into the style text, no PO. */
+    protected function prepareForValidation(): void
+    {
+        $link = app(MerchandisingLink::class);
+        $legacy = $link->legacyStylePicked($this->input('msfl_style_id'));
+        if ($link->available() && $legacy !== null) {
+            $this->merge(['style' => $legacy, 'msfl_style_id' => null, 'msfl_order_po_id' => null]);
+        }
+    }
+
     public function withValidator(Validator $validator): void
     {
         $validator->after(function (Validator $v) {
@@ -50,6 +60,7 @@ class InvFinishedGoodsReceiveRequest extends FormRequest
                     $this->integer('msfl_style_id') ?: null,
                     $this->integer('msfl_order_po_id') ?: null,
                     $qty,
+                    $this->input('style'),
                 );
                 foreach ($errors as $field => $message) {
                     $v->errors()->add($field, $message);

@@ -1,7 +1,7 @@
 {{--
     Buyer Store receive — who / which style / which order the goods belong to.
     props: grn (optional, edit), buyers (inventory), merLinked, merBuyersOptions,
-           merStylesOptions, merOrderPosOptions
+           merStylesOptions, merLegacyStyles, merOrderPosOptions
 
     Merchandising installed (and a new or already-linked GRN): Buyer -> Style ->
     PO all come from Merchandising, picked once; the inventory buyer, style text
@@ -11,6 +11,10 @@
 @php
     $grn = $grn ?? null;
     $linked = ($merLinked ?? false) && (! $grn || $grn->msfl_buyer_id);
+    $legacyPrefix = \ME\SflInventory\Services\MerchandisingLink::LEGACY_STYLE;
+    $pickedStyle = old('msfl_style_id')
+        ?? (old('style') ? $legacyPrefix . old('style') : null)
+        ?? ($grn?->msfl_style_id ?: ($grn?->style ? $legacyPrefix . $grn->style : ''));
 @endphp
 
 @if($linked)
@@ -36,10 +40,14 @@
         <select name="msfl_style_id" id="grnMerStyle" class="form-control form-control-sm inv-select2" required>
             <option value="">— Select style —</option>
             @foreach($merStylesOptions as $s)
-                <option value="{{ $s->id }}" data-buyer="{{ $s->buyer_id }}" @selected(old('msfl_style_id', $grn->msfl_style_id ?? '') == $s->id)>{{ $s->style_no }} — {{ $s->name }}</option>
+                <option value="{{ $s->id }}" data-buyer="{{ $s->buyer_id }}" @selected((string) $pickedStyle === (string) $s->id)>{{ $s->style_no }} — {{ $s->name }}</option>
+            @endforeach
+            {{-- Styles Inventory already received but Merchandising doesn't have yet. --}}
+            @foreach($merLegacyStyles ?? [] as $s)
+                <option value="{{ $legacyPrefix . $s->style_no }}" data-buyer="{{ $s->buyer_id }}" @selected((string) $pickedStyle === $legacyPrefix . $s->style_no)>{{ $s->style_no }} (Inventory)</option>
             @endforeach
         </select>
-        <span class="form-text">Only the selected buyer's styles.</span>
+        <span class="form-text">Only the selected buyer's styles — Merchandising + earlier receives.</span>
     </div>
     <div class="col-md-3 mb-3">
         <label class="form-label">Order (PO)</label>

@@ -36,6 +36,11 @@
                                 @foreach($merStylesOptions as $s)
                                     <option value="{{ $s->id }}" data-buyer="{{ $s->buyer_id }}" @selected(old('msfl_style_id') == $s->id)>{{ $s->style_no }} — {{ $s->name }}</option>
                                 @endforeach
+                                {{-- Styles Inventory already has but Merchandising doesn't yet (no production check). --}}
+                                @php $legacyPrefix = \ME\SflInventory\Services\MerchandisingLink::LEGACY_STYLE; @endphp
+                                @foreach($merLegacyStyles ?? [] as $s)
+                                    <option value="{{ $legacyPrefix . $s->style_no }}" data-buyer="{{ $s->buyer_id }}" @selected(old('msfl_style_id') === null && old('style') === $s->style_no)>{{ $s->style_no }} (Inventory)</option>
+                                @endforeach
                             </select>
                         </div>
                         <div class="col-md-3 mb-3">
@@ -182,7 +187,8 @@
 
         // Production packed vs already received; pre-fill the quantity with what's left.
         function loadSummary() {
-            if (!style.value) { box.style.display = 'none'; return; }
+            // Inventory-only style ("inv:…"): no production record to show.
+            if (!style.value || style.value.indexOf(@json(\ME\SflInventory\Services\MerchandisingLink::LEGACY_STYLE)) === 0) { box.style.display = 'none'; return; }
             const url = @json(route('inventory.fg-receives.production-summary')) + '?style_id=' + style.value + (po.value ? '&po_id=' + po.value : '');
             fetch(url, { headers: { 'Accept': 'application/json' } })
                 .then(function (r) { if (!r.ok) { throw new Error(r.status); } return r.json(); })

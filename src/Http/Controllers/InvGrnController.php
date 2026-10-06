@@ -566,7 +566,10 @@ class InvGrnController extends Controller
         if ($isNew) {
             $data['buyer_id'] = $link->inventoryBuyerId((int) $data['msfl_buyer_id']);
         }
-        $data['style'] = $link->styleNo((int) $data['msfl_style_id']);
+        // An Inventory-only style keeps the style text from the form (see InvGrnRequest).
+        if (! empty($data['msfl_style_id'])) {
+            $data['style'] = $link->styleNo((int) $data['msfl_style_id']);
+        }
         $data['order_ref'] = ! empty($data['msfl_order_po_id']) ? $link->orderRef((int) $data['msfl_order_po_id']) : null;
 
         return $data;
@@ -592,6 +595,7 @@ class InvGrnController extends Controller
             'merLinked'                  => app(MerchandisingLink::class)->available(),
             'merBuyersOptions'           => app(MerchandisingLink::class)->buyers(),
             'merStylesOptions'           => app(MerchandisingLink::class)->styles(),
+            'merLegacyStyles'            => app(MerchandisingLink::class)->legacyStyles(),
             'merOrderPosOptions' => app(MerchandisingLink::class)->pos(),
         ];
     }
