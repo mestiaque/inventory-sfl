@@ -13,6 +13,25 @@ class InvItemRequest extends FormRequest
     protected function prepareForValidation(): void
     {
         $this->mapPickedBuyer($this->route('item')?->buyer_id);
+
+        // These columns are NOT NULL with a DB default — a blank input arrives
+        // as null (ConvertEmptyStringsToNull) and an explicit NULL bypasses
+        // the default, so fall back to it here.
+        foreach (['minimum_stock', 'maximum_stock'] as $field) {
+            if ($this->has($field) && $this->input($field) === null) {
+                $this->merge([$field => 0]);
+            }
+        }
+        // Opening fields are dropped rather than zeroed so a blank opening
+        // stock doesn't trip opening_store_id's required_with rule.
+        foreach (['opening_stock', 'opening_value'] as $field) {
+            if ($this->has($field) && $this->input($field) === null) {
+                $this->getInputSource()->remove($field);
+            }
+        }
+        if ($this->has('item_type') && ! $this->filled('item_type')) {
+            $this->merge(['item_type' => 'raw_material']);
+        }
     }
 
     public function authorize(): bool
