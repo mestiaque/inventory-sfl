@@ -49,8 +49,9 @@ class InvShipmentController extends Controller
             ->withQueryString();
 
         $buyers = InvBuyer::active()->orderBy('name')->get();
+        $poLabels = app(\ME\SflInventory\Services\MerchandisingLink::class)->shipmentPos()->map(fn ($po) => $po['label']);
 
-        return view('sfl-inventory::admin.shipments.index', compact('shipments', 'buyers', 'grandQty', 'filterItems'));
+        return view('sfl-inventory::admin.shipments.index', compact('shipments', 'buyers', 'grandQty', 'filterItems', 'poLabels'));
     }
 
     /**
@@ -84,7 +85,7 @@ class InvShipmentController extends Controller
             ]);
 
             foreach ($data['items'] as $line) {
-                $shipment->items()->create(['item_id' => $line['item_id'], 'quantity' => $line['quantity']]);
+                $shipment->items()->create(['item_id' => $line['item_id'], 'quantity' => $line['quantity'], 'msfl_order_po_id' => $line['msfl_order_po_id'] ?? null]);
             }
 
             return $shipment;
@@ -127,6 +128,7 @@ class InvShipmentController extends Controller
             'fgStore'  => $fgStore,
             'items'    => $items,
             'stockMap' => $stockMap,
+            'shipmentPos' => app(\ME\SflInventory\Services\MerchandisingLink::class)->shipmentPos(),
         ] + app(\ME\SflInventory\Services\MerchandisingLink::class)->formOptions();
     }
 }

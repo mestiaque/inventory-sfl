@@ -189,7 +189,16 @@ class InvPurchaseRequisitionController extends Controller
             return redirect()->route('inventory.purchase-requisitions.index')->with('success', 'Purchase requisition rejected.');
         }
 
+        $hasApprovedLine = collect($data['items'] ?? [])->contains(fn ($line) => (float) ($line['approved_qty'] ?? 0) > 0);
+        if (! $hasApprovedLine) {
+            return back()->withInput()->with('error', 'Every item was removed (or set to 0 qty) — nothing to purchase. Use Reject instead.');
+        }
+
         DB::transaction(function () use ($data, $purchase_requisition) {
+            // Start every requested line at 0 so a line the approver
+            // removed (or set to 0) is guaranteed to stay out of the Store Order.
+            $purchase_requisition->items()->update(['approved_qty' => 0]);
+
             foreach ($data['items'] ?? [] as $line) {
                 if (! empty($line['id'])) {
                     // Edit: an existing requested line — adjust its approved

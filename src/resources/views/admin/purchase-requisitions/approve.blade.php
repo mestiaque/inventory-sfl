@@ -23,7 +23,7 @@
             <form method="POST" action="{{ route('inventory.purchase-requisitions.approval', $purchaseRequisition) }}">
                 @csrf
                 <div class="d-flex justify-content-between align-items-center mb-2">
-                    <p class="text-muted mb-0" style="font-size:12px;">Adjust an Approved Qty to edit a line, remove a row you don't want to approve, or add a new item the requester didn't originally ask for.</p>
+                    <p class="text-muted mb-0" style="font-size:12px;">Adjust an Approved Qty to edit a line, remove (✕) an item you don't want to purchase, or add a new item the requester didn't originally ask for. Removed items are left out of the auto-created Store Order.</p>
                     <button type="button" class="btn btn-sm btn-outline-primary" data-line-items-add="preqApprove"><i class="fa-solid fa-plus"></i> Add Item</button>
                 </div>
                 <div class="table-responsive">
@@ -43,7 +43,7 @@
                                     </td>
                                     <td><input type="number" step="0.01" min="0" class="form-control form-control-sm" data-role="rate" name="items[{{ $loop->index }}][estimated_rate]" value="{{ $item->estimated_rate }}" placeholder="Tk"></td>
                                     <td><input type="text" class="form-control form-control-sm text-right" data-role="amount" value="{{ number_format((float) $item->requested_qty * (float) $item->estimated_rate, 2, '.', '') }}" readonly tabindex="-1"></td>
-                                    <td><button type="button" class="btn-custom danger" data-line-items-remove title="Remove — don't approve this item"><i class="fa-solid fa-xmark"></i></button></td>
+                                    <td><button type="button" class="btn-custom danger" data-line-items-remove title="Remove — don't purchase this item"><i class="fa-solid fa-xmark"></i></button></td>
                                 </tr>
                             @endforeach
                         </tbody>

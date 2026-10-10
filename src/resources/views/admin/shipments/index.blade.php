@@ -145,20 +145,21 @@
                     <div class="table-responsive">
                         <table class="table table-bordered table-sm align-middle mb-0">
                             <thead>
-                                <tr><th>#</th><th>Item</th><th>Unit</th><th class="text-right">Quantity</th></tr>
+                                <tr><th>#</th><th>Item</th><th>PO</th><th>Unit</th><th class="text-right">Quantity</th></tr>
                             </thead>
                             <tbody>
                                 @foreach($shipment->items as $line)
                                     <tr>
                                         <td>{{ $loop->iteration }}</td>
                                         <td>{{ $line->item?->item_code }} — {{ $line->item?->item_name }}</td>
+                                        <td>{{ $line->msfl_order_po_id ? ($poLabels[$line->msfl_order_po_id] ?? '#' . $line->msfl_order_po_id) : '—' }}</td>
                                         <td>{{ $line->item?->unit?->short_name ?? '—' }}</td>
                                         <td class="text-right">{{ inv_qty($line->quantity) }}</td>
                                     </tr>
                                 @endforeach
                             </tbody>
                     <tfoot>
-                        <tr class="font-weight-bold"><td colspan="3" class="text-right">Total</td><td class="text-right">{{ inv_qty($shipment->items->sum('quantity')) }}</td></tr>
+                        <tr class="font-weight-bold"><td colspan="4" class="text-right">Total</td><td class="text-right">{{ inv_qty($shipment->items->sum('quantity')) }}</td></tr>
                     </tfoot>
                         </table>
                     </div>

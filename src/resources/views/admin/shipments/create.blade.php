@@ -15,7 +15,7 @@
             <a href="{{ route('inventory.shipments.index') }}" class="btn btn-light btn-sm"><i class="fa-solid fa-arrow-left"></i> Back</a>
         </div>
         <div class="card-body">
-            <div class="alert alert-info">This records what's being shipped — no stock moves yet. Once saved, issue a <strong>Gate Pass</strong> against it to actually release the goods.</div>
+            <div class="alert alert-info">This records what's being shipped — no stock moves yet. Once saved, issue a <strong>Gate Pass</strong> against it to actually release the goods.@if($shipmentPos->isNotEmpty()) Pick each line's <strong>PO</strong> so Merchandising counts the shipped qty and value.@endif</div>
             <form method="POST" action="{{ route('inventory.shipments.store') }}">
                 @csrf
 
@@ -70,7 +70,7 @@
                 </div>
                 <div class="table-responsive">
                     <table class="table table-bordered table-sm align-middle">
-                        <thead><tr><th style="min-width:220px">Item</th><th style="width:90px">Unit</th><th style="width:140px">Available</th><th style="width:160px">Quantity</th><th style="width:40px"></th></tr></thead>
+                        <thead><tr><th style="min-width:220px">Item</th>@if($shipmentPos->isNotEmpty())<th style="min-width:220px">PO (Merchandising)</th>@endif<th style="width:90px">Unit</th><th style="width:140px">Available</th><th style="width:160px">Quantity</th><th style="width:40px"></th></tr></thead>
                         <tbody id="shpRowsBody">
                             @foreach(old('items', [[]]) as $index => $line)
                                 <tr>
@@ -82,6 +82,16 @@
                                             @endforeach
                                         </select>
                                     </td>
+                                    @if($shipmentPos->isNotEmpty())
+                                        <td>
+                                            <select name="items[{{ $index }}][msfl_order_po_id]" class="form-control form-control-sm inv-select2">
+                                                <option value="">— None —</option>
+                                                @foreach($shipmentPos as $poId => $po)
+                                                    <option value="{{ $poId }}" @selected(($line['msfl_order_po_id'] ?? null) == $poId)>{{ $po['label'] }}</option>
+                                                @endforeach
+                                            </select>
+                                        </td>
+                                    @endif
                                     <td><input type="text" class="form-control form-control-sm" data-role="unit" disabled></td>
                                     <td><input type="text" class="form-control form-control-sm" data-role="available" disabled></td>
                                     <td><input type="number" step="0.0001" min="0.0001" name="items[{{ $index }}][quantity]" class="form-control form-control-sm" data-role="qty" value="{{ $line['quantity'] ?? '' }}" required></td>
@@ -102,6 +112,16 @@
                                 @endforeach
                             </select>
                         </td>
+                        @if($shipmentPos->isNotEmpty())
+                            <td>
+                                <select name="items[__INDEX__][msfl_order_po_id]" class="form-control form-control-sm inv-select2">
+                                    <option value="">— None —</option>
+                                    @foreach($shipmentPos as $poId => $po)
+                                        <option value="{{ $poId }}">{{ $po['label'] }}</option>
+                                    @endforeach
+                                </select>
+                            </td>
+                        @endif
                         <td><input type="text" class="form-control form-control-sm" data-role="unit" disabled></td>
                         <td><input type="text" class="form-control form-control-sm" data-role="available" disabled></td>
                         <td><input type="number" step="0.0001" min="0.0001" name="items[__INDEX__][quantity]" class="form-control form-control-sm" data-role="qty" required></td>

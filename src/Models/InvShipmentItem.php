@@ -14,7 +14,7 @@ class InvShipmentItem extends Model
 
     protected $table = 'inv_shipment_items';
 
-    protected $fillable = ['shipment_id', 'item_id', 'quantity', 'remarks'];
+    protected $fillable = ['shipment_id', 'item_id', 'msfl_order_po_id', 'quantity', 'remarks'];
 
     protected $casts = [
         'quantity' => 'decimal:4',

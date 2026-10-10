@@ -195,6 +195,26 @@ class MerchandisingLink
     }
 
     /**
+     * Confirmed POs for a shipment line: id => [label "style · color — buyer (PO no)", msfl buyer_id].
+     * The shipped qty / value of a PO is read back by Merchandising (Line Wise Output report).
+     */
+    public function shipmentPos(): Collection
+    {
+        if (! $this->available()) {
+            return collect();
+        }
+
+        return \ME\MerchandisingSfl\Models\OrderPo::query()
+            ->with(['order:id,order_no,buyer_id,status', 'order.buyer:id,name', 'style:id,style_no', 'color:id,name'])
+            ->whereHas('order', fn ($q) => $q->where('status', 'confirmed'))
+            ->latest('id')->get()
+            ->mapWithKeys(fn ($po) => [$po->id => [
+                'label' => trim(($po->style->style_no ?? '') . ' · ' . ($po->color->name ?? ''), ' ·') . ' — ' . ($po->order->buyer->name ?? '') . ' (' . $po->po_no . ')',
+                'buyer_id' => $po->order->buyer_id ?? null,
+            ]]);
+    }
+
+    /**
      * Merchandising styles that have goods in the Buyer Store — at least one
      * posted buyer-supplied receive (GRN) linked to them. Floor requisitions
      * from the Buyer Store can only be raised for these.
