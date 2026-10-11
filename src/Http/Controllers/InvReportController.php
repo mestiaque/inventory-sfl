@@ -359,7 +359,7 @@ class InvReportController extends Controller
      * consecutive rows that share the same value (see rowSpans() below).
      * One row per received "lot" (a GRN line — keeps Lot/Batch/Expiry
      * traceability), plus Issue/Delivery Qty and Balance columns computed
-     * per (buyer, style, item) across all receipts and *approved* issues
+     * per (buyer, style, item, color, size) across all receipts and *approved* issues
      * for that exact combination (a pending/authorized-but-not-yet-approved
      * challan is only a claim — stock hasn't actually left yet, see
      * InvIssueController::postIssueStock() — so it's excluded here or
@@ -401,10 +401,10 @@ class InvReportController extends Controller
             ->when($request->filled('buyer_id'), fn ($q) => $q->where('g.buyer_id', $request->buyer_id))
             ->when($request->filled('style'), fn ($q) => $q->where('g.style', $request->style))
             ->when($request->filled('item_id'), fn ($q) => $q->where('gi.item_id', $request->item_id))
-            ->groupBy('g.buyer_id', 'g.style', 'gi.item_id')
-            ->select('g.buyer_id', DB::raw("COALESCE(g.style, '') as style"), 'gi.item_id', DB::raw('SUM(gi.received_qty) as total_qty'))
+            ->groupBy('g.buyer_id', 'g.style', 'gi.item_id', 'gi.color_id', 'gi.size_id')
+            ->select('g.buyer_id', DB::raw("COALESCE(g.style, '') as style"), 'gi.item_id', 'gi.color_id', 'gi.size_id', DB::raw('SUM(gi.received_qty) as total_qty'))
             ->get()
-            ->keyBy(fn ($row) => $row->buyer_id . '|' . $row->style . '|' . $row->item_id);
+            ->keyBy(fn ($row) => $row->buyer_id . '|' . $row->style . '|' . $row->item_id . '|' . $row->color_id . '|' . $row->size_id);
 
         // Only 'approved' issues count — that's the moment stock actually
         // leaves the store (see InvIssueController::postIssueStock()). A
@@ -419,16 +419,25 @@ class InvReportController extends Controller
             ->when($request->filled('buyer_id'), fn ($q) => $q->where('i.buyer_id', $request->buyer_id))
             ->when($request->filled('style'), fn ($q) => $q->where('i.style', $request->style))
             ->when($request->filled('item_id'), fn ($q) => $q->where('ii.item_id', $request->item_id))
-            ->groupBy('i.buyer_id', 'i.style', 'ii.item_id')
-            ->select('i.buyer_id', DB::raw("COALESCE(i.style, '') as style"), 'ii.item_id', DB::raw('SUM(ii.issued_qty) as total_qty'))
+            ->groupBy('i.buyer_id', 'i.style', 'ii.item_id', 'ii.color_id', 'ii.size_id')
+            ->select('i.buyer_id', DB::raw("COALESCE(i.style, '') as style"), 'ii.item_id', 'ii.color_id', 'ii.size_id', DB::raw('SUM(ii.issued_qty) as total_qty'))
             ->get()
-            ->keyBy(fn ($row) => $row->buyer_id . '|' . $row->style . '|' . $row->item_id);
+            ->groupBy(fn ($row) => $row->buyer_id . '|' . $row->style . '|' . $row->item_id);
 
         $rows = $lines->values();
         foreach ($rows as $line) {
-            $key = ($line->grn->buyer_id ?? '') . '|' . ($line->grn->style ?? '') . '|' . $line->item_id;
+            // Keyed down to the variant (color/size) — each row is one
+            // color/size, so its Issue/Balance must be that variant's own,
+            // not the whole item's total repeated on every size row.
+            $key = ($line->grn->buyer_id ?? '') . '|' . ($line->grn->style ?? '') . '|' . $line->item_id . '|' . $line->color_id . '|' . $line->size_id;
             $line->item_total_received = (float) ($receivedTotals[$key]->total_qty ?? 0);
-            $line->item_total_issued = (float) ($issuedTotals[$key]->total_qty ?? 0);
+            // A blank color/size on the received line means "any" — e.g.
+            // the SFL-SL-1xx labels have a separate item code per size, so
+            // their GRN carries no size_id while the challan still picks one.
+            $line->item_total_issued = (float) collect($issuedTotals[($line->grn->buyer_id ?? '') . '|' . ($line->grn->style ?? '') . '|' . $line->item_id] ?? [])
+                ->filter(fn ($row) => ($line->color_id === null || $row->color_id == $line->color_id)
+                    && ($line->size_id === null || $row->size_id == $line->size_id))
+                ->sum('total_qty');
             $line->item_balance = $line->item_total_received - $line->item_total_issued;
         }
 
