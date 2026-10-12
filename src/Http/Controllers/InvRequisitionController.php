@@ -238,9 +238,30 @@ class InvRequisitionController extends Controller
             ->where(fn ($q) => $q->where('is_active', true)->whereNull('deleted_at'))
             ->when($requisition->requisition_for, fn ($q) => $q->orWhere('code', $requisition->requisition_for))
             ->ordered()->get();
-        $designation = $this->designationOf($requisition->requester);
+        // Every name on this form is the HR employee record (matched by the
+        // account's employee_id), not the login account — the account name
+        // doesn't always match the official HR name.
+        ['name' => $requesterName, 'designation' => $designation] = $this->employeeIdentity($requisition->requester);
 
-        return view('sfl-inventory::admin.requisitions.print', compact('requisition', 'departments', 'purposes', 'designation'));
+        // "Issued by" is the store staff who actually handed the goods out
+        // (the most recent Issue/challan raised against this requisition),
+        // not the requester — those are different people. Blank until
+        // something has actually been issued.
+        $issuedBy = $requisition->issues()->latest('id')->with('issuer')->first()?->issuer;
+        $issuedByName = $this->employeeIdentity($issuedBy)['name'];
+
+        // "Authorized By" stays blank until actually approved. Once issuing
+        // starts, status moves on to 'issued'/'partially_issued' (see
+        // InvRequisition::refreshIssueStatus()) but it's still approved —
+        // approved_by/approver never get cleared by that move.
+        $authorizedByName = in_array($requisition->status, ['approved', 'partially_issued', 'issued'], true)
+            ? $this->employeeIdentity($requisition->approver)['name']
+            : null;
+
+        return view('sfl-inventory::admin.requisitions.print', compact(
+            'requisition', 'departments', 'purposes', 'designation',
+            'issuedBy', 'issuedByName', 'requesterName', 'authorizedByName'
+        ));
     }
 
     /**
@@ -302,25 +323,33 @@ class InvRequisitionController extends Controller
     }
 
     /**
-     * The requester's designation: the user's employee_id is the HR
-     * employee's employee_id, and the designation comes from that employee.
-     * Falls back to the designation set on the user account itself.
+     * A user's real name + designation for the printed form, resolved via
+     * HR's employee master (matched by the user's employee_id) rather than
+     * the login account — the account name doesn't always match the
+     * official HR record. Falls back to the account itself when there's no
+     * linked HR employee (or no user at all — e.g. nothing issued yet).
      */
+    private function employeeIdentity(?\App\Models\User $user): array
+    {
+        if (! $user) {
+            return ['name' => null, 'designation' => null];
+        }
+
+        $employee = ($user->employee_id && class_exists(\ME\Hr\Models\HrEmployee::class))
+            ? \ME\Hr\Models\HrEmployee::query()->where('employee_id', $user->employee_id)->with('designation')->first()
+            : null;
+
+        return [
+            'name'        => $employee?->name ?: $user->name,
+            'designation' => $employee?->designation?->name ?: $this->designationOf($user),
+        ];
+    }
+
+    /** Falls back to the designation set on the user account itself. */
     private function designationOf(?\App\Models\User $user): ?string
     {
         if (! $user) {
             return null;
-        }
-
-        if ($user->employee_id && class_exists(\ME\Hr\Models\HrEmployee::class)) {
-            $designation = \ME\Hr\Models\HrEmployee::query()
-                ->where('employee_id', $user->employee_id)
-                ->with('designation')
-                ->first()?->designation?->name;
-
-            if ($designation) {
-                return $designation;
-            }
         }
 
         return $user->hr_designation_id

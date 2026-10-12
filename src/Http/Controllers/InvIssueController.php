@@ -33,8 +33,9 @@ class InvIssueController extends Controller
         $this->authorize('inv_issue.list');
 
         $issues = InvIssue::query()
-            ->with(['store', 'toStore', 'department', 'buyer'])
+            ->with(['store', 'toStore', 'department', 'buyer', 'requisition'])
             ->when($request->filled('search'), fn ($q) => $q->where('issue_no', 'like', '%' . $request->search . '%'))
+            ->when($request->filled('requisition_no'), fn ($q) => $q->whereHas('requisition', fn ($rq) => $rq->where('requisition_no', 'like', '%' . $request->requisition_no . '%')))
             ->when($request->filled('department_id'), fn ($q) => $q->where('department_id', $request->department_id))
             ->when($request->filled('buyer_id'), fn ($q) => $q->where('buyer_id', $request->buyer_id))
             ->when($request->filled('store_id'), fn ($q) => $q->where('store_id', $request->store_id))

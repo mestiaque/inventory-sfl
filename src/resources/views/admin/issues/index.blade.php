@@ -19,6 +19,9 @@
                     <input type="text" name="search" class="form-control form-control-sm" placeholder="Search issue no" value="{{ request('search') }}">
                 </div>
                 <div class="col-md-3 mb-2">
+                    <input type="text" name="requisition_no" class="form-control form-control-sm" placeholder="Search requisition no" value="{{ request('requisition_no') }}">
+                </div>
+                <div class="col-md-3 mb-2">
                     <select name="department_id" class="form-control form-control-sm inv-select2">
                         <option value="">All Departments</option>
                         @foreach($departments as $department)
@@ -73,13 +76,24 @@
             <div class="table-responsive">
                 <table class="table table-bordered table-sm align-middle">
                     <thead>
-                        <tr><th>#</th><th>Issue No</th><th>Department</th><th>From Store</th><th>To Store</th><th>Buyer / Style</th><th>Date</th><th>Status</th><th>Dept. Receive</th><th class="text-right">Actions</th></tr>
+                        <tr><th>#</th><th>Issue No</th><th>Requisition</th><th>Department</th><th>From Store</th><th>To Store</th><th>Buyer / Style</th><th>Date</th><th>Status</th><th>Dept. Receive</th><th class="text-right">Actions</th></tr>
                     </thead>
                     <tbody>
                         @forelse($issues as $issue)
                             <tr>
                                 <td>{{ $loop->iteration + $issues->firstItem() - 1 }}</td>
                                 <td>{{ $issue->issue_no }}</td>
+                                <td>
+                                    @if($issue->requisition)
+                                        @can('inv_requisition.print')
+                                            <a href="{{ route('inventory.requisitions.print', $issue->requisition) }}" target="_blank">{{ $issue->requisition->requisition_no }}</a>
+                                        @else
+                                            {{ $issue->requisition->requisition_no }}
+                                        @endcan
+                                    @else
+                                        —
+                                    @endif
+                                </td>
                                 <td>{{ $issue->department?->name }}</td>
                                 <td>{{ $issue->store?->name }}</td>
                                 <td>{{ $issue->toStore?->name ?? '—' }}</td>
@@ -135,12 +149,12 @@
                                 </td>
                             </tr>
                         @empty
-                            <tr><td colspan="10" class="text-center text-muted">No issues found.</td></tr>
+                            <tr><td colspan="11" class="text-center text-muted">No issues found.</td></tr>
                         @endforelse
                     </tbody>
                     @if($issues->total())
                         <tfoot>
-                            <tr class="font-weight-bold"><td colspan="10">Total: {{ $issues->total() }} challan(s){{ $issues->hasPages() ? ' (all pages)' : '' }}</td></tr>
+                            <tr class="font-weight-bold"><td colspan="11">Total: {{ $issues->total() }} challan(s){{ $issues->hasPages() ? ' (all pages)' : '' }}</td></tr>
                         </tfoot>
                     @endif
                 </table>

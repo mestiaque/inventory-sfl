@@ -33,7 +33,7 @@
 </div>
 
 <div class="req-meta-row">
-    <div>Name: <span class="field-line">{{ $requisition->requester?->name }}</span></div>
+    <div>Name: <span class="field-line">{{ $requesterName }}</span></div>
     <div>Designation: <span class="field-line">{{ $designation ?: "\u{00A0}" }}</span></div>
     <div>Date: <span class="field-line">{{ $requisition->requisition_date?->format('d-m-Y') }}</span></div>
 </div>
@@ -96,11 +96,11 @@
 <div class="sign-grid">
     <div class="signature-box">
         <div class="sig-slot">
-            @if($requisition->requester?->signature)
-                <img class="signature-img" src="{{ asset($requisition->requester->signature) }}" alt="Signature">
+            @if($issuedBy?->signature)
+                <img class="signature-img" src="{{ asset($issuedBy->signature) }}" alt="Signature">
             @endif
         </div>
-        <div class="signature-line">Issued by{{ $requisition->requester?->name ? ' — ' . $requisition->requester->name : '' }}</div>
+        <div class="signature-line">Issued by{{ $issuedByName ? ' — ' . $issuedByName : '' }}</div>
     </div>
     <div class="signature-box">
         <div class="sig-slot"></div>
@@ -108,11 +108,11 @@
     </div>
     <div class="signature-box">
         <div class="sig-slot">
-            @if($requisition->status === 'approved' && $requisition->approver?->signature)
+            @if($authorizedByName && $requisition->approver?->signature)
                 <img class="signature-img" src="{{ asset($requisition->approver->signature) }}" alt="Signature">
             @endif
         </div>
-        <div class="signature-line">Authorized By{{ $requisition->status === 'approved' && $requisition->approver ? ' — ' . $requisition->approver->name : '' }}</div>
+        <div class="signature-line">Authorized By{{ $authorizedByName ? ' — ' . $authorizedByName : '' }}</div>
     </div>
 </div>
 
