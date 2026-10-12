@@ -89,6 +89,7 @@ return [
                     'children'   => [
                         ['title' => 'Store Requisitions', 'icon' => 'fa-solid fa-file-pen', 'icon_color' => 'text-primary', 'permission' => 'inv_requisition', 'route' => "$base/requisitions"],
                         ['title' => 'Store Issues', 'icon' => 'fa-solid fa-dolly', 'icon_color' => 'text-primary', 'permission' => 'inv_issue', 'route' => "$base/issues"],
+                        ['title' => 'Sample Delivery Challan', 'icon' => 'fa-solid fa-truck', 'icon_color' => 'text-primary', 'permission' => 'inv_sample_challan', 'route' => "$base/sample-challans"],
                     ],
                 ],
                 [

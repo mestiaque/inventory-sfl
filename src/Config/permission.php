@@ -97,6 +97,10 @@ return [
             'label' => 'Store Issue & Department Receive',
             'permissions' => $crud + ['authorize' => 'Authorize', 'approve' => 'Approve', 'receive' => 'Department Receive', 'print' => 'Print', 'export' => 'Export'],
         ],
+        'inv_sample_challan' => [
+            'label' => 'Sample Delivery Challan',
+            'permissions' => $crud + ['print' => 'Print'],
+        ],
         'inv_transfer' => [
             'label' => 'Internal Stock Transfer',
             'permissions' => $crud + ['approve' => 'Approve', 'receive' => 'Receive', 'print' => 'Print', 'export' => 'Export', 'force_delete' => 'Force Delete'],

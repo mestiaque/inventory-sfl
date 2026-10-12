@@ -143,6 +143,10 @@ Route::middleware($route['middleware'] ?? ['web', 'auth'])
         Route::get('issues/{issue}/receive', [InvIssueController::class, 'receiveForm'])->name('issues.receive-form');
         Route::post('issues/{issue}/receive', [InvIssueController::class, 'receive'])->name('issues.receive');
 
+        // Sample Delivery Challan
+        Route::resource('sample-challans', SampleChallanController::class)->parameters(['sample-challans' => 'sample_challan']);
+        Route::get('sample-challans/{sample_challan}/print', [SampleChallanController::class, 'print'])->name('sample-challans.print');
+
         // Internal Stock Transfer + Production Consumption
         Route::resource('transfers', InvStockTransferController::class)->only(['index', 'create', 'store', 'show', 'edit', 'update', 'destroy']);
         Route::post('transfers/{transfer}/approve', [InvStockTransferController::class, 'approve'])->name('transfers.approve');
