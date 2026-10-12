@@ -25,6 +25,7 @@ use ME\SflInventory\Http\Controllers\InvReportController;
 use ME\SflInventory\Http\Controllers\InvRequisitionController;
 use ME\SflInventory\Http\Controllers\InvRequisitionPurposeController;
 use ME\SflInventory\Http\Controllers\InvShipmentController;
+use ME\SflInventory\Http\Controllers\SampleChallanController;
 use ME\SflInventory\Http\Controllers\InvSignatureController;
 use ME\SflInventory\Http\Controllers\InvSizeController;
 use ME\SflInventory\Http\Controllers\InvStockAdjustmentController;
