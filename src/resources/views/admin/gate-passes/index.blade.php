@@ -86,6 +86,9 @@
                                 </td>
                                 <td class="text-right">
                                     <button type="button" class="btn-custom success" data-toggle="modal" data-target="#viewGpModal{{ $gatePass->id }}"><i class="fa-solid fa-eye"></i></button>
+                                    @can('inv_gate_pass.print')
+                                        <a href="{{ route('inventory.gate-passes.print', $gatePass) }}" target="_blank" class="btn-custom primary"><i class="fa-solid fa-print"></i></a>
+                                    @endcan
                                     @can('inv_gate_pass.approve')
                                         @if($gatePass->status === 'pending')
                                             <form method="POST" action="{{ route('inventory.gate-passes.approve', $gatePass) }}" class="d-inline">

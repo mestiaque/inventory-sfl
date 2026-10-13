@@ -167,6 +167,7 @@ Route::middleware($route['middleware'] ?? ['web', 'auth'])
             ->only(['index', 'create', 'store'])
             ->parameters(['gate-passes' => 'gate_pass']);
         Route::post('gate-passes/{gate_pass}/approve', [InvGatePassController::class, 'approve'])->name('gate-passes.approve');
+        Route::get('gate-passes/{gate_pass}/print', [InvGatePassController::class, 'print'])->name('gate-passes.print');
         Route::resource('shipments', InvShipmentController::class)->only(['index', 'create', 'store']);
         Route::post('shipments/{shipment}/status', [InvShipmentController::class, 'updateStatus'])->name('shipments.status');
 

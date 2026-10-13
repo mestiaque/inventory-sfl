@@ -136,6 +136,31 @@ class InvGatePassController extends Controller
         return back()->with('success', "Gate pass {$gate_pass->gate_pass_no} issued and stock updated.");
     }
 
+    /**
+     * The printed delivery challan handed to the transporter — the Gate
+     * Pass is the actual stock-out document; each line's PO/Style/Colour
+     * snapshot comes from the Shipment it was issued against (a Gate Pass
+     * item itself only carries item/qty).
+     */
+    public function print(InvGatePass $gate_pass): View
+    {
+        $this->authorize('inv_gate_pass.print');
+
+        $gate_pass->load(['buyer', 'store', 'creator', 'shipment', 'items.item.unit']);
+
+        $posByItemId = collect();
+        if ($gate_pass->shipment) {
+            $link = app(\ME\SflInventory\Services\MerchandisingLink::class);
+            $poIds = $gate_pass->shipment->items->pluck('msfl_order_po_id')->filter()->unique()->values();
+            $pos = $link->available()
+                ? \ME\MerchandisingSfl\Models\OrderPo::query()->with(['style', 'color'])->whereIn('id', $poIds)->get()->keyBy('id')
+                : collect();
+            $posByItemId = $gate_pass->shipment->items->mapWithKeys(fn ($line) => [$line->item_id => $pos->get($line->msfl_order_po_id)]);
+        }
+
+        return view('sfl-inventory::admin.gate-passes.print', compact('gate_pass', 'posByItemId'));
+    }
+
     private function formOptions(): array
     {
         $fgStore = InvStore::active()->where('type', 'finished_goods')->first();
