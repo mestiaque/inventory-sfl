@@ -37,7 +37,7 @@
             <div class="table-responsive">
                 <table class="table table-bordered table-sm align-middle">
                     <thead>
-                        <tr><th>#</th><th>Item</th><th>PO</th><th>Style</th><th>Colour</th><th>Size</th><th>Sample of Buyer</th><th>P.P Sample from SFL</th><th>Total</th><th>Unit</th><th>Remarks</th></tr>
+                        <tr><th>#</th><th>Item</th><th>PO</th><th>Style</th><th>Colour</th><th>Size</th><th>Sample of Buyer</th><th>{{ $challan->ppColumnLabel() }}</th><th>Total</th><th>Unit</th><th>Remarks</th></tr>
                     </thead>
                     <tbody>
                         @forelse($challan->items as $item)

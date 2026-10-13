@@ -94,7 +94,7 @@ class InvGatePassController extends Controller
             ]);
 
             foreach ($data['items'] as $line) {
-                $gatePass->items()->create(['item_id' => $line['item_id'], 'quantity' => $line['quantity']]);
+                $gatePass->items()->create(['item_id' => $line['item_id'], 'quantity' => $line['quantity'], 'carton_qty' => $line['carton_qty'] ?? null]);
             }
 
             return $gatePass;
@@ -137,10 +137,12 @@ class InvGatePassController extends Controller
     }
 
     /**
-     * The printed delivery challan handed to the transporter — the Gate
-     * Pass is the actual stock-out document; each line's PO/Style/Colour
-     * snapshot comes from the Shipment it was issued against (a Gate Pass
-     * item itself only carries item/qty).
+     * The printed shipment delivery challan handed to the transporter — the
+     * Gate Pass is the actual stock-out document; each line's PO/Style/Colour
+     * and size-wise quantity come from the Shipment it was issued against (a
+     * Gate Pass item itself only carries item/qty/carton — see
+     * PackingFigures::forPo(), the same size breakdown the Final Packing
+     * List prints).
      */
     public function print(InvGatePass $gate_pass): View
     {
@@ -149,16 +151,22 @@ class InvGatePassController extends Controller
         $gate_pass->load(['buyer', 'store', 'creator', 'shipment', 'items.item.unit']);
 
         $posByItemId = collect();
+        $figuresByItemId = collect();
+        $sizes = collect();
         if ($gate_pass->shipment) {
             $link = app(\ME\SflInventory\Services\MerchandisingLink::class);
             $poIds = $gate_pass->shipment->items->pluck('msfl_order_po_id')->filter()->unique()->values();
-            $pos = $link->available()
-                ? \ME\MerchandisingSfl\Models\OrderPo::query()->with(['style', 'color'])->whereIn('id', $poIds)->get()->keyBy('id')
-                : collect();
-            $posByItemId = $gate_pass->shipment->items->mapWithKeys(fn ($line) => [$line->item_id => $pos->get($line->msfl_order_po_id)]);
+            if ($link->available()) {
+                $pos = \ME\MerchandisingSfl\Models\OrderPo::query()->with(['style', 'color', 'sizes.size'])->whereIn('id', $poIds)->get()->keyBy('id');
+                $posByItemId = $gate_pass->shipment->items->mapWithKeys(fn ($line) => [$line->item_id => $pos->get($line->msfl_order_po_id)]);
+
+                $figures = app(\ME\MerchandisingSfl\Services\PackingFigures::class);
+                $figuresByItemId = $posByItemId->filter()->map(fn ($po) => $figures->forPo($po));
+                $sizes = \ME\MerchandisingSfl\Models\Size::displaySort($figuresByItemId->flatMap(fn ($f) => $f['sizes'])->unique('id'));
+            }
         }
 
-        return view('sfl-inventory::admin.gate-passes.print', compact('gate_pass', 'posByItemId'));
+        return view('sfl-inventory::admin.gate-passes.print', compact('gate_pass', 'posByItemId', 'figuresByItemId', 'sizes'));
     }
 
     private function formOptions(): array

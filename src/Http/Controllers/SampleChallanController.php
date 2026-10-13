@@ -44,7 +44,9 @@ class SampleChallanController extends Controller
     {
         $this->authorize('inv_sample_challan.add');
 
-        $challan = new SampleChallan(['challan_date' => today()]);
+        // Samples go out of the Accessories (General) store by default.
+        $defaultStoreId = InvStore::active()->where('type', InvStore::TYPE_GENERAL)->value('id');
+        $challan = new SampleChallan(['challan_date' => today(), 'store_id' => $defaultStoreId]);
 
         return view('sfl-inventory::admin.sample-challans.create', $this->formData() + compact('challan'));
     }
@@ -59,6 +61,8 @@ class SampleChallanController extends Controller
                 'challan_date' => $data['challan_date'],
                 'store_id' => $data['store_id'] ?? null,
                 'msfl_buyer_id' => $data['msfl_buyer_id'] ?? null,
+                'msfl_sample_type_id' => $data['msfl_sample_type_id'] ?? null,
+                'sample_type_name' => $this->sampleTypeName($data['msfl_sample_type_id'] ?? null),
                 'to_name' => $data['to_name'],
                 'to_address' => $data['to_address'] ?? null,
                 'to_contact' => $data['to_contact'] ?? null,
@@ -100,6 +104,8 @@ class SampleChallanController extends Controller
                 'challan_date' => $data['challan_date'],
                 'store_id' => $data['store_id'] ?? null,
                 'msfl_buyer_id' => $data['msfl_buyer_id'] ?? null,
+                'msfl_sample_type_id' => $data['msfl_sample_type_id'] ?? null,
+                'sample_type_name' => $this->sampleTypeName($data['msfl_sample_type_id'] ?? null),
                 'to_name' => $data['to_name'],
                 'to_address' => $data['to_address'] ?? null,
                 'to_contact' => $data['to_contact'] ?? null,
@@ -169,12 +175,19 @@ class SampleChallanController extends Controller
         }
     }
 
+    /** Snapshots the picked sample type's code ("PP", "FIT", …) onto the challan. */
+    private function sampleTypeName(?int $sampleTypeId): ?string
+    {
+        return $sampleTypeId ? $this->link->sampleTypes()->firstWhere('id', $sampleTypeId)?->code : null;
+    }
+
     private function formData(): array
     {
         return [
             'stores' => InvStore::active()->orderBy('name')->get(),
             'merBuyersOptions' => $this->link->available() ? $this->link->buyers() : collect(),
             'orderPoOptions' => $this->link->available() ? $this->link->shipmentPos() : collect(),
+            'sampleTypeOptions' => $this->link->sampleTypes(),
             'sizes' => InvSize::active()->ordered()->get(),
         ];
     }

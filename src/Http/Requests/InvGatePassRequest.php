@@ -34,6 +34,7 @@ class InvGatePassRequest extends FormRequest
             'items'             => ['required', 'array', 'min:1'],
             'items.*.item_id'   => ['required', 'integer', 'exists:inv_items,id'],
             'items.*.quantity'  => ['required', 'numeric', 'min:0.0001'],
+            'items.*.carton_qty' => ['nullable', 'integer', 'min:0'],
         ];
     }
 }

@@ -85,7 +85,7 @@
                 </div>
                 <div class="table-responsive">
                     <table class="table table-bordered table-sm align-middle">
-                        <thead><tr><th style="min-width:220px">Item</th><th style="width:160px">Quantity</th><th style="width:40px"></th></tr></thead>
+                        <thead><tr><th style="min-width:220px">Item</th><th style="width:160px">Quantity</th><th style="width:110px">Carton Qty</th><th style="width:40px"></th></tr></thead>
                         <tbody id="gpRowsBody">
                             @php $lines = old('items', $shipment ? $shipment->items->map(fn ($i) => ['item_id' => $i->item_id, 'quantity' => $i->quantity])->all() : [[]]); @endphp
                             @foreach($lines as $index => $line)
@@ -102,6 +102,7 @@
                                         @endif
                                     </td>
                                     <td><input type="number" step="0.0001" min="0.0001" name="items[{{ $index }}][quantity]" class="form-control form-control-sm" value="{{ $line['quantity'] ?? '' }}" @if($shipment) readonly @endif required></td>
+                                    <td><input type="number" step="1" min="0" name="items[{{ $index }}][carton_qty]" class="form-control form-control-sm" value="{{ $line['carton_qty'] ?? '' }}"></td>
                                     <td>@unless($shipment)<button type="button" class="btn-custom danger" data-line-items-remove><i class="fa-solid fa-xmark"></i></button>@endunless</td>
                                 </tr>
                             @endforeach
@@ -121,6 +122,7 @@
                                 </select>
                             </td>
                             <td><input type="number" step="0.0001" min="0.0001" name="items[__INDEX__][quantity]" class="form-control form-control-sm" required></td>
+                            <td><input type="number" step="1" min="0" name="items[__INDEX__][carton_qty]" class="form-control form-control-sm"></td>
                             <td><button type="button" class="btn-custom danger" data-line-items-remove><i class="fa-solid fa-xmark"></i></button></td>
                         </tr>
                     </template>

@@ -32,6 +32,14 @@ class MerchandisingLink
             : collect();
     }
 
+    /** Sample types (PROTO/FIT/PP/…) — labels a sample delivery challan's own-sample column. */
+    public function sampleTypes(): Collection
+    {
+        return class_exists(\ME\MerchandisingSfl\Models\SampleType::class)
+            ? \ME\MerchandisingSfl\Models\SampleType::query()->orderBy('sequence')->get(['id', 'code', 'name'])
+            : collect();
+    }
+
     /** Active styles, each carrying buyer_id so the form can filter by buyer. */
     public function styles(): Collection
     {

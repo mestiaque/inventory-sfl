@@ -55,7 +55,7 @@
                 <th>STYLE</th>
                 <th>COLOUR</th>
                 <th>SAMPLE<br>OF BUYER</th>
-                <th>P.P SAMPLE<br>FROM SFL</th>
+                <th>{{ strtoupper($challan->sample_type_name ?: 'P.P') }} SAMPLE<br>FROM SFL</th>
                 <th>SIZE</th>
                 <th>TOTAL</th>
                 <th>UNIT</th>

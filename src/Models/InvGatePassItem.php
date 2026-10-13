@@ -14,10 +14,11 @@ class InvGatePassItem extends Model
 
     protected $table = 'inv_gate_pass_items';
 
-    protected $fillable = ['gate_pass_id', 'item_id', 'quantity', 'remarks'];
+    protected $fillable = ['gate_pass_id', 'item_id', 'quantity', 'carton_qty', 'remarks'];
 
     protected $casts = [
         'quantity' => 'decimal:4',
+        'carton_qty' => 'integer',
     ];
 
     public function gatePass(): BelongsTo

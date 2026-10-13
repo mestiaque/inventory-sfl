@@ -1,4 +1,4 @@
-{{-- props: challan (model, may be unsaved), stores, merBuyersOptions, orderPoOptions, sizes --}}
+{{-- props: challan (model, may be unsaved), stores, merBuyersOptions, orderPoOptions, sampleTypeOptions, sizes --}}
 @php
     $lines = old('items', $challan->relationLoaded('items') ? $challan->items->toArray() : []);
 @endphp
@@ -22,6 +22,15 @@
             <option value="">— None —</option>
             @foreach($merBuyersOptions as $buyer)
                 <option value="{{ $buyer->id }}" @selected((string) old('msfl_buyer_id', $challan->msfl_buyer_id) === (string) $buyer->id)>{{ $buyer->name }}</option>
+            @endforeach
+        </select>
+    </div>
+    <div class="col-md-3 mb-3">
+        <label class="form-label">Sample Type</label>
+        <select name="msfl_sample_type_id" class="form-control form-control-sm inv-select2" data-sci-sample-type>
+            <option value="" data-code="P.P">— P.P (default) —</option>
+            @foreach($sampleTypeOptions as $type)
+                <option value="{{ $type->id }}" data-code="{{ $type->code }}" @selected((string) old('msfl_sample_type_id', $challan->msfl_sample_type_id) === (string) $type->id)>{{ $type->name }}</option>
             @endforeach
         </select>
     </div>
@@ -51,7 +60,7 @@
     <table class="table table-bordered table-sm align-middle">
         <thead>
             <tr>
-                <th>PO / Style / Colour</th><th>Size</th><th>Sample of Buyer</th><th>P.P Sample from SFL</th><th>Unit</th><th>Remarks</th><th></th>
+                <th>PO / Style / Colour</th><th>Size</th><th>Sample of Buyer</th><th data-sci-pp-header>{{ strtoupper($challan->sample_type_name ?: 'P.P') }} Sample from SFL</th><th>Unit</th><th>Remarks</th><th></th>
             </tr>
         </thead>
         <tbody id="sciRowsBody">
@@ -64,3 +73,10 @@
 <template id="sciRowTemplate">
     @include('sfl-inventory::admin.sample-challans.partials.line-row', ['index' => '__INDEX__', 'line' => []])
 </template>
+<script>
+    document.querySelector('[data-sci-sample-type]')?.addEventListener('change', function () {
+        var code = this.options[this.selectedIndex]?.dataset.code || 'P.P';
+        var th = document.querySelector('[data-sci-pp-header]');
+        if (th) { th.textContent = code.toUpperCase() + ' Sample from SFL'; }
+    });
+</script>

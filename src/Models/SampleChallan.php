@@ -18,10 +18,17 @@ class SampleChallan extends Model
     protected $table = 'inv_sample_challans';
 
     protected $fillable = [
-        'challan_no', 'challan_date', 'store_id', 'msfl_buyer_id', 'to_name', 'to_address', 'to_contact', 'remarks', 'issued_by',
+        'challan_no', 'challan_date', 'store_id', 'msfl_buyer_id', 'msfl_sample_type_id', 'sample_type_name',
+        'to_name', 'to_address', 'to_contact', 'remarks', 'issued_by',
     ];
 
     protected $casts = ['challan_date' => 'date'];
+
+    /** The "<TYPE> SAMPLE FROM SFL" column header — "P.P" when no sample type is picked. */
+    public function ppColumnLabel(): string
+    {
+        return strtoupper($this->sample_type_name ?: 'P.P') . ' SAMPLE FROM SFL';
+    }
 
     public function store(): BelongsTo
     {

@@ -26,6 +26,7 @@ class SampleChallanRequest extends FormRequest
             'challan_date' => ['required', 'date'],
             'store_id' => ['nullable', 'integer', 'exists:inv_stores,id'],
             'msfl_buyer_id' => ['nullable', 'integer'],
+            'msfl_sample_type_id' => ['nullable', 'integer'],
             'to_name' => ['required', 'string', 'max:255'],
             'to_address' => ['nullable', 'string', 'max:2000'],
             'to_contact' => ['nullable', 'string', 'max:100'],
