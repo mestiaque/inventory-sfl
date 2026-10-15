@@ -206,6 +206,51 @@ class MerchandisingLink
      * Confirmed POs for a shipment line: id => [label "style · color — buyer (PO no)", msfl buyer_id].
      * The shipped qty / value of a PO is read back by Merchandising (Line Wise Output report).
      */
+    /** Merchandising commercial invoices that no shipment carries yet (id => label), newest first. */
+    public function commercialInvoices(): Collection
+    {
+        if (! $this->available() || ! class_exists(\ME\MerchandisingSfl\Models\Commercial\Invoice::class)) {
+            return collect();
+        }
+        $used = \ME\SflInventory\Models\InvShipment::query()->whereNotNull('invoice_no')->pluck('invoice_no')->all();
+
+        return \ME\MerchandisingSfl\Models\Commercial\Invoice::query()->with('buyer:id,name')
+            ->whereNotIn('invoice_no', $used)->latest('id')->get()
+            ->mapWithKeys(fn ($i) => [$i->id => $i->invoice_no . ' — ' . ($i->buyer->name ?? '') . ' (' . $i->invoice_date?->format('d M Y') . ', ' . number_format((int) $i->total_qty) . ' pcs, ' . (int) $i->total_cartons . ' ctn)']);
+    }
+
+    /**
+     * Shipment form values from a Merchandising commercial invoice: buyer, invoice / packing list no
+     * and one line per PO (qty from the invoice; finished-good item last received for that PO / style).
+     */
+    public function shipmentFromInvoice(int $invoiceId): ?array
+    {
+        if (! $this->available() || ! class_exists(\ME\MerchandisingSfl\Models\Commercial\Invoice::class)) {
+            return null;
+        }
+        $invoice = \ME\MerchandisingSfl\Models\Commercial\Invoice::with('lines.orderPo')->find($invoiceId);
+        if (! $invoice) {
+            return null;
+        }
+
+        $item = function ($po) {
+            $q = \ME\SflInventory\Models\InvFinishedGoodsReceive::query()->with('items')->latest('id');
+
+            return (clone $q)->where('msfl_order_po_id', $po->id)->first()?->items->first()?->item_id
+                ?? (clone $q)->where('msfl_style_id', $po->style_id)->first()?->items->first()?->item_id;
+        };
+
+        return [
+            'msfl_buyer_id' => $invoice->buyer_id,
+            'invoice_no' => $invoice->invoice_no,
+            'packing_list_no' => $invoice->invoice_no,
+            'shipment_date' => $invoice->invoice_date?->toDateString(),
+            'items' => $invoice->lines->filter(fn ($l) => $l->orderPo && $l->qty > 0)->values()->map(fn ($l) => [
+                'item_id' => $item($l->orderPo), 'msfl_order_po_id' => $l->order_po_id, 'quantity' => (int) $l->qty,
+            ])->all(),
+        ];
+    }
+
     public function shipmentPos(): Collection
     {
         if (! $this->available()) {

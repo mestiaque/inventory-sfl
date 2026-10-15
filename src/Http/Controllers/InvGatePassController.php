@@ -161,12 +161,44 @@ class InvGatePassController extends Controller
                 $posByItemId = $gate_pass->shipment->items->mapWithKeys(fn ($line) => [$line->item_id => $pos->get($line->msfl_order_po_id)]);
 
                 $figures = app(\ME\MerchandisingSfl\Services\PackingFigures::class);
-                $figuresByItemId = $posByItemId->filter()->map(fn ($po) => $figures->forPo($po));
+                $shipped = $gate_pass->shipment->items->groupBy('msfl_order_po_id')->map(fn ($l) => (float) $l->sum('quantity'));
+                $invoiced = $this->invoiceSizes($gate_pass->shipment->invoice_no);
+                // Size split of what goes out: the commercial invoice's carton list when the shipment
+                // carries its invoice no; else production's packed qty only when the whole PO ships.
+                $figuresByItemId = $posByItemId->filter()->map(function ($po) use ($figures, $invoiced, $shipped) {
+                    $f = $figures->forPo($po);
+                    if (isset($invoiced[$po->id])) {
+                        return ['packed' => $invoiced[$po->id]['sizes'], 'cartons' => $invoiced[$po->id]['cartons']] + $f;
+                    }
+
+                    return array_sum($f['packed']) == ($shipped[$po->id] ?? 0) ? $f : ['packed' => []] + $f;
+                });
                 $sizes = \ME\MerchandisingSfl\Models\Size::displaySort($figuresByItemId->flatMap(fn ($f) => $f['sizes'])->unique('id'));
             }
         }
 
         return view('sfl-inventory::admin.gate-passes.print', compact('gate_pass', 'posByItemId', 'figuresByItemId', 'sizes'));
+    }
+
+    /** order_po_id => [sizes: size_id => pcs, cartons] from the Merchandising commercial invoice with this number. */
+    private function invoiceSizes(?string $invoiceNo): array
+    {
+        if (! $invoiceNo || ! \Illuminate\Support\Facades\Schema::hasTable('msfl_com_invoice_carton_sizes')) {
+            return [];
+        }
+        $out = [];
+        $cartons = DB::table('msfl_com_invoice_cartons as c')->join('msfl_com_invoices as i', 'i.id', '=', 'c.invoice_id')
+            ->whereNull('i.deleted_at')->where('i.invoice_no', $invoiceNo)->get(['c.id', 'c.order_po_id', 'c.carton_from', 'c.carton_to']);
+        $sizes = DB::table('msfl_com_invoice_carton_sizes')->whereIn('invoice_carton_id', $cartons->pluck('id'))->get()->groupBy('invoice_carton_id');
+        foreach ($cartons as $c) {
+            $count = max(0, $c->carton_to - $c->carton_from + 1);
+            $out[$c->order_po_id]['cartons'] = ($out[$c->order_po_id]['cartons'] ?? 0) + $count;
+            foreach ($sizes[$c->id] ?? [] as $s) {
+                $out[$c->order_po_id]['sizes'][$s->size_id] = ($out[$c->order_po_id]['sizes'][$s->size_id] ?? 0) + $s->qty * $count;
+            }
+        }
+
+        return $out;
     }
 
     private function formOptions(): array

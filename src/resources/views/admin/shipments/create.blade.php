@@ -16,6 +16,19 @@
         </div>
         <div class="card-body">
             <div class="alert alert-info">This records what's being shipped — no stock moves yet. Once saved, issue a <strong>Gate Pass</strong> against it to actually release the goods.@if($shipmentPos->isNotEmpty()) Pick each line's <strong>PO</strong> so Merchandising counts the shipped qty and value.@endif</div>
+            @if(($commercialInvoices ?? collect())->isNotEmpty())
+                <form method="GET" action="{{ route('inventory.shipments.create') }}" class="row align-items-end mb-2">
+                    <div class="col-md-6 mb-2">
+                        <label class="form-label">From Commercial Invoice <small class="text-muted">(Merchandising → Commercial — fills buyer, invoice / packing list no, PO lines and qty)</small></label>
+                        <select name="msfl_invoice_id" class="form-control form-control-sm inv-select2" onchange="this.form.submit()">
+                            <option value="">— Pick to fill the form —</option>
+                            @foreach($commercialInvoices as $id => $label)
+                                <option value="{{ $id }}" @selected(request('msfl_invoice_id') == $id)>{{ $label }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                </form>
+            @endif
             <form method="POST" action="{{ route('inventory.shipments.store') }}">
                 @csrf
 

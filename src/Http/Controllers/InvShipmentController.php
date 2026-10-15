@@ -61,11 +61,18 @@ class InvShipmentController extends Controller
      * the actual stock-out / security-exit event (see
      * InvGatePassController::approve()).
      */
-    public function create(): View
+    public function create(Request $request): View
     {
         $this->authorize('inv_shipment.add');
 
-        return view('sfl-inventory::admin.shipments.create', $this->formOptions());
+        // ?msfl_invoice_id= : fill the form from a Merchandising commercial invoice (no retyping).
+        $link = app(\ME\SflInventory\Services\MerchandisingLink::class);
+        if ($request->filled('msfl_invoice_id') && ! $request->session()->hasOldInput()
+            && ($prefill = $link->shipmentFromInvoice($request->integer('msfl_invoice_id')))) {
+            $request->session()->flashInput($prefill);
+        }
+
+        return view('sfl-inventory::admin.shipments.create', $this->formOptions() + ['commercialInvoices' => $link->commercialInvoices()]);
     }
 
     public function store(InvShipmentRequest $request): RedirectResponse
@@ -90,6 +97,12 @@ class InvShipmentController extends Controller
 
             return $shipment;
         });
+
+        // Next step right away: the Gate Pass releases the goods and prints the Delivery Challan.
+        if (auth()->user()?->can('inv_gate_pass.add')) {
+            return redirect()->route('inventory.gate-passes.create', ['shipment_id' => $shipment->id])
+                ->with('success', "Shipment {$shipment->shipment_no} saved. Now issue the Gate Pass — it releases the goods and prints the Delivery Challan.");
+        }
 
         return redirect()->route('inventory.shipments.index')->with('success', "Shipment {$shipment->shipment_no} created. Issue a Gate Pass against it to release the goods.");
     }

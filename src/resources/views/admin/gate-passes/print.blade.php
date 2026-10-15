@@ -50,6 +50,7 @@
         <div class="col">
             <div class="row"><div class="lbl">Vehicle No.</div><div>: {{ $gate_pass->vehicle_no ?: '—' }}</div></div>
             <div class="row"><div class="lbl">Driver</div><div>: {{ collect([$gate_pass->driver_name, $gate_pass->driver_contact])->filter()->implode(' / ') ?: '—' }}</div></div>
+            <div class="row"><div class="lbl">Invoice No.</div><div>: {{ $gate_pass->shipment?->invoice_no ?: '—' }}</div></div>
             <div class="row"><div class="lbl">Packing List No.</div><div>: {{ $gate_pass->shipment?->packing_list_no ?: '—' }}</div></div>
         </div>
     </div>
@@ -91,9 +92,10 @@
                         @endphp
                         <td>{{ $q ?: '' }}</td>
                     @endforeach
-                    <td>{{ $figures ? $lineTotal : inv_qty($line->quantity) }}</td>
+                    @php $grandQty = ($grandQty ?? 0) + ($figures && $lineTotal ? $lineTotal : (float) $line->quantity); @endphp
+                    <td>{{ $figures && $lineTotal ? $lineTotal : inv_qty($line->quantity) }}</td>
                     <td>{{ $line->item?->unit?->short_name }}</td>
-                    <td>{{ $line->carton_qty ?: '' }}</td>
+                    <td>{{ $line->carton_qty ?: ($figures['cartons'] ?? '') }}</td>
                     <td class="text-left">{{ $line->remarks }}</td>
                 </tr>
             @endforeach
@@ -110,9 +112,9 @@
             <tr>
                 <td colspan="5" class="text-left">Total-</td>
                 @foreach($sizes as $size)<td>{{ $grand[$size->id] ?: '' }}</td>@endforeach
-                <td>{{ array_sum($grand) ?: inv_qty($gate_pass->items->sum('quantity')) }}</td>
+                <td>{{ inv_qty($grandQty ?? 0) }}</td>
                 <td></td>
-                <td>{{ $gate_pass->items->sum('carton_qty') ?: '' }}</td>
+                <td>{{ $gate_pass->items->sum('carton_qty') ?: ($figuresByItemId->sum(fn ($f) => $f['cartons'] ?? 0) ?: '') }}</td>
                 <td></td>
             </tr>
         </tfoot>

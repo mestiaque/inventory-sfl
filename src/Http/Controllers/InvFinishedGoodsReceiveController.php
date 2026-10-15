@@ -56,11 +56,25 @@ class InvFinishedGoodsReceiveController extends Controller
         return view('sfl-inventory::admin.fg-receives.index', compact('receives', 'buyers', 'stores', 'grandQty', 'filterItems'));
     }
 
-    public function create(): View
+    /**
+     * ?msfl_order_po_id= (from Merchandising's Final Packing List / production status) picks
+     * that PO's buyer / style / PO, and the finished-good item last received for the style.
+     */
+    public function create(Request $request): View
     {
         $this->authorize('inv_fg_receive.add');
 
-        return view('sfl-inventory::admin.fg-receives.create', $this->formOptions());
+        $defaultItemId = null;
+        $link = app(MerchandisingLink::class);
+        if ($request->filled('msfl_order_po_id') && ! $request->session()->hasOldInput() && $link->available()) {
+            $po = \ME\MerchandisingSfl\Models\OrderPo::with('order')->find($request->integer('msfl_order_po_id'));
+            if ($po) {
+                $request->session()->flashInput(['msfl_buyer_id' => $po->order?->buyer_id, 'msfl_style_id' => $po->style_id, 'msfl_order_po_id' => $po->id]);
+                $defaultItemId = InvFinishedGoodsReceive::query()->where('msfl_style_id', $po->style_id)->latest('id')->with('items')->first()?->items->first()?->item_id;
+            }
+        }
+
+        return view('sfl-inventory::admin.fg-receives.create', $this->formOptions() + ['defaultItemId' => $defaultItemId]);
     }
 
     public function store(InvFinishedGoodsReceiveRequest $request): RedirectResponse

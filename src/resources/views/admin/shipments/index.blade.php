@@ -80,10 +80,17 @@
                                     <button type="button" class="btn-custom success" data-toggle="modal" data-target="#viewShpModal{{ $shipment->id }}"><i class="fa-solid fa-eye"></i></button>
                                     @can('inv_gate_pass.add')
                                         @if($shipment->gatePasses->isEmpty())
-                                            <a href="{{ route('inventory.gate-passes.create', ['shipment_id' => $shipment->id]) }}" class="btn btn-sm btn-outline-success">
-                                                <i class="fa-solid fa-door-open"></i> Gate Pass
+                                            <a href="{{ route('inventory.gate-passes.create', ['shipment_id' => $shipment->id]) }}" class="btn btn-sm btn-outline-success" title="Issue the Gate Pass — it releases the goods and prints the Delivery Challan">
+                                                <i class="fa-solid fa-door-open"></i> Gate Pass / Challan
                                             </a>
                                         @endif
+                                    @endcan
+                                    @can('inv_gate_pass.print')
+                                        @foreach($shipment->gatePasses as $gp)
+                                            <a href="{{ route('inventory.gate-passes.print', $gp) }}" target="_blank" class="btn btn-sm btn-outline-dark" title="Delivery Challan {{ $gp->gate_pass_no }}">
+                                                <i class="fa-solid fa-print"></i> Delivery Challan
+                                            </a>
+                                        @endforeach
                                     @endcan
                                     @can('inv_shipment.edit')
                                         @if($shipment->status !== 'delivered')

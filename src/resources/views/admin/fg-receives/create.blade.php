@@ -125,7 +125,7 @@
                                     <select name="items[0][item_id]" class="form-control form-control-sm inv-select2" required>
                                         <option value="">— Select —</option>
                                         @foreach($items as $item)
-                                            <option value="{{ $item->id }}">{{ $item->item_code }} — {{ $item->item_name }}</option>
+                                            <option value="{{ $item->id }}" @selected(old('items.0.item_id', $defaultItemId ?? null) == $item->id)>{{ $item->item_code }} — {{ $item->item_name }}</option>
                                         @endforeach
                                     </select>
                                 </td>
