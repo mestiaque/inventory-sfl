@@ -4,6 +4,8 @@ namespace ME\SflInventory\Services;
 
 use Illuminate\Support\Collection;
 use ME\SflInventory\Models\InvBuyer;
+use ME\SflInventory\Models\InvItem;
+use ME\SflInventory\Models\InvStore;
 
 /**
  * Bridge to Merchandising v2 (merchandising-sfl, which also runs production)
@@ -206,6 +208,66 @@ class MerchandisingLink
      * Confirmed POs for a shipment line: id => [label "style · color — buyer (PO no)", msfl buyer_id].
      * The shipped qty / value of a PO is read back by Merchandising (Line Wise Output report).
      */
+    /**
+     * The finished-good item of a Merchandising style, if it exists — linked by msfl_style_id,
+     * or an older hand-made item with code "FG-<style no>" (linked to the style on first use).
+     */
+    public function styleFinishedItemId(int $styleId): ?int
+    {
+        $id = InvItem::query()->where('msfl_style_id', $styleId)->where('item_type', 'finished_good')->value('id');
+        if ($id || ! $this->available()) {
+            return $id;
+        }
+        $styleNo = \ME\MerchandisingSfl\Models\Style::query()->whereKey($styleId)->value('style_no');
+        $old = $styleNo ? InvItem::query()->where('item_code', 'FG-' . $styleNo)->where('item_type', 'finished_good')->whereNull('msfl_style_id')->first() : null;
+        $old?->forceFill(['msfl_style_id' => $styleId])->save();
+
+        return $old?->id;
+    }
+
+    /** style_id => finished-good item id, for every style that has one (forms pick it by themselves). */
+    public function styleFinishedItems(): Collection
+    {
+        return InvItem::query()->whereNotNull('msfl_style_id')->where('item_type', 'finished_good')->pluck('id', 'msfl_style_id');
+    }
+
+    /**
+     * Finished-good item of a style — made from the style the first time (no one enters it by hand):
+     * code FG-<style no>, name "<style no> — <style name> (<buyer>)", PCS, category Finished Goods,
+     * the Finish Store as its store.
+     */
+    public function finishedGoodItem(int $styleId): int
+    {
+        if ($id = $this->styleFinishedItemId($styleId)) {
+            return $id;
+        }
+        $style = \ME\MerchandisingSfl\Models\Style::query()->with('buyer')->findOrFail($styleId);
+
+        $category = \ME\SflInventory\Models\InvItemCategory::query()->whereRaw('LOWER(TRIM(name)) IN (?, ?)', ['finished goods', 'finished good'])->value('id')
+            ?? \ME\SflInventory\Models\InvItemCategory::create(['name' => 'Finished Goods', 'code' => 'FG', 'is_active' => true, 'created_by' => auth()->id()])->id;
+        $unit = \ME\SflInventory\Models\InvUnit::query()->whereRaw('UPPER(TRIM(short_name)) IN (?, ?)', ['PCS', 'PC'])->value('id')
+            ?? \ME\SflInventory\Models\InvUnit::create(['name' => 'Pieces', 'short_name' => 'PCS', 'is_active' => true, 'created_by' => auth()->id()])->id;
+
+        // Same style no can exist under two buyers: keep the code unique.
+        $code = $base = 'FG-' . $style->style_no;
+        for ($n = 2; InvItem::withTrashed()->where('item_code', $code)->exists(); $n++) {
+            $code = "{$base}-{$n}";
+        }
+
+        return InvItem::create([
+            'item_code' => $code,
+            'item_name' => trim($style->style_no . ' — ' . $style->name . ($style->buyer ? ' (' . $style->buyer->name . ')' : '')),
+            'category_id' => $category,
+            'unit_id' => $unit,
+            'buyer_id' => $style->buyer_id ? $this->inventoryBuyerId((int) $style->buyer_id) : null,
+            'item_type' => 'finished_good',
+            'msfl_style_id' => $style->id,
+            'opening_store_id' => InvStore::query()->where('type', InvStore::TYPE_FINISH)->value('id'),
+            'is_active' => true,
+            'created_by' => auth()->id(),
+        ])->id;
+    }
+
     /** Merchandising commercial invoices that no shipment carries yet (id => label), newest first. */
     public function commercialInvoices(): Collection
     {
@@ -234,6 +296,9 @@ class MerchandisingLink
         }
 
         $item = function ($po) {
+            if ($id = $this->styleFinishedItemId((int) $po->style_id)) {
+                return $id;
+            }
             $q = \ME\SflInventory\Models\InvFinishedGoodsReceive::query()->with('items')->latest('id');
 
             return (clone $q)->where('msfl_order_po_id', $po->id)->first()?->items->first()?->item_id

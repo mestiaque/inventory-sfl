@@ -70,7 +70,7 @@ class InvFinishedGoodsReceiveController extends Controller
             $po = \ME\MerchandisingSfl\Models\OrderPo::with('order')->find($request->integer('msfl_order_po_id'));
             if ($po) {
                 $request->session()->flashInput(['msfl_buyer_id' => $po->order?->buyer_id, 'msfl_style_id' => $po->style_id, 'msfl_order_po_id' => $po->id]);
-                $defaultItemId = InvFinishedGoodsReceive::query()->where('msfl_style_id', $po->style_id)->latest('id')->with('items')->first()?->items->first()?->item_id;
+                $defaultItemId = $link->styleFinishedItemId((int) $po->style_id);
             }
         }
 
@@ -94,7 +94,7 @@ class InvFinishedGoodsReceiveController extends Controller
             $data['order_ref'] = null;
         }
 
-        $receive = DB::transaction(function () use ($data) {
+        $receive = DB::transaction(function () use ($data, $link) {
             $receive = InvFinishedGoodsReceive::create([
                 'receive_date' => $data['receive_date'],
                 'style'        => $data['style'] ?? null,
@@ -109,6 +109,8 @@ class InvFinishedGoodsReceiveController extends Controller
             ]);
 
             foreach ($data['items'] as $line) {
+                // No item picked: the style's own finished-good item (made from the style the first time).
+                $line['item_id'] = $line['item_id'] ?: $link->finishedGoodItem((int) $data['msfl_style_id']);
                 $receiveItem = $receive->items()->create(['item_id' => $line['item_id'], 'quantity' => $line['quantity']]);
 
                 $this->stock->post([
@@ -162,6 +164,7 @@ class InvFinishedGoodsReceiveController extends Controller
             'merStylesOptions'           => app(MerchandisingLink::class)->styles(),
             'merLegacyStyles'            => app(MerchandisingLink::class)->legacyStyles(),
             'merOrderPosOptions' => app(MerchandisingLink::class)->pos(),
+            'styleItems'                 => app(MerchandisingLink::class)->available() ? app(MerchandisingLink::class)->styleFinishedItems() : collect(),
         ];
     }
 }

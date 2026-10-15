@@ -74,8 +74,8 @@
             @php $grand = array_fill_keys($sizes->pluck('id')->all(), 0); @endphp
             @foreach($gate_pass->items as $line)
                 @php
-                    $po = $posByItemId[$line->item_id] ?? null;
-                    $figures = $figuresByItemId[$line->item_id] ?? null;
+                    $po = $posByItemId[$line->id] ?? null;
+                    $figures = $figuresByItemId[$line->id] ?? null;
                     $lineTotal = 0;
                 @endphp
                 <tr>

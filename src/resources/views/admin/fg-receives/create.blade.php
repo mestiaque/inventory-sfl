@@ -122,8 +122,8 @@
                         <tbody id="fgrRowsBody">
                             <tr>
                                 <td>
-                                    <select name="items[0][item_id]" class="form-control form-control-sm inv-select2" required>
-                                        <option value="">— Select —</option>
+                                    <select name="items[0][item_id]" class="form-control form-control-sm inv-select2" data-fg-item @unless($merLinked ?? false) required @endunless>
+                                        <option value="">{{ ($merLinked ?? false) ? '— Auto: the style\'s own item (made on save if new) —' : '— Select —' }}</option>
                                         @foreach($items as $item)
                                             <option value="{{ $item->id }}" @selected(old('items.0.item_id', $defaultItemId ?? null) == $item->id)>{{ $item->item_code }} — {{ $item->item_name }}</option>
                                         @endforeach
@@ -139,8 +139,8 @@
                 <template id="fgrRowTemplate">
                     <tr>
                         <td>
-                            <select name="items[__INDEX__][item_id]" class="form-control form-control-sm inv-select2" required>
-                                <option value="">— Select —</option>
+                            <select name="items[__INDEX__][item_id]" class="form-control form-control-sm inv-select2" data-fg-item @unless($merLinked ?? false) required @endunless>
+                                <option value="">{{ ($merLinked ?? false) ? '— Auto: the style\'s own item (made on save if new) —' : '— Select —' }}</option>
                                 @foreach($items as $item)
                                     <option value="{{ $item->id }}">{{ $item->item_code }} — {{ $item->item_name }}</option>
                                 @endforeach
@@ -183,7 +183,15 @@
             if (jq) { jq(select).trigger('change.select2'); }
         }
         function onBuyer() { rebuild(style, allStyles, function (o) { return buyer.value && o.dataset.buyer === buyer.value; }); onStyle(); }
-        function onStyle() { rebuild(po, allPos, function (o) { return style.value && o.dataset.style === style.value; }); loadSummary(); }
+        // Finished good item = the style's own item (empty = made from the style on save).
+        const styleItems = @json($styleItems ?? []);
+        function pickItem() {
+            document.querySelectorAll('#fgrRowsBody [data-fg-item]').forEach(function (sel) {
+                sel.value = styleItems[style.value] ? String(styleItems[style.value]) : '';
+                if (jq) { jq(sel).trigger('change.select2'); }
+            });
+        }
+        function onStyle() { rebuild(po, allPos, function (o) { return style.value && o.dataset.style === style.value; }); pickItem(); loadSummary(); }
 
         // Production packed vs already received; pre-fill the quantity with what's left.
         function loadSummary() {

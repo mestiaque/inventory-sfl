@@ -27,7 +27,8 @@ class InvFinishedGoodsReceiveRequest extends FormRequest
             'store_id'          => ['required', 'integer', 'exists:inv_stores,id'],
             'remarks'           => ['nullable', 'string'],
             'items'             => ['required', 'array', 'min:1'],
-            'items.*.item_id'   => ['required', 'integer', 'exists:inv_items,id'],
+            // Empty = the Merchandising style's own finished-good item (made on save if new).
+            'items.*.item_id'   => ['nullable', 'integer', 'exists:inv_items,id'],
             'items.*.quantity'  => ['required', 'numeric', 'min:0.0001'],
         ];
     }
@@ -46,6 +47,14 @@ class InvFinishedGoodsReceiveRequest extends FormRequest
     public function withValidator(Validator $validator): void
     {
         $validator->after(function (Validator $v) {
+            if (! $this->integer('msfl_style_id')) {
+                foreach ((array) $this->input('items', []) as $i => $line) {
+                    if (empty($line['item_id'])) {
+                        $v->errors()->add("items.{$i}.item_id", 'Pick the finished good item (it is filled by itself only for a Merchandising style).');
+                    }
+                }
+            }
+
             $store = $this->filled('store_id') ? InvStore::find($this->input('store_id')) : null;
             if ($store && $store->type !== InvStore::TYPE_FINISH) {
                 $v->errors()->add('store_id', "{$store->name} is not a " . InvStore::TYPE_LABELS[InvStore::TYPE_FINISH] . '.');

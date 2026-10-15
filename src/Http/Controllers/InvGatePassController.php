@@ -158,10 +158,17 @@ class InvGatePassController extends Controller
             $poIds = $gate_pass->shipment->items->pluck('msfl_order_po_id')->filter()->unique()->values();
             if ($link->available()) {
                 $pos = \ME\MerchandisingSfl\Models\OrderPo::query()->with(['style', 'color', 'sizes.size'])->whereIn('id', $poIds)->get()->keyBy('id');
-                $posByItemId = $gate_pass->shipment->items->mapWithKeys(fn ($line) => [$line->item_id => $pos->get($line->msfl_order_po_id)]);
+                // Gate pass line → its shipment line's PO: same position (the gate pass copies the
+                // shipment's lines in order — one style item can carry several POs / colors), else by item.
+                $shipLines = $gate_pass->shipment->items->values();
+                $samePlaces = $shipLines->count() === $gate_pass->items->count()
+                    && $shipLines->pluck('item_id')->all() === $gate_pass->items->pluck('item_id')->all();
+                $posByItemId = $gate_pass->items->values()->mapWithKeys(fn ($line, $i) => [$line->id => $pos->get(
+                    $samePlaces ? $shipLines[$i]->msfl_order_po_id : $shipLines->firstWhere('item_id', $line->item_id)?->msfl_order_po_id
+                )]);
 
                 $figures = app(\ME\MerchandisingSfl\Services\PackingFigures::class);
-                $shipped = $gate_pass->shipment->items->groupBy('msfl_order_po_id')->map(fn ($l) => (float) $l->sum('quantity'));
+                $shipped = $shipLines->groupBy('msfl_order_po_id')->map(fn ($l) => (float) $l->sum('quantity'));
                 $invoiced = $this->invoiceSizes($gate_pass->shipment->invoice_no);
                 // Size split of what goes out: the commercial invoice's carton list when the shipment
                 // carries its invoice no; else production's packed qty only when the whole PO ships.

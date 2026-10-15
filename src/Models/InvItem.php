@@ -21,7 +21,7 @@ class InvItem extends Model
     protected $fillable = [
         'item_code', 'item_name', 'category_id', 'sub_category_id', 'department_id', 'supplier_id', 'buyer_id',
         'unit_id', 'brand_id', 'color_id', 'size_id', 'specification', 'item_type', 'minimum_stock', 'maximum_stock',
-        'opening_stock', 'opening_value', 'opening_store_id', 'barcode', 'barcode_enabled', 'is_active', 'created_by',
+        'opening_stock', 'opening_value', 'opening_store_id', 'barcode', 'barcode_enabled', 'is_active', 'created_by', 'msfl_style_id',
     ];
 
     protected $casts = [
