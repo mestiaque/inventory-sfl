@@ -16,17 +16,30 @@
         </div>
         <div class="card-body">
             <div class="alert alert-info">This records what's being shipped — no stock moves yet. Once saved, issue a <strong>Gate Pass</strong> against it to actually release the goods.@if($shipmentPos->isNotEmpty()) Pick each line's <strong>PO</strong> so Merchandising counts the shipped qty and value.@endif</div>
-            @if(($commercialInvoices ?? collect())->isNotEmpty())
+            @if(($commercialInvoices ?? collect())->isNotEmpty() || ($buyerPoNumbers ?? collect())->isNotEmpty())
                 <form method="GET" action="{{ route('inventory.shipments.create') }}" class="row align-items-end mb-2">
+                    @if(($buyerPoNumbers ?? collect())->isNotEmpty())
+                    <div class="col-md-6 mb-2">
+                        <label class="form-label">From Buyer PO <small class="text-muted">(every style / color of the PO, one line each — qty = packed − already shipped)</small></label>
+                        <select name="msfl_buyer_po" class="form-control form-control-sm inv-select2" onchange="this.form.msfl_invoice_id && (this.form.msfl_invoice_id.value = ''); this.form.submit()">
+                            <option value="">— Pick to fill the form —</option>
+                            @foreach($buyerPoNumbers as $key => $label)
+                                <option value="{{ $key }}" @selected(request('msfl_buyer_po') === $key)>{{ $label }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    @endif
+                    @if(($commercialInvoices ?? collect())->isNotEmpty())
                     <div class="col-md-6 mb-2">
                         <label class="form-label">From Commercial Invoice <small class="text-muted">(Merchandising → Commercial — fills buyer, invoice / packing list no, PO lines and qty)</small></label>
-                        <select name="msfl_invoice_id" class="form-control form-control-sm inv-select2" onchange="this.form.submit()">
+                        <select name="msfl_invoice_id" class="form-control form-control-sm inv-select2" onchange="this.form.msfl_buyer_po && (this.form.msfl_buyer_po.value = ''); this.form.submit()">
                             <option value="">— Pick to fill the form —</option>
                             @foreach($commercialInvoices as $id => $label)
                                 <option value="{{ $id }}" @selected(request('msfl_invoice_id') == $id)>{{ $label }}</option>
                             @endforeach
                         </select>
                     </div>
+                    @endif
                 </form>
             @endif
             <form method="POST" action="{{ route('inventory.shipments.store') }}">

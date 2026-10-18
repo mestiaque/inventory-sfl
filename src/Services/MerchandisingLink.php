@@ -3,6 +3,7 @@
 namespace ME\SflInventory\Services;
 
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 use ME\SflInventory\Models\InvBuyer;
 use ME\SflInventory\Models\InvItem;
 use ME\SflInventory\Models\InvStore;
@@ -295,15 +296,7 @@ class MerchandisingLink
             return null;
         }
 
-        $item = function ($po) {
-            if ($id = $this->styleFinishedItemId((int) $po->style_id)) {
-                return $id;
-            }
-            $q = \ME\SflInventory\Models\InvFinishedGoodsReceive::query()->with('items')->latest('id');
-
-            return (clone $q)->where('msfl_order_po_id', $po->id)->first()?->items->first()?->item_id
-                ?? (clone $q)->where('msfl_style_id', $po->style_id)->first()?->items->first()?->item_id;
-        };
+        $item = fn ($po) => $this->poFinishedItemId($po);
 
         return [
             'msfl_buyer_id' => $invoice->buyer_id,
@@ -313,6 +306,69 @@ class MerchandisingLink
             'items' => $invoice->lines->filter(fn ($l) => $l->orderPo && $l->qty > 0)->values()->map(fn ($l) => [
                 'item_id' => $item($l->orderPo), 'msfl_order_po_id' => $l->order_po_id, 'quantity' => (int) $l->qty,
             ])->all(),
+        ];
+    }
+
+    /** Finished-good item of a PO line: the style's FG item, else the item last received for that PO / style. */
+    private function poFinishedItemId($po): ?int
+    {
+        if ($id = $this->styleFinishedItemId((int) $po->style_id)) {
+            return $id;
+        }
+        $q = \ME\SflInventory\Models\InvFinishedGoodsReceive::query()->with('items')->latest('id');
+
+        return (clone $q)->where('msfl_order_po_id', $po->id)->first()?->items->first()?->item_id
+            ?? (clone $q)->where('msfl_style_id', $po->style_id)->first()?->items->first()?->item_id;
+    }
+
+    /** Confirmed buyer PO numbers ("<buyer id>|<po no>" => label) — one buyer PO can hold several styles / colors. */
+    public function buyerPoNumbers(): Collection
+    {
+        if (! $this->available()) {
+            return collect();
+        }
+
+        return \ME\MerchandisingSfl\Models\OrderPo::query()
+            ->with(['order:id,buyer_id,status', 'order.buyer:id,name', 'style:id,style_no'])
+            ->whereHas('order', fn ($q) => $q->where('status', 'confirmed'))
+            ->latest('id')->get()
+            ->groupBy(fn ($po) => $po->order->buyer_id . '|' . $po->po_no)
+            ->map(fn ($lines) => ($lines = $lines->sortBy('id'))->first()->po_no . ' — ' . ($lines->first()->order->buyer->name ?? '')
+                . ' (' . $lines->pluck('style.style_no')->filter()->unique()->implode(', ') . ' · ' . $lines->count() . ' line' . ($lines->count() > 1 ? 's' : '') . ')');
+    }
+
+    /**
+     * Shipment form values from a buyer PO no: buyer + one line per PO line (every style / color under
+     * that PO no), qty = packed (production) − already on a shipment; lines with nothing left are skipped.
+     */
+    public function shipmentFromBuyerPo(string $key): ?array
+    {
+        [$buyerId, $poNo] = array_pad(explode('|', $key, 2), 2, null);
+        if (! $this->available() || ! $buyerId || $poNo === null) {
+            return null;
+        }
+        $pos = \ME\MerchandisingSfl\Models\OrderPo::query()->with('style')->where('po_no', $poNo)
+            ->whereHas('order', fn ($q) => $q->where('status', 'confirmed')->where('buyer_id', (int) $buyerId))
+            ->orderBy('id')->get();
+        if ($pos->isEmpty()) {
+            return null;
+        }
+
+        $flow = app(\ME\MerchandisingSfl\Services\ProductionFlow::class);
+        $shipped = DB::table('inv_shipment_items as i')->join('inv_shipments as s', 's.id', '=', 'i.shipment_id')
+            ->whereNull('s.deleted_at')->whereIn('i.msfl_order_po_id', $pos->pluck('id'))
+            ->groupBy('i.msfl_order_po_id')->selectRaw('i.msfl_order_po_id, SUM(i.quantity) q')->pluck('q', 'msfl_order_po_id');
+
+        $lines = $pos->map(fn ($po) => [
+            'item_id' => $this->poFinishedItemId($po),
+            'msfl_order_po_id' => $po->id,
+            'quantity' => max(0, (int) ($flow->summary($po)['packing']['pass'] ?? 0) - (int) ($shipped[$po->id] ?? 0)),
+        ]);
+        $left = $lines->filter(fn ($l) => $l['quantity'] > 0)->values();
+
+        return [
+            'msfl_buyer_id' => (int) $buyerId,
+            'items' => ($left->isNotEmpty() ? $left : $lines->map(fn ($l) => ['quantity' => ''] + $l))->values()->all(),
         ];
     }
 

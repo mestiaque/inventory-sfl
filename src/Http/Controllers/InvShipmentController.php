@@ -71,8 +71,13 @@ class InvShipmentController extends Controller
             && ($prefill = $link->shipmentFromInvoice($request->integer('msfl_invoice_id')))) {
             $request->session()->flashInput($prefill);
         }
+        // ?msfl_buyer_po= : every style / color line under one buyer PO no.
+        if ($request->filled('msfl_buyer_po') && ! $request->filled('msfl_invoice_id') && ! $request->session()->hasOldInput()
+            && ($prefill = $link->shipmentFromBuyerPo((string) $request->input('msfl_buyer_po')))) {
+            $request->session()->flashInput($prefill);
+        }
 
-        return view('sfl-inventory::admin.shipments.create', $this->formOptions() + ['commercialInvoices' => $link->commercialInvoices()]);
+        return view('sfl-inventory::admin.shipments.create', $this->formOptions() + ['commercialInvoices' => $link->commercialInvoices(), 'buyerPoNumbers' => $link->buyerPoNumbers()]);
     }
 
     public function store(InvShipmentRequest $request): RedirectResponse
