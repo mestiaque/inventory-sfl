@@ -339,9 +339,28 @@ class MerchandisingLink
      */
     public function receivedStyleIds(): array
     {
-        return \ME\SflInventory\Models\InvGrn::query()
+        $linked = \ME\SflInventory\Models\InvGrn::query()
             ->where('source_type', 'buyer_supplied')->where('status', 'posted')->whereNotNull('msfl_style_id')
-            ->distinct()->pluck('msfl_style_id')->map(fn ($id) => (int) $id)->all();
+            ->distinct()->pluck('msfl_style_id')->map(fn ($id) => (int) $id);
+
+        // Older receives carry the style only as text (msfl_style_id empty).
+        // legacyStyles() skips those once the style exists in Merchandising,
+        // so match them to that Merchandising style here by buyer name +
+        // style no — otherwise the style can't be picked for a requisition.
+        $merBuyers = $this->buyers()->keyBy(fn ($b) => mb_strtolower(trim($b->name)));
+        $invToMer = InvBuyer::query()->get(['id', 'name'])
+            ->mapWithKeys(fn ($b) => [$b->id => $merBuyers->get(mb_strtolower(trim($b->name)))?->id])
+            ->filter();
+        $textReceived = \ME\SflInventory\Models\InvGrn::query()
+            ->where('source_type', 'buyer_supplied')->where('status', 'posted')->whereNull('msfl_style_id')
+            ->whereIn('buyer_id', $invToMer->keys())->whereNotNull('style')->where('style', '<>', '')
+            ->distinct()->get(['buyer_id', 'style'])
+            ->mapWithKeys(fn ($g) => [$invToMer[$g->buyer_id] . '|' . mb_strtolower(trim($g->style)) => true]);
+        $matched = $this->styles()
+            ->filter(fn ($s) => isset($textReceived[$s->buyer_id . '|' . mb_strtolower(trim($s->style_no))]))
+            ->pluck('id')->map(fn ($id) => (int) $id);
+
+        return $linked->concat($matched)->unique()->values()->all();
     }
 
     /**
