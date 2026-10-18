@@ -28,7 +28,7 @@ return [
         'transfer'             => 'TRF',
         'consumption'          => 'CONS',
         'fg_receive'           => 'FGR',
-        'gate_pass'            => 'GP',
+        'gate_pass'            => 'CL', // Delivery Challan, daily: CL261017-001
         'shipment'             => 'SHP',
         'adjustment'           => 'ADJ',
     ],

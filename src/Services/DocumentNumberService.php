@@ -23,4 +23,19 @@ class DocumentNumberService
             return "{$prefix}-{$next}";
         });
     }
+
+    /** "<PREFIX><YYMMDD>-<001>": the counter restarts every day (date = the document's own date), e.g. CL261017-001. */
+    public function daily(string $modelClass, string $column, string $prefix, $date, int $pad = 3): string
+    {
+        $prefix .= \Illuminate\Support\Carbon::parse($date ?? now())->format('ymd') . '-';
+
+        return DB::transaction(function () use ($modelClass, $column, $prefix, $pad) {
+            $last = $modelClass::withTrashed()
+                ->where($column, 'like', "{$prefix}%")
+                ->lockForUpdate()
+                ->max(DB::raw("CAST(SUBSTRING_INDEX(`{$column}`, '-', -1) AS UNSIGNED)"));
+
+            return $prefix . str_pad((string) ((int) $last + 1), $pad, '0', STR_PAD_LEFT);
+        });
+    }
 }

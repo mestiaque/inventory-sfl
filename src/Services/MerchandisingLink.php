@@ -308,7 +308,7 @@ class MerchandisingLink
         return [
             'msfl_buyer_id' => $invoice->buyer_id,
             'invoice_no' => $invoice->invoice_no,
-            'packing_list_no' => $invoice->invoice_no,
+            'packing_list_no' => $invoice->packingListNo(),
             'shipment_date' => $invoice->invoice_date?->toDateString(),
             'items' => $invoice->lines->filter(fn ($l) => $l->orderPo && $l->qty > 0)->values()->map(fn ($l) => [
                 'item_id' => $item($l->orderPo), 'msfl_order_po_id' => $l->order_po_id, 'quantity' => (int) $l->qty,

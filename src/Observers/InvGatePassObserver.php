@@ -14,10 +14,11 @@ class InvGatePassObserver
     public function creating(InvGatePass $gatePass): void
     {
         if (empty($gatePass->gate_pass_no)) {
-            $gatePass->gate_pass_no = $this->documentNumbers->next(
+            $gatePass->gate_pass_no = $this->documentNumbers->daily(
                 InvGatePass::class,
                 'gate_pass_no',
-                config('sfl-inventory.document_prefixes.gate_pass', 'GP')
+                config('sfl-inventory.document_prefixes.gate_pass', 'CL'),
+                $gatePass->gate_pass_date
             );
         }
     }
