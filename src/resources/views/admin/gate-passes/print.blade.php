@@ -45,9 +45,9 @@
 
     <div class="sc-to">
         <div class="col">
-            <div class="row"><div class="lbl">To</div><div>: {{ $gate_pass->buyer?->name }}</div></div>
-            <div class="row"><div class="lbl">Address</div><div>: {{ $gate_pass->buyer?->address }}</div></div>
-            <div class="row"><div class="lbl">Contact No.</div><div>: {{ $gate_pass->buyer?->contact ?: '—' }}</div></div>
+            <div class="row"><div class="lbl">To</div><div>: {{ $buyerInfo['name'] }}</div></div>
+            <div class="row"><div class="lbl">Address</div><div>: {{ $buyerInfo['address'] ?: '—' }}</div></div>
+            <div class="row"><div class="lbl">Contact No.</div><div>: {{ $buyerInfo['contact'] ?: '—' }}</div></div>
         </div>
         <div class="col">
             <div class="row"><div class="lbl">Vehicle No.</div><div>: {{ $gate_pass->vehicle_no ?: '—' }}</div></div>

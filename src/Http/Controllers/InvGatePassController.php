@@ -195,8 +195,26 @@ class InvGatePassController extends Controller
             }
         }
         $packingListNo = $gate_pass->shipment?->packing_list_no ?: ($packingListNo ?? null);
+        $buyerInfo = $this->buyerInfo($gate_pass);
 
-        return view('sfl-inventory::admin.gate-passes.print', compact('gate_pass', 'posByItemId', 'figuresByItemId', 'sizes', 'packingListNo'));
+        return view('sfl-inventory::admin.gate-passes.print', compact('gate_pass', 'posByItemId', 'figuresByItemId', 'sizes', 'packingListNo', 'buyerInfo'));
+    }
+
+    /**
+     * To / Address / Contact for the challan: the Merchandising buyer (the buyer master, kept up to
+     * date there) matched by name, else what the inventory buyer itself carries.
+     */
+    private function buyerInfo(InvGatePass $gatePass): array
+    {
+        $inv = $gatePass->buyer;
+        $link = app(\ME\SflInventory\Services\MerchandisingLink::class);
+        $mer = ($id = $link->merBuyerIdFor($gatePass->buyer_id)) ? \ME\MerchandisingSfl\Models\Buyer::query()->find($id) : null;
+
+        return [
+            'name' => $inv?->name ?? $mer?->name,
+            'address' => $mer?->address ?: $inv?->address,
+            'contact' => collect([$mer?->contact_person, $mer?->phone])->filter()->implode(' / ') ?: $inv?->contact,
+        ];
     }
 
     /** order_po_id => [sizes: size_id => pcs, cartons] from the Merchandising commercial invoice with this number. */
