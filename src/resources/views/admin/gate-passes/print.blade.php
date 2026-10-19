@@ -53,7 +53,7 @@
             <div class="row"><div class="lbl">Vehicle No.</div><div>: {{ $gate_pass->vehicle_no ?: '—' }}</div></div>
             <div class="row"><div class="lbl">Driver</div><div>: {{ collect([$gate_pass->driver_name, $gate_pass->driver_contact])->filter()->implode(' / ') ?: '—' }}</div></div>
             <div class="row"><div class="lbl">Invoice No.</div><div>: {{ $gate_pass->shipment?->invoice_no ?: '—' }}</div></div>
-            <div class="row"><div class="lbl">Packing List No.</div><div>: {{ $gate_pass->shipment?->packing_list_no ?: '—' }}</div></div>
+            <div class="row"><div class="lbl">Packing List No.</div><div>: {{ $packingListNo ?: '—' }}</div></div>
         </div>
     </div>
 

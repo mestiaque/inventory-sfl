@@ -155,12 +155,18 @@ class InvGatePassController extends Controller
         $sizes = collect();
         if ($gate_pass->shipment) {
             $link = app(\ME\SflInventory\Services\MerchandisingLink::class);
-            $poIds = $gate_pass->shipment->items->pluck('msfl_order_po_id')->filter()->unique()->values();
+            $shipLines = $gate_pass->shipment->items->values();
+            // A shipment entered by hand (no commercial invoice picked) may carry no PO on its lines:
+            // take the PO the item was received into the Finish Store against.
+            foreach ($shipLines as $l) {
+                $l->msfl_order_po_id ??= \ME\SflInventory\Models\InvFinishedGoodsReceive::query()->whereNotNull('msfl_order_po_id')
+                    ->whereHas('items', fn ($q) => $q->where('item_id', $l->item_id))->latest('id')->value('msfl_order_po_id');
+            }
+            $poIds = $shipLines->pluck('msfl_order_po_id')->filter()->unique()->values();
             if ($link->available()) {
                 $pos = \ME\MerchandisingSfl\Models\OrderPo::query()->with(['style', 'color', 'sizes.size'])->whereIn('id', $poIds)->get()->keyBy('id');
                 // Gate pass line → its shipment line's PO: same position (the gate pass copies the
                 // shipment's lines in order — one style item can carry several POs / colors), else by item.
-                $shipLines = $gate_pass->shipment->items->values();
                 $samePlaces = $shipLines->count() === $gate_pass->items->count()
                     && $shipLines->pluck('item_id')->all() === $gate_pass->items->pluck('item_id')->all();
                 $posByItemId = $gate_pass->items->values()->mapWithKeys(fn ($line, $i) => [$line->id => $pos->get(
@@ -181,10 +187,16 @@ class InvGatePassController extends Controller
                     return array_sum($f['packed']) == ($shipped[$po->id] ?? 0) ? $f : ['packed' => []] + $f;
                 });
                 $sizes = \ME\MerchandisingSfl\Models\Size::displaySort($figuresByItemId->flatMap(fn ($f) => $f['sizes'])->unique('id'));
+                if (! $gate_pass->shipment->packing_list_no && class_exists(\ME\MerchandisingSfl\Models\Production\FinalPackingList::class)) {
+                    $packingListNo = $pos->map(fn ($po) => \ME\MerchandisingSfl\Models\Production\FinalPackingList::query()
+                        ->where('order_id', $po->order_id)->where('po_no', $po->po_no)->latest('id')->value('fpl_no'))
+                        ->filter()->unique()->implode(', ') ?: null;
+                }
             }
         }
+        $packingListNo = $gate_pass->shipment?->packing_list_no ?: ($packingListNo ?? null);
 
-        return view('sfl-inventory::admin.gate-passes.print', compact('gate_pass', 'posByItemId', 'figuresByItemId', 'sizes'));
+        return view('sfl-inventory::admin.gate-passes.print', compact('gate_pass', 'posByItemId', 'figuresByItemId', 'sizes', 'packingListNo'));
     }
 
     /** order_po_id => [sizes: size_id => pcs, cartons] from the Merchandising commercial invoice with this number. */
