@@ -23,7 +23,6 @@
     .sc-note { margin-top: 10px; font-size: 12px; }
     .sc-for { text-align: right; font-size: 12px; margin-top: 30px; font-weight: 600; }
     .sc-sign-grid { display: flex; justify-content: space-between; margin-top: 50px; font-size: 12px; }
-    .sc-sign-req { margin-top: 18px; text-align: center; font-size: 13px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; }
     .sc-sign-grid .box { width: 30%; text-align: center; border-top: 1px solid #333; padding-top: 4px; font-weight: 600; }
 </style>
 @endpush
@@ -129,7 +128,7 @@
         <div class="box">Receiver's Signature</div>
         <div class="box">Authorised Signature</div>
     </div>
-
-    <div class="sc-sign-req">*** Signature Required ***</div>
 </div>
+{{-- Below the border, in the layout's own footer-note style (its "no signature required" note is hidden). --}}
+<div class="generated-note">Signature Required</div>
 @endsection
