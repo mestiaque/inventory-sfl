@@ -1,4 +1,4 @@
-@extends('printMaster2')
+@extends('printMaster2', ['hideGeneratedNote' => true])
 
 @section('title', 'Delivery Challan — ' . $gate_pass->gate_pass_no)
 
@@ -24,7 +24,6 @@
     .sc-for { text-align: right; font-size: 12px; margin-top: 30px; font-weight: 600; }
     .sc-sign-grid { display: flex; justify-content: space-between; margin-top: 50px; font-size: 12px; }
     .sc-sign-req { margin-top: 18px; text-align: center; font-size: 13px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; }
-    .sc-sign-grid .box small { display: block; font-weight: 400; font-style: italic; }
     .sc-sign-grid .box { width: 30%; text-align: center; border-top: 1px solid #333; padding-top: 4px; font-weight: 600; }
 </style>
 @endpush
@@ -126,11 +125,11 @@
 
     <div class="sc-for">For - {{ config('sfl-inventory.company.name') }}</div>
 
-    <div class="sc-sign-req">*** Signature Required ***</div>
-
     <div class="sc-sign-grid">
-        <div class="box">Receiver's Signature<small>(Signature Required)</small></div>
-        <div class="box">Authorised Signature<small>(Signature Required)</small></div>
+        <div class="box">Receiver's Signature</div>
+        <div class="box">Authorised Signature</div>
     </div>
+
+    <div class="sc-sign-req">*** Signature Required ***</div>
 </div>
 @endsection
