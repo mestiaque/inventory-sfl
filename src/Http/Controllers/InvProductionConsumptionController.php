@@ -62,6 +62,8 @@ class InvProductionConsumptionController extends Controller
         }
 
         $consumption = DB::transaction(function () use ($data) {
+            $this->stock->assertInStock(collect($data['items'])->map(fn ($l) => ['item_id' => $l['item_id'], 'qty' => (float) $l['consumed_qty'] + (float) ($l['waste_qty'] ?? 0)]), (int) $data['store_id'], 'consume');
+
             $consumption = InvProductionConsumption::create([
                 'department_id'    => $data['department_id'],
                 'store_id'         => $data['store_id'],

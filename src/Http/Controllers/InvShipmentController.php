@@ -85,6 +85,9 @@ class InvShipmentController extends Controller
         $data = $request->validated();
 
         $shipment = DB::transaction(function () use ($data) {
+            $this->stock->assertInStock(collect($data['items'])->map(fn ($l) => ['item_id' => $l['item_id'], 'qty' => $l['quantity']]), (int) $data['store_id'], 'ship');
+            $this->assertWithinFinishReceive($data['items']);
+
             $shipment = InvShipment::create([
                 'shipment_date'   => $data['shipment_date'],
                 'buyer_id'        => $data['buyer_id'] ?? null,
@@ -121,6 +124,39 @@ class InvShipmentController extends Controller
         $shipment->update(['status' => $request->status]);
 
         return back()->with('success', 'Shipment status updated.');
+    }
+
+    /** Per PO: what's shipped (this + earlier shipments) can't pass what was received into the Finish Store for it. */
+    private function assertWithinFinishReceive(array $items): void
+    {
+        $byPo = collect($items)->filter(fn ($l) => ! empty($l['msfl_order_po_id']))->groupBy('msfl_order_po_id')->map(fn ($g) => (float) $g->sum('quantity'));
+        if ($byPo->isEmpty()) {
+            return;
+        }
+        $received = DB::table('inv_finished_goods_receives as r')->join('inv_finished_goods_receive_items as ri', 'ri.fg_receive_id', '=', 'r.id')
+            ->whereNull('r.deleted_at')->whereIn('r.msfl_order_po_id', $byPo->keys())
+            ->groupBy('r.msfl_order_po_id')->selectRaw('r.msfl_order_po_id po, SUM(ri.quantity) q')->pluck('q', 'po');
+        $shipped = DB::table('inv_shipment_items as si')->join('inv_shipments as s', 's.id', '=', 'si.shipment_id')
+            ->whereNull('s.deleted_at')->whereIn('si.msfl_order_po_id', $byPo->keys())
+            ->groupBy('si.msfl_order_po_id')->selectRaw('si.msfl_order_po_id po, SUM(si.quantity) q')->pluck('q', 'po');
+        $pos = DB::table('msfl_order_pos')->whereIn('id', $byPo->keys())->get(['id', 'po_no', 'style_id'])->keyBy('id');
+        // A style received without a PO can't be split per PO — the store stock check alone covers those.
+        $styleLevel = DB::table('inv_finished_goods_receives')->whereNull('deleted_at')->whereNull('msfl_order_po_id')
+            ->whereIn('msfl_style_id', $pos->pluck('style_id'))->distinct()->pluck('msfl_style_id')->flip();
+
+        foreach ($byPo as $poId => $want) {
+            if (isset($styleLevel[$pos[$poId]->style_id ?? 0])) {
+                continue;
+            }
+            $poNo = [$poId => $pos[$poId]->po_no ?? $poId];
+            $left = (float) ($received[$poId] ?? 0) - (float) ($shipped[$poId] ?? 0);
+            if ($want > $left + 0.0001) {
+                throw \Illuminate\Validation\ValidationException::withMessages([
+                    'items' => 'PO ' . ($poNo[$poId] ?? $poId) . ': ' . inv_qty($received[$poId] ?? 0) . ' received into the Finish Store, ' . inv_qty($shipped[$poId] ?? 0)
+                        . ' already on shipments, so only ' . inv_qty(max(0, $left)) . ' can be shipped now (you entered ' . inv_qty($want) . ').',
+                ]);
+            }
+        }
     }
 
     private function formOptions(): array

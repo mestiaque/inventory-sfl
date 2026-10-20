@@ -80,6 +80,12 @@ class InvGatePassController extends Controller
         $data = $request->validated();
 
         $gatePass = DB::transaction(function () use ($data) {
+            $lines = collect($data['items'])->map(fn ($l) => ['item_id' => $l['item_id'], 'qty' => $l['quantity']]);
+            if (! empty($data['shipment_id'])) {
+                $this->assertWithinShipment((int) $data['shipment_id'], $lines);
+            }
+            $this->stock->assertInStock($lines, (int) $data['store_id'], 'release');
+
             $gatePass = InvGatePass::create([
                 'shipment_id'    => $data['shipment_id'] ?? null,
                 'gate_pass_date' => $data['gate_pass_date'],
@@ -116,6 +122,9 @@ class InvGatePassController extends Controller
         abort_if($gate_pass->status !== 'pending', 403, 'Only pending gate passes can be issued.');
 
         DB::transaction(function () use ($gate_pass) {
+            // Stock can have moved since the gate pass was saved — check again at the moment it leaves.
+            $this->stock->assertInStock($gate_pass->items->map(fn ($l) => ['item_id' => $l->item_id, 'qty' => $l->quantity]), (int) $gate_pass->store_id, 'release');
+
             foreach ($gate_pass->items as $line) {
                 $this->stock->post([
                     'item_id'          => $line->item_id,
@@ -236,6 +245,29 @@ class InvGatePassController extends Controller
         }
 
         return $out;
+    }
+
+    /** A gate pass can't release more of an item than its shipment carries, less what earlier gate passes of that shipment already took. */
+    private function assertWithinShipment(int $shipmentId, $lines): void
+    {
+        $shipment = InvShipment::with('items.item')->findOrFail($shipmentId);
+        $shipped = $shipment->items->groupBy('item_id')->map(fn ($g) => (float) $g->sum('quantity'));
+        $alreadyPassed = DB::table('inv_gate_pass_items as gi')->join('inv_gate_passes as g', 'g.id', '=', 'gi.gate_pass_id')
+            ->where('g.shipment_id', $shipmentId)->whereNull('g.deleted_at')->where('g.status', '!=', 'cancelled')
+            ->groupBy('gi.item_id')->selectRaw('gi.item_id, SUM(gi.quantity) q')->pluck('q', 'item_id');
+
+        foreach (collect($lines)->groupBy('item_id') as $itemId => $g) {
+            $want = (float) $g->sum('qty');
+            $left = (float) ($shipped[$itemId] ?? 0) - (float) ($alreadyPassed[$itemId] ?? 0);
+            if ($want > $left + 0.0001) {
+                $name = $shipment->items->firstWhere('item_id', $itemId)?->item?->item_name ?? 'This item';
+                throw \Illuminate\Validation\ValidationException::withMessages([
+                    'items' => isset($shipped[$itemId])
+                        ? "\"{$name}\" — shipment {$shipment->shipment_no} carries " . inv_qty($shipped[$itemId]) . ', ' . inv_qty($alreadyPassed[$itemId] ?? 0) . ' already gate-passed, so only ' . inv_qty(max(0, $left)) . ' can go out now (you entered ' . inv_qty($want) . ').'
+                        : "\"{$name}\" is not on shipment {$shipment->shipment_no}.",
+                ]);
+            }
+        }
     }
 
     private function formOptions(): array

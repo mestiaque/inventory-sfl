@@ -64,6 +64,31 @@ class StockService
         ]);
     }
 
+    /**
+     * Never let an outflow take more than the store holds. $lines: [['item_id' => …, 'qty' => …], …];
+     * the same item on several lines is summed, so splitting a quantity into rows can't get past it.
+     * Throws a ValidationException (field 'items') naming the item, the store and what is left.
+     */
+    public function assertInStock(iterable $lines, int $storeId, string $doing = 'take out'): void
+    {
+        $byItem = [];
+        foreach ($lines as $line) {
+            $byItem[(int) $line['item_id']] = ($byItem[(int) $line['item_id']] ?? 0) + (float) $line['qty'];
+        }
+        $storeName = \ME\SflInventory\Models\InvStore::find($storeId)?->name ?? 'this store';
+        foreach ($byItem as $itemId => $qty) {
+            $available = $this->currentStock($itemId, $storeId);
+            if ($qty > $available + 0.0001) {
+                $item = InvItem::find($itemId);
+                $name = trim(($item?->item_code ?? '') . ' ' . ($item?->item_name ?? ''));
+                throw \Illuminate\Validation\ValidationException::withMessages([
+                    'items' => "\"{$name}\" — you're trying to {$doing} " . inv_qty($qty) . ', but ' . ($available > 0 ? 'only ' . inv_qty($available) . ' is' : 'nothing is')
+                        . " in stock at {$storeName}. Lower the quantity, or receive the goods into this store first.",
+                ]);
+            }
+        }
+    }
+
     public function currentStock(int $itemId, ?int $storeId = null, ?int $colorId = null, ?int $sizeId = null): float
     {
         [$colorId, $sizeId] = $this->lookupVariant($itemId, $colorId, $sizeId);
