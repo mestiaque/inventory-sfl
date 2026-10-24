@@ -14,14 +14,10 @@
             <h4 class="mb-0">Departments</h4>
             <div>
                 @can('inv_department.delete')
-                    <button type="button" class="btn btn-outline-secondary btn-sm" data-toggle="modal" data-target="#departmentTrashModal">
-                        <i class="fa-solid fa-trash"></i> Trash ({{ $trashedDepartments->count() }})
-                    </button>
+                    <button type="button" class="btn btn-outline-secondary btn-sm btn-icon" data-toggle="modal" data-target="#departmentTrashModal" title="Trash"><i class="fa-solid fa-trash"></i> <span class="ui-btn-count">{{ $trashedDepartments->count() }}</span></button>
                 @endcan
                 @can('inv_department.add')
-                    <button type="button" class="btn btn-primary btn-sm" data-toggle="modal" data-target="#createDepartmentModal">
-                        <i class="fa-solid fa-plus"></i> Add Department
-                    </button>
+                    <button type="button" class="btn btn-primary btn-sm btn-icon" data-toggle="modal" data-target="#createDepartmentModal" title="Add Department"><i class="fa-solid fa-plus"></i></button>
                 @endcan
             </div>
         </div>
@@ -38,8 +34,8 @@
                     </select>
                 </div>
                 <div class="col-md-3 mb-2 d-flex align-items-end flex-wrap gap-1">
-                    <button type="submit" class="btn btn-secondary btn-sm">Filter</button>
-                    <a href="{{ route('inventory.departments.index') }}" class="btn btn-light btn-sm">Reset</a>
+                    <button type="submit" class="btn btn-secondary btn-sm btn-icon" title="Filter"><i class="fa-solid fa-filter"></i></button>
+                    <a href="{{ route('inventory.departments.index') }}" class="btn btn-light btn-sm btn-icon" title="Reset"><i class="fa-solid fa-rotate-left"></i></a>
                 </div>
             </form>
 

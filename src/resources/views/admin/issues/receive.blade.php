@@ -12,7 +12,7 @@
     <div class="card">
         <div class="card-header d-flex justify-content-between align-items-center">
             <h4 class="mb-0">Confirm Department Receipt — {{ $issue->issue_no }}</h4>
-            <a href="{{ route('inventory.issues.index') }}" class="btn btn-light btn-sm"><i class="fa-solid fa-arrow-left"></i> Back</a>
+            <a href="{{ route('inventory.issues.index') }}" class="btn btn-light btn-sm btn-icon" title="Back"><i class="fa-solid fa-arrow-left"></i></a>
         </div>
         <div class="card-body">
             <p><strong>Department:</strong> {{ $issue->department?->name }} &nbsp;|&nbsp; <strong>Issue Date:</strong> {{ $issue->issue_date?->format('d M Y') }}</p>

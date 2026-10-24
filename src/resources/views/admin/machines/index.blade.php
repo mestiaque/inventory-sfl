@@ -14,14 +14,10 @@
             <h4 class="mb-0">Machines</h4>
             <div>
                 @can('inv_machine.delete')
-                    <button type="button" class="btn btn-outline-secondary btn-sm" data-toggle="modal" data-target="#machineTrashModal">
-                        <i class="fa-solid fa-trash"></i> Trash ({{ $trashedMachines->count() }})
-                    </button>
+                    <button type="button" class="btn btn-outline-secondary btn-sm btn-icon" data-toggle="modal" data-target="#machineTrashModal" title="Trash"><i class="fa-solid fa-trash"></i> <span class="ui-btn-count">{{ $trashedMachines->count() }}</span></button>
                 @endcan
                 @can('inv_machine.add')
-                    <button type="button" class="btn btn-primary btn-sm" data-toggle="modal" data-target="#createMachineModal">
-                        <i class="fa-solid fa-plus"></i> Add Machine
-                    </button>
+                    <button type="button" class="btn btn-primary btn-sm btn-icon" data-toggle="modal" data-target="#createMachineModal" title="Add Machine"><i class="fa-solid fa-plus"></i></button>
                 @endcan
             </div>
         </div>
@@ -46,8 +42,8 @@
                     </select>
                 </div>
                 <div class="col-md-3 mb-2 d-flex align-items-end flex-wrap gap-1">
-                    <button type="submit" class="btn btn-secondary btn-sm">Filter</button>
-                    <a href="{{ route('inventory.machines.index') }}" class="btn btn-light btn-sm">Reset</a>
+                    <button type="submit" class="btn btn-secondary btn-sm btn-icon" title="Filter"><i class="fa-solid fa-filter"></i></button>
+                    <a href="{{ route('inventory.machines.index') }}" class="btn btn-light btn-sm btn-icon" title="Reset"><i class="fa-solid fa-rotate-left"></i></a>
                 </div>
             </form>
 

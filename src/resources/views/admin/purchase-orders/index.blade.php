@@ -14,9 +14,7 @@
             <h4 class="mb-0">Store Order</h4>
             <div>
                 @can('inv_purchase_order.delete')
-                    <button type="button" class="btn btn-outline-secondary btn-sm" data-toggle="modal" data-target="#poTrashModal">
-                        <i class="fa-solid fa-trash"></i> Trash ({{ $trashedPurchaseOrders->count() }})
-                    </button>
+                    <button type="button" class="btn btn-outline-secondary btn-sm btn-icon" data-toggle="modal" data-target="#poTrashModal" title="Trash"><i class="fa-solid fa-trash"></i> <span class="ui-btn-count">{{ $trashedPurchaseOrders->count() }}</span></button>
                 @endcan
                 @can('inv_purchase_requisition.list')
                     <a href="{{ route('inventory.purchase-requisitions.index') }}" class="btn btn-primary btn-sm"><i class="fa-solid fa-plus"></i> Create from Purchase Requisition</a>
@@ -59,8 +57,8 @@
                     </select>
                 </div>
                 <div class="col-md-3 mb-2 d-flex align-items-end flex-wrap gap-1">
-                    <button type="submit" class="btn btn-secondary btn-sm">Filter</button>
-                    <a href="{{ route('inventory.purchase-orders.index') }}" class="btn btn-light btn-sm">Reset</a>
+                    <button type="submit" class="btn btn-secondary btn-sm btn-icon" title="Filter"><i class="fa-solid fa-filter"></i></button>
+                    <a href="{{ route('inventory.purchase-orders.index') }}" class="btn btn-light btn-sm btn-icon" title="Reset"><i class="fa-solid fa-rotate-left"></i></a>
                 </div>
             </form>
 
@@ -127,7 +125,7 @@
                                     @endcan
                                     @can('inv_grn.add')
                                         @if(in_array($po->status, ['approved', 'received']))
-                                            <a href="{{ route('inventory.grns.create-purchase', ['purchase_order_id' => $po->id]) }}" class="btn btn-sm btn-outline-secondary" title="Receive (GRN)">
+                                            <a href="{{ route('inventory.grns.create-purchase', ['purchase_order_id' => $po->id]) }}" class="btn btn-sm btn-outline-secondary btn-icon" title="Receive (GRN)">
                                                 <i class="fa-solid fa-truck-ramp-box"></i>
                                             </a>
                                         @endif

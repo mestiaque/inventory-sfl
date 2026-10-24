@@ -14,12 +14,10 @@
             <h4 class="mb-0">Internal Stock Transfer</h4>
             <div>
                 @can('inv_transfer.delete')
-                    <button type="button" class="btn btn-outline-secondary btn-sm" data-toggle="modal" data-target="#transferTrashModal">
-                        <i class="fa-solid fa-trash"></i> Trash ({{ $trashedTransfers->count() }})
-                    </button>
+                    <button type="button" class="btn btn-outline-secondary btn-sm btn-icon" data-toggle="modal" data-target="#transferTrashModal" title="Trash"><i class="fa-solid fa-trash"></i> <span class="ui-btn-count">{{ $trashedTransfers->count() }}</span></button>
                 @endcan
                 @can('inv_transfer.add')
-                    <a href="{{ route('inventory.transfers.create') }}" class="btn btn-primary btn-sm"><i class="fa-solid fa-plus"></i> Request Transfer</a>
+                    <a href="{{ route('inventory.transfers.create') }}" class="btn btn-primary btn-sm btn-icon" title="Request Transfer"><i class="fa-solid fa-plus"></i></a>
                 @endcan
             </div>
         </div>
@@ -67,8 +65,8 @@
                     <input type="date" name="date_to" class="form-control form-control-sm" value="{{ request('date_to') }}" placeholder="To">
                 </div>
                 <div class="col-md-3 mb-2 d-flex align-items-end flex-wrap gap-1">
-                    <button type="submit" class="btn btn-secondary btn-sm">Filter</button>
-                    <a href="{{ route('inventory.transfers.index') }}" class="btn btn-light btn-sm">Reset</a>
+                    <button type="submit" class="btn btn-secondary btn-sm btn-icon" title="Filter"><i class="fa-solid fa-filter"></i></button>
+                    <a href="{{ route('inventory.transfers.index') }}" class="btn btn-light btn-sm btn-icon" title="Reset"><i class="fa-solid fa-rotate-left"></i></a>
                 </div>
             </form>
 
@@ -96,11 +94,11 @@
                                         @can('inv_transfer.approve')
                                             <form method="POST" action="{{ route('inventory.transfers.approve', $transfer) }}" class="d-inline">
                                                 @csrf
-                                                <button type="submit" class="btn btn-sm btn-outline-success" onclick="return confirm('Approve and dispatch this transfer?')">Approve</button>
+                                                <button type="submit" class="btn btn-sm btn-outline-success btn-icon" onclick="return confirm('Approve and dispatch this transfer?')" title="Approve"><i class="fa-solid fa-check"></i></button>
                                             </form>
                                             <form method="POST" action="{{ route('inventory.transfers.reject', $transfer) }}" class="d-inline">
                                                 @csrf
-                                                <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Reject this transfer?')">Reject</button>
+                                                <button type="submit" class="btn btn-sm btn-outline-danger btn-icon" onclick="return confirm('Reject this transfer?')" title="Reject"><i class="fa-solid fa-xmark"></i></button>
                                             </form>
                                         @endcan
                                         @can('inv_transfer.edit')

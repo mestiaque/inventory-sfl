@@ -14,14 +14,10 @@
             <h4 class="mb-0">Requisition For</h4>
             <div>
                 @can('inv_requisition_purpose.delete')
-                    <button type="button" class="btn btn-outline-secondary btn-sm" data-toggle="modal" data-target="#purposeTrashModal">
-                        <i class="fa-solid fa-trash"></i> Trash ({{ $trashedPurposes->count() }})
-                    </button>
+                    <button type="button" class="btn btn-outline-secondary btn-sm btn-icon" data-toggle="modal" data-target="#purposeTrashModal" title="Trash"><i class="fa-solid fa-trash"></i> <span class="ui-btn-count">{{ $trashedPurposes->count() }}</span></button>
                 @endcan
                 @can('inv_requisition_purpose.add')
-                    <button type="button" class="btn btn-primary btn-sm" data-toggle="modal" data-target="#createPurposeModal">
-                        <i class="fa-solid fa-plus"></i> Add Option
-                    </button>
+                    <button type="button" class="btn btn-primary btn-sm btn-icon" data-toggle="modal" data-target="#createPurposeModal" title="Add Option"><i class="fa-solid fa-plus"></i></button>
                 @endcan
             </div>
         </div>
@@ -38,8 +34,8 @@
                     </select>
                 </div>
                 <div class="col-md-3 mb-2 d-flex align-items-end flex-wrap gap-1">
-                    <button type="submit" class="btn btn-secondary btn-sm">Filter</button>
-                    <a href="{{ route('inventory.requisition-purposes.index') }}" class="btn btn-light btn-sm">Reset</a>
+                    <button type="submit" class="btn btn-secondary btn-sm btn-icon" title="Filter"><i class="fa-solid fa-filter"></i></button>
+                    <a href="{{ route('inventory.requisition-purposes.index') }}" class="btn btn-light btn-sm btn-icon" title="Reset"><i class="fa-solid fa-rotate-left"></i></a>
                 </div>
             </form>
 

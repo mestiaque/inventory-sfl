@@ -20,10 +20,10 @@
                 @endcan
                 @can('inv_grn.edit')
                     @if($grn->status !== 'rejected')
-                        <a href="{{ route('inventory.grns.edit', $grn) }}" class="btn btn-outline-primary btn-sm"><i class="fa-solid fa-pen"></i> Edit</a>
+                        <a href="{{ route('inventory.grns.edit', $grn) }}" class="btn btn-outline-primary btn-sm btn-icon" title="Edit"><i class="fa-solid fa-pen"></i></a>
                     @endif
                 @endcan
-                <a href="{{ route('inventory.grns.index') }}" class="btn btn-light btn-sm"><i class="fa-solid fa-arrow-left"></i> Back</a>
+                <a href="{{ route('inventory.grns.index') }}" class="btn btn-light btn-sm btn-icon" title="Back"><i class="fa-solid fa-arrow-left"></i></a>
             </div>
         </div>
         <div class="card-body">

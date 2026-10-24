@@ -12,7 +12,7 @@
     <div class="card">
         <div class="card-header d-flex justify-content-between align-items-center">
             <h4 class="mb-0">Add Shipment</h4>
-            <a href="{{ route('inventory.shipments.index') }}" class="btn btn-light btn-sm"><i class="fa-solid fa-arrow-left"></i> Back</a>
+            <a href="{{ route('inventory.shipments.index') }}" class="btn btn-light btn-sm btn-icon" title="Back"><i class="fa-solid fa-arrow-left"></i></a>
         </div>
         <div class="card-body">
             <div class="alert alert-info">This records what's being shipped — no stock moves yet. Once saved, issue a <strong>Gate Pass</strong> against it to actually release the goods.@if($shipmentPos->isNotEmpty()) Pick each line's <strong>PO</strong> so Merchandising counts the shipped qty and value.@endif</div>

@@ -14,9 +14,7 @@
             <h4 class="mb-0">Item Master</h4>
             <div>
                 @can('inv_item.delete')
-                    <button type="button" class="btn btn-outline-secondary btn-sm" data-toggle="modal" data-target="#itemTrashModal">
-                        <i class="fa-solid fa-trash"></i> Trash ({{ $trashedItems->count() }})
-                    </button>
+                    <button type="button" class="btn btn-outline-secondary btn-sm btn-icon" data-toggle="modal" data-target="#itemTrashModal" title="Trash"><i class="fa-solid fa-trash"></i> <span class="ui-btn-count">{{ $trashedItems->count() }}</span></button>
                 @endcan
                 @can('inv_item.export')
                     <a href="{{ route('inventory.items.export', request()->query()) }}" class="btn btn-outline-success btn-sm">
@@ -113,8 +111,8 @@
                     </select>
                 </div>
                 <div class="col-md-3 mb-2 d-flex align-items-end flex-wrap gap-1">
-                    <button type="submit" class="btn btn-secondary btn-sm">Filter</button>
-                    <a href="{{ route('inventory.items.index') }}" class="btn btn-light btn-sm">Reset</a>
+                    <button type="submit" class="btn btn-secondary btn-sm btn-icon" title="Filter"><i class="fa-solid fa-filter"></i></button>
+                    <a href="{{ route('inventory.items.index') }}" class="btn btn-light btn-sm btn-icon" title="Reset"><i class="fa-solid fa-rotate-left"></i></a>
                 </div>
             </form>
 

@@ -15,10 +15,10 @@
             <div class="d-flex align-items-center gap-2">
                 @if($transfer->status === 'pending')
                     @can('inv_transfer.edit')
-                        <a href="{{ route('inventory.transfers.edit', $transfer) }}" class="btn btn-outline-primary btn-sm"><i class="fa-solid fa-pen"></i> Edit</a>
+                        <a href="{{ route('inventory.transfers.edit', $transfer) }}" class="btn btn-outline-primary btn-sm btn-icon" title="Edit"><i class="fa-solid fa-pen"></i></a>
                     @endcan
                 @endif
-                <a href="{{ route('inventory.transfers.index') }}" class="btn btn-light btn-sm"><i class="fa-solid fa-arrow-left"></i> Back</a>
+                <a href="{{ route('inventory.transfers.index') }}" class="btn btn-light btn-sm btn-icon" title="Back"><i class="fa-solid fa-arrow-left"></i></a>
             </div>
         </div>
         <div class="card-body">

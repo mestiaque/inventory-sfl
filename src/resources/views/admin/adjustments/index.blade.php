@@ -14,12 +14,10 @@
             <h4 class="mb-0">Stock Adjustment</h4>
             <div>
                 @can('inv_adjustment.delete')
-                    <button type="button" class="btn btn-outline-secondary btn-sm" data-toggle="modal" data-target="#adjustmentTrashModal">
-                        <i class="fa-solid fa-trash"></i> Trash ({{ $trashedAdjustments->count() }})
-                    </button>
+                    <button type="button" class="btn btn-outline-secondary btn-sm btn-icon" data-toggle="modal" data-target="#adjustmentTrashModal" title="Trash"><i class="fa-solid fa-trash"></i> <span class="ui-btn-count">{{ $trashedAdjustments->count() }}</span></button>
                 @endcan
                 @can('inv_adjustment.add')
-                    <a href="{{ route('inventory.adjustments.create') }}" class="btn btn-primary btn-sm"><i class="fa-solid fa-plus"></i> New Adjustment</a>
+                    <a href="{{ route('inventory.adjustments.create') }}" class="btn btn-primary btn-sm btn-icon" title="New Adjustment"><i class="fa-solid fa-plus"></i></a>
                 @endcan
             </div>
         </div>
@@ -68,8 +66,8 @@
                     <input type="date" name="date_to" class="form-control form-control-sm" value="{{ request('date_to') }}" placeholder="To">
                 </div>
                 <div class="col-md-3 mb-2 d-flex align-items-end flex-wrap gap-1">
-                    <button type="submit" class="btn btn-secondary btn-sm">Filter</button>
-                    <a href="{{ route('inventory.adjustments.index') }}" class="btn btn-light btn-sm">Reset</a>
+                    <button type="submit" class="btn btn-secondary btn-sm btn-icon" title="Filter"><i class="fa-solid fa-filter"></i></button>
+                    <a href="{{ route('inventory.adjustments.index') }}" class="btn btn-light btn-sm btn-icon" title="Reset"><i class="fa-solid fa-rotate-left"></i></a>
                 </div>
             </form>
 
@@ -96,11 +94,11 @@
                                         @can('inv_adjustment.approve')
                                             <form method="POST" action="{{ route('inventory.adjustments.approve', $adjustment) }}" class="d-inline">
                                                 @csrf
-                                                <button type="submit" class="btn btn-sm btn-outline-success" onclick="return confirm('Approve this adjustment and update stock?')">Approve</button>
+                                                <button type="submit" class="btn btn-sm btn-outline-success btn-icon" onclick="return confirm('Approve this adjustment and update stock?')" title="Approve"><i class="fa-solid fa-check"></i></button>
                                             </form>
                                             <form method="POST" action="{{ route('inventory.adjustments.reject', $adjustment) }}" class="d-inline">
                                                 @csrf
-                                                <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Reject this adjustment?')">Reject</button>
+                                                <button type="submit" class="btn btn-sm btn-outline-danger btn-icon" onclick="return confirm('Reject this adjustment?')" title="Reject"><i class="fa-solid fa-xmark"></i></button>
                                             </form>
                                         @endcan
                                     @endif

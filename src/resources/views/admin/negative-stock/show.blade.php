@@ -17,7 +17,7 @@
     <div class="card mb-3">
         <div class="card-header d-flex justify-content-between align-items-center">
             <h4 class="mb-0">Negative Stock Fix</h4>
-            <a href="{{ route('inventory.negative-stock.index') }}" class="btn btn-light btn-sm">&larr; Back to list</a>
+            <a href="{{ route('inventory.negative-stock.index') }}" class="btn btn-light btn-sm btn-icon" title="Back"><i class="fa-solid fa-arrow-left"></i></a>
         </div>
         <div class="card-body">
             <div class="row">

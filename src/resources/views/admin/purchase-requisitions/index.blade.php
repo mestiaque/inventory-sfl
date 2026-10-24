@@ -14,12 +14,10 @@
             <h4 class="mb-0">Purchase Requisitions</h4>
             <div>
                 @can('inv_purchase_requisition.delete')
-                    <button type="button" class="btn btn-outline-secondary btn-sm" data-toggle="modal" data-target="#purchaseRequisitionTrashModal">
-                        <i class="fa-solid fa-trash"></i> Trash ({{ $trashedPurchaseRequisitions->count() }})
-                    </button>
+                    <button type="button" class="btn btn-outline-secondary btn-sm btn-icon" data-toggle="modal" data-target="#purchaseRequisitionTrashModal" title="Trash"><i class="fa-solid fa-trash"></i> <span class="ui-btn-count">{{ $trashedPurchaseRequisitions->count() }}</span></button>
                 @endcan
                 @can('inv_purchase_requisition.add')
-                    <a href="{{ route('inventory.purchase-requisitions.create') }}" class="btn btn-primary btn-sm"><i class="fa-solid fa-plus"></i> Add Purchase Requisition</a>
+                    <a href="{{ route('inventory.purchase-requisitions.create') }}" class="btn btn-primary btn-sm btn-icon" title="Add Purchase Requisition"><i class="fa-solid fa-plus"></i></a>
                 @endcan
             </div>
         </div>
@@ -59,8 +57,8 @@
                     <input type="date" name="date_to" class="form-control form-control-sm" value="{{ request('date_to') }}" placeholder="To">
                 </div>
                 <div class="col-md-3 mb-2 d-flex align-items-end flex-wrap gap-1">
-                    <button type="submit" class="btn btn-secondary btn-sm">Filter</button>
-                    <a href="{{ route('inventory.purchase-requisitions.index') }}" class="btn btn-light btn-sm">Reset</a>
+                    <button type="submit" class="btn btn-secondary btn-sm btn-icon" title="Filter"><i class="fa-solid fa-filter"></i></button>
+                    <a href="{{ route('inventory.purchase-requisitions.index') }}" class="btn btn-light btn-sm btn-icon" title="Reset"><i class="fa-solid fa-rotate-left"></i></a>
                 </div>
             </form>
 
@@ -91,7 +89,7 @@
                                             <a href="{{ route('inventory.purchase-requisitions.edit', $purchaseRequisition) }}" class="btn-custom yellow"><i class="fa-solid fa-pen"></i></a>
                                         @endcan
                                         @can('inv_purchase_requisition.approve')
-                                            <a href="{{ route('inventory.purchase-requisitions.approval-form', $purchaseRequisition) }}" class="btn btn-sm btn-outline-success">Approve/Reject</a>
+                                            <a href="{{ route('inventory.purchase-requisitions.approval-form', $purchaseRequisition) }}" class="btn btn-sm btn-outline-success btn-icon" title="Approve / Reject"><i class="fa-solid fa-gavel"></i></a>
                                         @endcan
                                         @can('inv_purchase_requisition.delete')
                                             <button type="button" class="btn-custom danger" data-toggle="modal" data-target="#deletePreqModal" data-action="{{ route('inventory.purchase-requisitions.destroy', $purchaseRequisition) }}"><i class="fa-solid fa-trash"></i></button>

@@ -17,9 +17,7 @@
                 <a href="{{ route('inventory.broken-needles.report') }}" class="btn btn-outline-info btn-sm"><i class="fa-solid fa-chart-column"></i> Monthly Report</a>
                 <a href="{{ route('inventory.broken-needles.machine-report') }}" class="btn btn-outline-info btn-sm"><i class="fa-solid fa-industry"></i> Machine Report</a>
                 @can('inv_broken_needle.delete')
-                    <button type="button" class="btn btn-outline-secondary btn-sm" data-toggle="modal" data-target="#brokenNeedleTrashModal">
-                        <i class="fa-solid fa-trash"></i> Trash ({{ $trashedEntries->count() }})
-                    </button>
+                    <button type="button" class="btn btn-outline-secondary btn-sm btn-icon" data-toggle="modal" data-target="#brokenNeedleTrashModal" title="Trash"><i class="fa-solid fa-trash"></i> <span class="ui-btn-count">{{ $trashedEntries->count() }}</span></button>
                 @endcan
                 @can('inv_broken_needle.add')
                     <button type="button" class="btn btn-primary btn-sm" data-toggle="modal" data-target="#createBrokenNeedleModal">
@@ -72,8 +70,8 @@
                     <input type="date" name="date_to" class="form-control form-control-sm" value="{{ request('date_to') }}" placeholder="To">
                 </div>
                 <div class="col-md-3 mb-2 d-flex align-items-end flex-wrap gap-1">
-                    <button type="submit" class="btn btn-secondary btn-sm">Filter</button>
-                    <a href="{{ route('inventory.broken-needles.index') }}" class="btn btn-light btn-sm">Reset</a>
+                    <button type="submit" class="btn btn-secondary btn-sm btn-icon" title="Filter"><i class="fa-solid fa-filter"></i></button>
+                    <a href="{{ route('inventory.broken-needles.index') }}" class="btn btn-light btn-sm btn-icon" title="Reset"><i class="fa-solid fa-rotate-left"></i></a>
                 </div>
             </form>
 

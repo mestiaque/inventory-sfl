@@ -14,14 +14,10 @@
             <h4 class="mb-0">Item Categories</h4>
             <div>
                 @can('inv_item_category.delete')
-                    <button type="button" class="btn btn-outline-secondary btn-sm" data-toggle="modal" data-target="#categoryTrashModal">
-                        <i class="fa-solid fa-trash"></i> Trash ({{ $trashedCategories->count() }})
-                    </button>
+                    <button type="button" class="btn btn-outline-secondary btn-sm btn-icon" data-toggle="modal" data-target="#categoryTrashModal" title="Trash"><i class="fa-solid fa-trash"></i> <span class="ui-btn-count">{{ $trashedCategories->count() }}</span></button>
                 @endcan
                 @can('inv_item_category.add')
-                    <button type="button" class="btn btn-primary btn-sm" data-toggle="modal" data-target="#createCategoryModal">
-                        <i class="fa-solid fa-plus"></i> Add Category
-                    </button>
+                    <button type="button" class="btn btn-primary btn-sm btn-icon" data-toggle="modal" data-target="#createCategoryModal" title="Add Category"><i class="fa-solid fa-plus"></i></button>
                 @endcan
             </div>
         </div>
@@ -46,8 +42,8 @@
                     </select>
                 </div>
                 <div class="col-md-3 mb-2 d-flex align-items-end flex-wrap gap-1">
-                    <button type="submit" class="btn btn-secondary btn-sm">Filter</button>
-                    <a href="{{ route('inventory.item-categories.index') }}" class="btn btn-light btn-sm">Reset</a>
+                    <button type="submit" class="btn btn-secondary btn-sm btn-icon" title="Filter"><i class="fa-solid fa-filter"></i></button>
+                    <a href="{{ route('inventory.item-categories.index') }}" class="btn btn-light btn-sm btn-icon" title="Reset"><i class="fa-solid fa-rotate-left"></i></a>
                 </div>
             </form>
 
