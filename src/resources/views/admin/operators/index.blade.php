@@ -5,7 +5,7 @@
 @endsection
 
 @section('contents')
-<div class="flex-grow-1 p-4 inv-module">
+<div class="flex-grow-1 inv-module">
     @include('sfl-inventory::admin.partials.alerts')
     @include('sfl-inventory::admin.partials.ui-kit')
 
