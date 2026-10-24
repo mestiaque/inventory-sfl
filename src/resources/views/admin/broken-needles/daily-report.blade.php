@@ -81,6 +81,7 @@
 
     <div class="needle-sheet">
         <div class="needle-sheet-header">
+            @if(report_logo_url() && ! request()->boolean('excel_export'))<img src="{{ report_logo_url() }}" alt="Logo" style="display:block;height:50px;max-width:160px;object-fit:contain;margin:0 auto 4px;">@endif
             <div class="company-name">{{ config('sfl-inventory.company.name') }}</div>
             @if(config('sfl-inventory.company.address'))
                 <div class="company-address">{{ config('sfl-inventory.company.address') }}</div>

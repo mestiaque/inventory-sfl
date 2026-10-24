@@ -27,6 +27,7 @@
 
 @section('contents')
 <div class="req-title">
+    @if(report_logo_url())<img src="{{ report_logo_url() }}" alt="Logo" style="display:block;height:50px;max-width:160px;object-fit:contain;margin:0 auto 4px;">@endif
     <h2>{{ strtoupper(config('sfl-inventory.company.name')) }}</h2>
     <div class="sub">{{ strtoupper(config('sfl-inventory.company.address') ?: 'KATHGORA, ASHULIA, SAVAR, DHAKA') }}</div>
     <div class="form-title">REQUISITION FORM</div>

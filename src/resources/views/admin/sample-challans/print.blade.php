@@ -29,6 +29,7 @@
 @section('contents')
 <div class="sc-frame">
     <div class="sc-head">
+        @if(report_logo_url())<img src="{{ report_logo_url() }}" alt="Logo" style="display:block;height:50px;max-width:160px;object-fit:contain;margin:0 auto 4px;">@endif
         <div class="sc-name">{{ strtoupper(config('sfl-inventory.company.name')) }}</div>
         <div class="sc-addr">{{ strtoupper(config('sfl-inventory.company.address')) }}</div>
     </div>
