@@ -10,21 +10,25 @@ return new class extends Migration
     {
         Schema::create('inv_sample_challans', function (Blueprint $table) {
             $table->id();
-            $table->string('challan_no', 50)->unique();
+            $table->string('challan_no', 50);
             $table->date('challan_date');
-            $table->foreignId('store_id')->nullable()->constrained('inv_stores')->nullOnDelete();
-            // Merchandising v2 buyer — soft reference, no FK (see
-            // 2026_10_04_000001_link_inventory_documents_to_merchandising_v2).
-            $table->unsignedBigInteger('msfl_buyer_id')->nullable()->index();
-            // Receiver block — defaults from the buyer but overridable (e.g. a
-            // specific buying-house contact that isn't the buyer record itself).
+            $table->unsignedBigInteger('store_id')->nullable();
+            $table->unsignedBigInteger('msfl_buyer_id')->nullable();
+            $table->unsignedBigInteger('msfl_sample_type_id')->nullable();
+            $table->string('sample_type_name', 50)->nullable();
             $table->string('to_name')->nullable();
             $table->text('to_address')->nullable();
             $table->string('to_contact', 100)->nullable();
             $table->text('remarks')->nullable();
-            $table->foreignId('issued_by')->nullable()->constrained('users')->nullOnDelete();
+            $table->unsignedBigInteger('issued_by')->nullable();
             $table->timestamps();
             $table->softDeletes();
+            $table->unique('challan_no');
+            $table->index('msfl_buyer_id');
+            $table->index('msfl_sample_type_id');
+
+            $table->foreign('issued_by')->references('id')->on('users')->nullOnDelete();
+            $table->foreign('store_id')->references('id')->on('inv_stores')->nullOnDelete();
         });
     }
 

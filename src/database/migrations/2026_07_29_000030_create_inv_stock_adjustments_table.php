@@ -10,17 +10,22 @@ return new class extends Migration
     {
         Schema::create('inv_stock_adjustments', function (Blueprint $table) {
             $table->id();
-            $table->string('adjustment_no')->unique();
-            $table->foreignId('store_id')->constrained('inv_stores')->restrictOnDelete();
+            $table->string('adjustment_no');
+            $table->unsignedBigInteger('store_id');
             $table->date('adjustment_date');
             $table->enum('type', ['damage', 'lost', 'excess', 'physical_count'])->default('physical_count');
-            $table->enum('status', ['pending', 'approved'])->default('pending');
+            $table->enum('status', ['pending', 'approved', 'rejected'])->default('pending');
             $table->text('remarks')->nullable();
-            $table->foreignId('approved_by')->nullable()->constrained('users')->nullOnDelete();
+            $table->unsignedBigInteger('approved_by')->nullable();
             $table->timestamp('approved_at')->nullable();
-            $table->foreignId('created_by')->nullable()->constrained('users')->nullOnDelete();
+            $table->unsignedBigInteger('created_by')->nullable();
             $table->timestamps();
             $table->softDeletes();
+            $table->unique('adjustment_no');
+
+            $table->foreign('approved_by')->references('id')->on('users')->nullOnDelete();
+            $table->foreign('created_by')->references('id')->on('users')->nullOnDelete();
+            $table->foreign('store_id')->references('id')->on('inv_stores')->restrictOnDelete();
         });
     }
 

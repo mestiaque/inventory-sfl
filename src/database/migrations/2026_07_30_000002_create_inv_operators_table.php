@@ -11,16 +11,21 @@ return new class extends Migration
         Schema::create('inv_operators', function (Blueprint $table) {
             $table->id();
             $table->string('name');
-            $table->string('code')->unique();
-            // operator: sees only their own created records.
-            // store_incharge / store_manager: sees every record for their assigned store.
+            $table->string('code');
             $table->enum('designation', ['operator', 'store_incharge', 'store_manager'])->default('operator');
-            $table->foreignId('user_id')->unique()->constrained('users')->cascadeOnDelete();
-            $table->foreignId('store_id')->nullable()->constrained('inv_stores')->nullOnDelete();
+            $table->unsignedBigInteger('user_id');
+            $table->unsignedBigInteger('employee_id')->nullable();
+            $table->unsignedBigInteger('store_id')->nullable();
             $table->boolean('is_active')->default(true);
-            $table->foreignId('created_by')->nullable()->constrained('users')->nullOnDelete();
+            $table->unsignedBigInteger('created_by')->nullable();
             $table->timestamps();
             $table->softDeletes();
+            $table->unique('code');
+            $table->unique('user_id');
+
+            $table->foreign('created_by')->references('id')->on('users')->nullOnDelete();
+            $table->foreign('store_id')->references('id')->on('inv_stores')->nullOnDelete();
+            $table->foreign('user_id')->references('id')->on('users')->cascadeOnDelete();
         });
     }
 

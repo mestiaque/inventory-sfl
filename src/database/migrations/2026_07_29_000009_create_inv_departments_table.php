@@ -11,12 +11,16 @@ return new class extends Migration
         Schema::create('inv_departments', function (Blueprint $table) {
             $table->id();
             $table->string('name');
-            $table->string('code')->unique();
-            $table->foreignId('default_store_id')->nullable()->constrained('inv_stores')->nullOnDelete();
+            $table->string('code');
+            $table->unsignedBigInteger('default_store_id')->nullable();
             $table->boolean('is_active')->default(true);
-            $table->foreignId('created_by')->nullable()->constrained('users')->nullOnDelete();
+            $table->unsignedBigInteger('created_by')->nullable();
             $table->timestamps();
             $table->softDeletes();
+            $table->unique('code');
+
+            $table->foreign('created_by')->references('id')->on('users')->nullOnDelete();
+            $table->foreign('default_store_id')->references('id')->on('inv_stores')->nullOnDelete();
         });
     }
 

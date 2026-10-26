@@ -10,11 +10,15 @@ return new class extends Migration
     {
         Schema::create('inv_gate_pass_items', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('gate_pass_id')->constrained('inv_gate_passes')->cascadeOnDelete();
-            $table->foreignId('item_id')->constrained('inv_items')->restrictOnDelete();
+            $table->unsignedBigInteger('gate_pass_id');
+            $table->unsignedBigInteger('item_id');
             $table->decimal('quantity', 15, 4);
+            $table->unsignedInteger('carton_qty')->nullable();
             $table->text('remarks')->nullable();
             $table->timestamps();
+
+            $table->foreign('gate_pass_id')->references('id')->on('inv_gate_passes')->cascadeOnDelete();
+            $table->foreign('item_id')->references('id')->on('inv_items')->restrictOnDelete();
         });
     }
 

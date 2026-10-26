@@ -7,11 +7,6 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * "Requisition For" master (Fabrics, Accessories, …) — was a fixed list in
-     * the code. inv_requisitions.requisition_for keeps storing the purpose's
-     * `code`, so the five codes it already used are seeded here unchanged.
-     */
     public function up(): void
     {
         Schema::create('inv_requisition_purposes', function (Blueprint $table) {

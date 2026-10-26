@@ -10,18 +10,24 @@ return new class extends Migration
     {
         Schema::create('inv_gate_passes', function (Blueprint $table) {
             $table->id();
-            $table->string('gate_pass_no')->unique();
+            $table->unsignedBigInteger('shipment_id')->nullable();
+            $table->string('gate_pass_no');
             $table->date('gate_pass_date');
-            $table->foreignId('buyer_id')->nullable()->constrained('inv_buyers')->restrictOnDelete();
+            $table->unsignedBigInteger('buyer_id')->nullable();
             $table->string('vehicle_no')->nullable();
             $table->string('driver_name')->nullable();
             $table->string('driver_contact')->nullable();
-            $table->foreignId('store_id')->constrained('inv_stores')->restrictOnDelete();
+            $table->unsignedBigInteger('store_id');
             $table->enum('status', ['pending', 'issued', 'cancelled'])->default('pending');
             $table->text('remarks')->nullable();
-            $table->foreignId('created_by')->nullable()->constrained('users')->nullOnDelete();
+            $table->unsignedBigInteger('created_by')->nullable();
             $table->timestamps();
             $table->softDeletes();
+            $table->unique('gate_pass_no');
+
+            $table->foreign('buyer_id')->references('id')->on('inv_buyers')->restrictOnDelete();
+            $table->foreign('created_by')->references('id')->on('users')->nullOnDelete();
+            $table->foreign('store_id')->references('id')->on('inv_stores')->restrictOnDelete();
         });
     }
 

@@ -10,11 +10,16 @@ return new class extends Migration
     {
         Schema::create('inv_shipment_items', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('shipment_id')->constrained('inv_shipments')->cascadeOnDelete();
-            $table->foreignId('item_id')->constrained('inv_items')->restrictOnDelete();
+            $table->unsignedBigInteger('shipment_id');
+            $table->unsignedBigInteger('item_id');
+            $table->unsignedBigInteger('msfl_order_po_id')->nullable();
             $table->decimal('quantity', 15, 4);
             $table->text('remarks')->nullable();
             $table->timestamps();
+            $table->index('msfl_order_po_id');
+
+            $table->foreign('item_id')->references('id')->on('inv_items')->restrictOnDelete();
+            $table->foreign('shipment_id')->references('id')->on('inv_shipments')->cascadeOnDelete();
         });
     }
 

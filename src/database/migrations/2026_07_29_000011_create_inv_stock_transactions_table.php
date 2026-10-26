@@ -6,36 +6,37 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * The stock ledger — the single source of truth for inventory. Insert-only
-     * (see ME\SflInventory\Models\InvStockTransaction, which overrides
-     * update()/delete() to throw). Current/reserved/available stock and stock
-     * value are always computed from this table by
-     * ME\SflInventory\Services\StockService — never stored on inv_items.
-     */
     public function up(): void
     {
         Schema::create('inv_stock_transactions', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('item_id')->constrained('inv_items')->restrictOnDelete();
-            $table->foreignId('store_id')->constrained('inv_stores')->restrictOnDelete();
+            $table->unsignedBigInteger('item_id');
+            $table->unsignedBigInteger('color_id')->nullable();
+            $table->unsignedBigInteger('size_id')->nullable();
+            $table->unsignedBigInteger('store_id');
             $table->date('transaction_date');
-            // opening | grn | issue | transfer | production_consumption | finished_goods | gate_pass | shipment | adjustment
             $table->string('transaction_type');
-            $table->decimal('qty_in', 15, 4)->default(0);
-            $table->decimal('qty_out', 15, 4)->default(0);
-            $table->decimal('rate', 15, 2)->default(0);
-            $table->decimal('value', 15, 2)->default(0);
+            $table->decimal('qty_in', 15, 4)->default(0.0000);
+            $table->decimal('qty_out', 15, 4)->default(0.0000);
+            $table->decimal('rate', 15, 2)->default(0.00);
+            $table->decimal('value', 15, 2)->default(0.00);
             $table->string('reference_type')->nullable();
             $table->unsignedBigInteger('reference_id')->nullable();
-            $table->foreignId('department_id')->nullable()->constrained('inv_departments')->nullOnDelete();
+            $table->unsignedBigInteger('department_id')->nullable();
             $table->text('remarks')->nullable();
-            $table->foreignId('created_by')->nullable()->constrained('users')->nullOnDelete();
+            $table->unsignedBigInteger('created_by')->nullable();
             $table->timestamps();
-
+            $table->index('transaction_type');
             $table->index(['item_id', 'store_id', 'transaction_date'], 'inv_stock_txn_item_store_date_idx');
             $table->index(['reference_type', 'reference_id'], 'inv_stock_txn_reference_idx');
-            $table->index('transaction_type');
+            $table->index(['item_id', 'store_id', 'color_id', 'size_id', 'transaction_date'], 'inv_stock_txn_variant_idx');
+
+            $table->foreign('color_id')->references('id')->on('inv_colors')->nullOnDelete();
+            $table->foreign('created_by')->references('id')->on('users')->nullOnDelete();
+            $table->foreign('department_id')->references('id')->on('inv_departments')->nullOnDelete();
+            $table->foreign('item_id')->references('id')->on('inv_items')->restrictOnDelete();
+            $table->foreign('size_id')->references('id')->on('inv_sizes')->nullOnDelete();
+            $table->foreign('store_id')->references('id')->on('inv_stores')->restrictOnDelete();
         });
     }
 

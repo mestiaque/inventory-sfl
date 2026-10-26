@@ -11,17 +11,24 @@ return new class extends Migration
         Schema::create('inv_suppliers', function (Blueprint $table) {
             $table->id();
             $table->string('name');
-            $table->string('code')->unique();
+            $table->string('code');
             $table->string('address')->nullable();
             $table->string('contact_person')->nullable();
+            $table->string('products_supplied')->nullable();
+            $table->unsignedSmallInteger('relation_since_year')->nullable();
             $table->string('phone')->nullable();
             $table->string('email')->nullable();
             $table->string('tin_vat')->nullable();
+            $table->unsignedTinyInteger('price_rating')->nullable();
+            $table->unsignedTinyInteger('quality_rating')->nullable();
             $table->text('remarks')->nullable();
             $table->boolean('is_active')->default(true);
-            $table->foreignId('created_by')->nullable()->constrained('users')->nullOnDelete();
+            $table->unsignedBigInteger('created_by')->nullable();
             $table->timestamps();
             $table->softDeletes();
+            $table->unique('code');
+
+            $table->foreign('created_by')->references('id')->on('users')->nullOnDelete();
         });
     }
 

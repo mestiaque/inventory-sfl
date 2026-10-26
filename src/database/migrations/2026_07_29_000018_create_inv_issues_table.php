@@ -10,25 +10,46 @@ return new class extends Migration
     {
         Schema::create('inv_issues', function (Blueprint $table) {
             $table->id();
-            $table->string('issue_no')->unique();
-            $table->foreignId('requisition_id')->nullable()->constrained('inv_requisitions')->nullOnDelete();
-            $table->foreignId('store_id')->constrained('inv_stores')->restrictOnDelete();
-            // Optional destination floor store (Cutting/Sewing/Finishing) — see
-            // InvIssueObserver: issuing to a floor department posts a paired
-            // qty_out(store_id)/qty_in(to_store_id) so Production Consumption
-            // has a real balance to draw down.
-            $table->foreignId('to_store_id')->nullable()->constrained('inv_stores')->nullOnDelete();
-            $table->foreignId('department_id')->constrained('inv_departments')->restrictOnDelete();
+            $table->string('issue_no');
+            $table->unsignedBigInteger('requisition_id')->nullable();
+            $table->unsignedBigInteger('store_id');
+            $table->unsignedBigInteger('to_store_id')->nullable();
+            $table->unsignedBigInteger('department_id');
+            $table->enum('status', ['pending', 'authorized', 'approved'])->default('pending');
+            $table->unsignedBigInteger('buyer_id')->nullable();
+            $table->string('style')->nullable();
+            $table->string('order_ref')->nullable();
             $table->date('issue_date');
-            $table->foreignId('issued_by')->nullable()->constrained('users')->nullOnDelete();
-            $table->foreignId('department_received_by')->nullable()->constrained('users')->nullOnDelete();
+            $table->unsignedBigInteger('issued_by')->nullable();
+            $table->unsignedBigInteger('authorized_by')->nullable();
+            $table->timestamp('authorized_at')->nullable();
+            $table->unsignedBigInteger('approved_by')->nullable();
+            $table->timestamp('approved_at')->nullable();
+            $table->unsignedBigInteger('department_received_by')->nullable();
             $table->timestamp('department_received_at')->nullable();
             $table->enum('department_receive_status', ['pending', 'partial', 'full'])->default('pending');
             $table->text('department_receive_remarks')->nullable();
             $table->text('remarks')->nullable();
-            $table->foreignId('created_by')->nullable()->constrained('users')->nullOnDelete();
+            $table->unsignedBigInteger('created_by')->nullable();
             $table->timestamps();
             $table->softDeletes();
+            $table->unsignedBigInteger('msfl_style_id')->nullable();
+            $table->unsignedBigInteger('msfl_order_po_id')->nullable();
+            $table->unsignedBigInteger('msfl_buyer_id')->nullable();
+            $table->unique('issue_no');
+            $table->index('msfl_order_po_id');
+            $table->index('msfl_style_id');
+
+            $table->foreign('approved_by')->references('id')->on('users')->nullOnDelete();
+            $table->foreign('authorized_by')->references('id')->on('users')->nullOnDelete();
+            $table->foreign('buyer_id')->references('id')->on('inv_buyers')->nullOnDelete();
+            $table->foreign('created_by')->references('id')->on('users')->nullOnDelete();
+            $table->foreign('department_id')->references('id')->on('inv_departments')->restrictOnDelete();
+            $table->foreign('department_received_by')->references('id')->on('users')->nullOnDelete();
+            $table->foreign('issued_by')->references('id')->on('users')->nullOnDelete();
+            $table->foreign('requisition_id')->references('id')->on('inv_requisitions')->nullOnDelete();
+            $table->foreign('store_id')->references('id')->on('inv_stores')->restrictOnDelete();
+            $table->foreign('to_store_id')->references('id')->on('inv_stores')->nullOnDelete();
         });
     }
 

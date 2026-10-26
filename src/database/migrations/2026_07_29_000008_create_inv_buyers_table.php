@@ -11,13 +11,16 @@ return new class extends Migration
         Schema::create('inv_buyers', function (Blueprint $table) {
             $table->id();
             $table->string('name');
-            $table->string('code')->unique();
+            $table->string('code');
             $table->string('address')->nullable();
             $table->string('contact')->nullable();
             $table->boolean('is_active')->default(true);
-            $table->foreignId('created_by')->nullable()->constrained('users')->nullOnDelete();
+            $table->unsignedBigInteger('created_by')->nullable();
             $table->timestamps();
             $table->softDeletes();
+            $table->unique('code');
+
+            $table->foreign('created_by')->references('id')->on('users')->nullOnDelete();
         });
     }
 
