@@ -14,10 +14,10 @@
             <h4 class="mb-0">Production Consumption</h4>
             <div>
                 @can('inv_production.delete')
-                    <button type="button" class="btn btn-outline-secondary btn-sm btn-icon" data-toggle="modal" data-target="#consumptionTrashModal" title="Trash"><i class="fa-solid fa-trash"></i> <span class="ui-btn-count">{{ $trashedConsumptions->count() }}</span></button>
+                    <button type="button" class="btn btn-sm ui-act ui-act-delete" data-toggle="modal" data-target="#consumptionTrashModal" title="Trash"><i class="fa-solid fa-trash"></i> Trash<span class="ui-btn-count">{{ $trashedConsumptions->count() }}</span></button>
                 @endcan
                 @can('inv_production.add')
-                    <a href="{{ route('inventory.production-consumptions.create') }}" class="btn btn-primary btn-sm btn-icon" title="Add Consumption"><i class="fa-solid fa-plus"></i></a>
+                    <a href="{{ route('inventory.production-consumptions.create') }}" class="btn btn-sm ui-act ui-act-create" title="Add Consumption"><i class="fa-solid fa-plus"></i> Add Consumption</a>
                 @endcan
             </div>
         </div>
@@ -57,8 +57,8 @@
                     <input type="date" name="date_to" class="form-control form-control-sm" value="{{ request('date_to') }}" placeholder="To">
                 </div>
                 <div class="col-md-3 mb-2 d-flex align-items-end flex-wrap gap-1">
-                    <button type="submit" class="btn btn-secondary btn-sm btn-icon" title="Filter"><i class="fa-solid fa-filter"></i></button>
-                    <a href="{{ route('inventory.production-consumptions.index') }}" class="btn btn-light btn-sm btn-icon" title="Reset"><i class="fa-solid fa-rotate-left"></i></a>
+                    <button type="submit" class="btn btn-sm ui-act ui-act-filter" title="Filter"><i class="fa-solid fa-filter"></i> Filter</button>
+                    <a href="{{ route('inventory.production-consumptions.index') }}" class="btn btn-sm ui-act ui-act-reset" title="Reset"><i class="fa-solid fa-rotate-left"></i> Reset</a>
                 </div>
             </form>
 
@@ -78,9 +78,9 @@
                                 <td>{{ $consumption->order_ref }}</td>
                                 <td>{{ $consumption->consumption_date?->format('d M Y') }}</td>
                                 <td class="text-right">
-                                    <button type="button" class="btn-custom success" data-toggle="modal" data-target="#viewConsModal{{ $consumption->id }}"><i class="fa-solid fa-eye"></i></button>
+                                    <button type="button" class="btn-custom ui-act ui-act-view" data-toggle="modal" data-target="#viewConsModal{{ $consumption->id }}" title="View"><i class="fa-solid fa-eye"></i></button>
                                     @can('inv_production.delete')
-                                        <button type="button" class="btn-custom danger" data-toggle="modal" data-target="#deleteConsModal" data-action="{{ route('inventory.production-consumptions.destroy', $consumption) }}"><i class="fa-solid fa-trash"></i></button>
+                                        <button type="button" class="btn-custom ui-act ui-act-delete" data-toggle="modal" data-target="#deleteConsModal" data-action="{{ route('inventory.production-consumptions.destroy', $consumption) }}" title="Delete"><i class="fa-solid fa-trash"></i></button>
                                     @endcan
                                 </td>
                             </tr>
@@ -150,7 +150,7 @@
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-light btn-sm" data-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-sm ui-act ui-act-cancel" data-dismiss="modal" title="Close"><i class="fa-solid fa-ban"></i> Close</button>
                 </div>
             </div>
         </div>

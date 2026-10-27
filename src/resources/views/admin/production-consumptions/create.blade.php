@@ -12,7 +12,7 @@
     <div class="card">
         <div class="card-header d-flex justify-content-between align-items-center">
             <h4 class="mb-0">Add Production Consumption</h4>
-            <a href="{{ route('inventory.production-consumptions.index') }}" class="btn btn-light btn-sm btn-icon" title="Back"><i class="fa-solid fa-arrow-left"></i></a>
+            <a href="{{ route('inventory.production-consumptions.index') }}" class="btn btn-sm ui-act ui-act-back" title="Back"><i class="fa-solid fa-arrow-left"></i> Back</a>
         </div>
         <div class="card-body">
             <form method="POST" action="{{ route('inventory.production-consumptions.store') }}">
@@ -62,7 +62,7 @@
                 <hr>
                 <div class="d-flex justify-content-between align-items-center mb-2">
                     <h6 class="mb-0">Items</h6>
-                    <button type="button" class="btn btn-sm btn-outline-primary" data-line-items-add="pc"><i class="fa-solid fa-plus"></i> Add Row</button>
+                    <button type="button" class="btn btn-sm ui-act ui-act-create" data-line-items-add="pc" title="Add Row"><i class="fa-solid fa-plus"></i> Add Row</button>
                 </div>
                 <div class="table-responsive">
                     <table class="table table-bordered table-sm align-middle">
@@ -79,7 +79,7 @@
                                 </td>
                                 <td><input type="number" step="0.0001" min="0" name="items[0][consumed_qty]" class="form-control form-control-sm" required></td>
                                 <td><input type="number" step="0.0001" min="0" name="items[0][waste_qty]" class="form-control form-control-sm" value="0"></td>
-                                <td><button type="button" class="btn-custom danger" data-line-items-remove><i class="fa-solid fa-xmark"></i></button></td>
+                                <td><button type="button" class="btn-custom ui-act ui-act-delete" data-line-items-remove title="Delete"><i class="fa-solid fa-trash"></i></button></td>
                             </tr>
                         </tbody>
                     </table>
@@ -97,12 +97,12 @@
                         </td>
                         <td><input type="number" step="0.0001" min="0" name="items[__INDEX__][consumed_qty]" class="form-control form-control-sm" required></td>
                         <td><input type="number" step="0.0001" min="0" name="items[__INDEX__][waste_qty]" class="form-control form-control-sm" value="0"></td>
-                        <td><button type="button" class="btn-custom danger" data-line-items-remove><i class="fa-solid fa-xmark"></i></button></td>
+                        <td><button type="button" class="btn-custom ui-act ui-act-delete" data-line-items-remove title="Delete"><i class="fa-solid fa-trash"></i></button></td>
                     </tr>
                 </template>
 
-                <button type="submit" class="btn btn-primary mt-3 btn-sm">Post Consumption &amp; Update Stock</button>
-                <a href="{{ route('inventory.production-consumptions.index') }}" class="btn btn-light mt-3 btn-sm">Cancel</a>
+                <button type="submit" class="btn mt-3 btn-sm ui-act ui-act-save" title="Post Consumption & Update Stock"><i class="fa-solid fa-floppy-disk"></i> Post Consumption &amp; Update Stock</button>
+                <a href="{{ route('inventory.production-consumptions.index') }}" class="btn mt-3 btn-sm ui-act ui-act-cancel" title="Cancel"><i class="fa-solid fa-ban"></i> Cancel</a>
             </form>
         </div>
     </div>

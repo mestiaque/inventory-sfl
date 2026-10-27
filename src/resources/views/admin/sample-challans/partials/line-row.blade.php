@@ -21,5 +21,5 @@
     <td style="width:110px"><input type="number" step="1" min="0" name="items[{{ $index }}][pp_sample_qty]" class="form-control form-control-sm text-right" value="{{ $line['pp_sample_qty'] ?? '' }}"></td>
     <td style="width:90px"><input type="text" name="items[{{ $index }}][unit]" class="form-control form-control-sm" value="{{ $line['unit'] ?? 'Pcs' }}"></td>
     <td style="min-width:160px"><input type="text" name="items[{{ $index }}][remarks]" class="form-control form-control-sm" value="{{ $line['remarks'] ?? '' }}" placeholder="e.g. P.P Sample"></td>
-    <td style="width:40px"><button type="button" class="btn-custom danger" data-line-items-remove><i class="fa-solid fa-xmark"></i></button></td>
+    <td style="width:40px"><button type="button" class="btn-custom ui-act ui-act-delete" data-line-items-remove title="Delete"><i class="fa-solid fa-trash"></i></button></td>
 </tr>

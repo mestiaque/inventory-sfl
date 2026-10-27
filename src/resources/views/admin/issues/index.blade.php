@@ -68,8 +68,8 @@
                     </select>
                 </div>
                 <div class="col-md-3 mb-2 d-flex align-items-end flex-wrap gap-1">
-                    <button type="submit" class="btn btn-secondary btn-sm btn-icon" title="Filter"><i class="fa-solid fa-filter"></i></button>
-                    <a href="{{ route('inventory.issues.index') }}" class="btn btn-light btn-sm btn-icon" title="Reset"><i class="fa-solid fa-rotate-left"></i></a>
+                    <button type="submit" class="btn btn-sm ui-act ui-act-filter" title="Filter"><i class="fa-solid fa-filter"></i> Filter</button>
+                    <a href="{{ route('inventory.issues.index') }}" class="btn btn-sm ui-act ui-act-reset" title="Reset"><i class="fa-solid fa-rotate-left"></i> Reset</a>
                 </div>
             </form>
 
@@ -117,7 +117,7 @@
                                         @if($issue->status === 'pending')
                                             <form action="{{ route('inventory.issues.authorize', $issue) }}" method="POST" class="d-inline">
                                                 @csrf
-                                                <button type="submit" class="btn btn-sm btn-outline-primary">Authorize</button>
+                                                <button type="submit" class="btn btn-sm btn-icon ui-act ui-act-approve" title="Authorize"><i class="fa-solid fa-check"></i></button>
                                             </form>
                                         @endif
                                     @endcan
@@ -125,7 +125,7 @@
                                         @if($issue->status === 'authorized')
                                             <form action="{{ route('inventory.issues.approve', $issue) }}" method="POST" class="d-inline">
                                                 @csrf
-                                                <button type="submit" class="btn btn-sm btn-outline-success">Approve &amp; Issue</button>
+                                                <button type="submit" class="btn btn-sm btn-icon ui-act ui-act-approve" title="Approve & Issue"><i class="fa-solid fa-check"></i></button>
                                             </form>
                                         @endif
                                     @endcan
@@ -134,16 +134,16 @@
                                             <form action="{{ route('inventory.issues.cancel', $issue) }}" method="POST" class="d-inline" onsubmit="return confirm('Cancel this challan and release the reserved quantity back to the requisition?')">
                                                 @csrf
                                                 @method('DELETE')
-                                                <button type="submit" class="btn btn-sm btn-outline-danger">Cancel</button>
+                                                <button type="submit" class="btn btn-sm btn-icon ui-act ui-act-cancel" title="Cancel"><i class="fa-solid fa-ban"></i></button>
                                             </form>
                                         @endif
                                     @endcan
                                     @can('inv_issue.print')
-                                        <a href="{{ route('inventory.issues.print', $issue) }}" target="_blank" class="btn-custom primary"><i class="fa-solid fa-print"></i></a>
+                                        <a href="{{ route('inventory.issues.print', $issue) }}" target="_blank" class="btn-custom ui-act ui-act-print" title="Print"><i class="fa-solid fa-print"></i></a>
                                     @endcan
                                     @can('inv_issue.receive')
                                         @if($issue->status === 'approved' && $issue->department_receive_status !== 'full')
-                                            <a href="{{ route('inventory.issues.receive-form', $issue) }}" class="btn btn-sm btn-outline-success">Confirm Receipt</a>
+                                            <a href="{{ route('inventory.issues.receive-form', $issue) }}" class="btn btn-sm btn-icon ui-act ui-act-receive" title="Confirm Receipt"><i class="fa-solid fa-box-open"></i></a>
                                         @endif
                                     @endcan
                                 </td>

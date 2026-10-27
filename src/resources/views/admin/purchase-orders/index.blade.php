@@ -14,10 +14,10 @@
             <h4 class="mb-0">Store Order</h4>
             <div>
                 @can('inv_purchase_order.delete')
-                    <button type="button" class="btn btn-outline-secondary btn-sm btn-icon" data-toggle="modal" data-target="#poTrashModal" title="Trash"><i class="fa-solid fa-trash"></i> <span class="ui-btn-count">{{ $trashedPurchaseOrders->count() }}</span></button>
+                    <button type="button" class="btn btn-sm ui-act ui-act-delete" data-toggle="modal" data-target="#poTrashModal" title="Trash"><i class="fa-solid fa-trash"></i> Trash<span class="ui-btn-count">{{ $trashedPurchaseOrders->count() }}</span></button>
                 @endcan
                 @can('inv_purchase_requisition.list')
-                    <a href="{{ route('inventory.purchase-requisitions.index') }}" class="btn btn-primary btn-sm"><i class="fa-solid fa-plus"></i> Create from Purchase Requisition</a>
+                    <a href="{{ route('inventory.purchase-requisitions.index') }}" class="btn btn-sm ui-act ui-act-create" title="Create from Purchase Requisition"><i class="fa-solid fa-plus"></i> Create from Purchase Requisition</a>
                 @endcan
             </div>
         </div>
@@ -57,8 +57,8 @@
                     </select>
                 </div>
                 <div class="col-md-3 mb-2 d-flex align-items-end flex-wrap gap-1">
-                    <button type="submit" class="btn btn-secondary btn-sm btn-icon" title="Filter"><i class="fa-solid fa-filter"></i></button>
-                    <a href="{{ route('inventory.purchase-orders.index') }}" class="btn btn-light btn-sm btn-icon" title="Reset"><i class="fa-solid fa-rotate-left"></i></a>
+                    <button type="submit" class="btn btn-sm ui-act ui-act-filter" title="Filter"><i class="fa-solid fa-filter"></i> Filter</button>
+                    <a href="{{ route('inventory.purchase-orders.index') }}" class="btn btn-sm ui-act ui-act-reset" title="Reset"><i class="fa-solid fa-rotate-left"></i> Reset</a>
                 </div>
             </form>
 
@@ -91,16 +91,16 @@
                                 <td>{{ $po->creator?->name ?? '—' }}</td>
                                 <td class="text-right">
                                     @can('inv_purchase_order.view')
-                                        <a href="{{ route('inventory.purchase-orders.show', $po) }}" class="btn-custom success" title="Challans ({{ $po->grns_count }})"><i class="fa-solid fa-eye"></i></a>
+                                        <a href="{{ route('inventory.purchase-orders.show', $po) }}" class="btn-custom ui-act ui-act-view" title="Challans ({{ $po->grns_count }})"><i class="fa-solid fa-eye"></i></a>
                                     @endcan
                                     @if($po->status === 'draft')
                                         @can('inv_purchase_order.edit')
-                                            <a href="{{ route('inventory.purchase-orders.edit', $po) }}" class="btn-custom yellow" title="Edit"><i class="fa-solid fa-pen"></i></a>
+                                            <a href="{{ route('inventory.purchase-orders.edit', $po) }}" class="btn-custom ui-act ui-act-edit" title="Edit"><i class="fa-solid fa-pen-to-square"></i></a>
                                         @endcan
                                         @can('inv_purchase_order.approve')
                                             <form method="POST" action="{{ route('inventory.purchase-orders.approve', $po) }}" class="d-inline">
                                                 @csrf
-                                                <button type="submit" class="btn-custom success" title="Approve" onclick="return confirm('Approve this store order?')"><i class="fa-solid fa-check"></i></button>
+                                                <button type="submit" class="btn-custom ui-act ui-act-approve" title="Approve" onclick="return confirm('Approve this store order?')"><i class="fa-solid fa-check"></i></button>
                                             </form>
                                         @endcan
                                     @endif
@@ -111,7 +111,7 @@
                                          instead (same check destroy() itself already enforces server-side). --}}
                                     @can('inv_purchase_order.delete')
                                         @if($po->grns_count === 0)
-                                            <button type="button" class="btn-custom danger" title="Delete" data-toggle="modal" data-target="#deletePoModal" data-action="{{ route('inventory.purchase-orders.destroy', $po) }}"><i class="fa-solid fa-trash"></i></button>
+                                            <button type="button" class="btn-custom ui-act ui-act-delete" title="Delete" data-toggle="modal" data-target="#deletePoModal" data-action="{{ route('inventory.purchase-orders.destroy', $po) }}"><i class="fa-solid fa-trash"></i></button>
                                         @endif
                                     @endcan
                                     {{-- No grns_count gate here, unlike the soft-delete button above — safe
@@ -121,13 +121,11 @@
                                          the stock ledger stay completely intact, they just lose their
                                          back-link to this order. --}}
                                     @can('inv_purchase_order.force_delete')
-                                        <button type="button" class="btn-custom danger" title="Delete Permanently" data-toggle="modal" data-target="#forcePoModal" data-action="{{ route('inventory.purchase-orders.force-destroy', $po) }}"><i class="fa-solid fa-triangle-exclamation"></i></button>
+                                        <button type="button" class="btn-custom ui-act ui-act-delete" title="Delete Permanently" data-toggle="modal" data-target="#forcePoModal" data-action="{{ route('inventory.purchase-orders.force-destroy', $po) }}"><i class="fa-solid fa-trash"></i></button>
                                     @endcan
                                     @can('inv_grn.add')
                                         @if(in_array($po->status, ['approved', 'received']))
-                                            <a href="{{ route('inventory.grns.create-purchase', ['purchase_order_id' => $po->id]) }}" class="btn btn-sm btn-outline-secondary btn-icon" title="Receive (GRN)">
-                                                <i class="fa-solid fa-truck-ramp-box"></i>
-                                            </a>
+                                            <a href="{{ route('inventory.grns.create-purchase', ['purchase_order_id' => $po->id]) }}" class="btn btn-sm btn-icon ui-act ui-act-receive" title="Receive (GRN)"><i class="fa-solid fa-box-open"></i></a>
                                         @endif
                                     @endcan
                                 </td>
@@ -174,8 +172,8 @@
                         <p class="text-danger mb-0">Permanently delete this store order? This cannot be undone — it skips Trash entirely.</p>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-light btn-sm" data-dismiss="modal">Cancel</button>
-                        <button type="submit" class="btn btn-danger btn-sm">Delete Permanently</button>
+                        <button type="button" class="btn btn-sm ui-act ui-act-cancel" data-dismiss="modal" title="Cancel"><i class="fa-solid fa-ban"></i> Cancel</button>
+                        <button type="submit" class="btn btn-sm ui-act ui-act-delete" title="Delete Permanently"><i class="fa-solid fa-trash"></i> Delete Permanently</button>
                     </div>
                 </form>
             </div>

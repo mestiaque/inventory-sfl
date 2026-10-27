@@ -12,7 +12,7 @@
     <div class="card">
         <div class="card-header d-flex justify-content-between align-items-center">
             <h4 class="mb-0">Receive Transfer — {{ $transfer->transfer_no }}</h4>
-            <a href="{{ route('inventory.transfers.index') }}" class="btn btn-light btn-sm btn-icon" title="Back"><i class="fa-solid fa-arrow-left"></i></a>
+            <a href="{{ route('inventory.transfers.index') }}" class="btn btn-sm ui-act ui-act-back" title="Back"><i class="fa-solid fa-arrow-left"></i> Back</a>
         </div>
         <div class="card-body">
             <p><strong>From:</strong> {{ $transfer->fromStore?->name }} &nbsp;→&nbsp; <strong>To:</strong> {{ $transfer->toStore?->name }}</p>
@@ -40,8 +40,8 @@
                     </table>
                 </div>
 
-                <button type="submit" class="btn btn-primary btn-sm">Confirm Receipt &amp; Update Stock</button>
-                <a href="{{ route('inventory.transfers.index') }}" class="btn btn-light btn-sm">Cancel</a>
+                <button type="submit" class="btn btn-sm ui-act ui-act-save" title="Confirm Receipt & Update Stock"><i class="fa-solid fa-floppy-disk"></i> Confirm Receipt &amp; Update Stock</button>
+                <a href="{{ route('inventory.transfers.index') }}" class="btn btn-sm ui-act ui-act-cancel" title="Cancel"><i class="fa-solid fa-ban"></i> Cancel</a>
             </form>
         </div>
     </div>

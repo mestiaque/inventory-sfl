@@ -12,7 +12,7 @@
     <div class="card">
         <div class="card-header d-flex justify-content-between align-items-center">
             <h4 class="mb-0">Merge Duplicate Items</h4>
-            <a href="{{ route('inventory.items.index') }}" class="btn btn-light btn-sm btn-icon" title="Back"><i class="fa-solid fa-arrow-left"></i></a>
+            <a href="{{ route('inventory.items.index') }}" class="btn btn-sm ui-act ui-act-back" title="Back"><i class="fa-solid fa-arrow-left"></i> Back</a>
         </div>
         <div class="card-body">
             <div class="alert alert-info">
@@ -59,10 +59,8 @@
                     </label>
                 </div>
 
-                <button type="submit" class="btn btn-danger btn-sm">
-                    <i class="fa-solid fa-code-merge"></i> Merge &amp; Delete Duplicate(s)
-                </button>
-                <a href="{{ route('inventory.items.index') }}" class="btn btn-light btn-sm">Cancel</a>
+                <button type="submit" class="btn btn-sm ui-act ui-act-delete" title="Merge & Delete Duplicate(s)"><i class="fa-solid fa-trash"></i> Merge &amp; Delete Duplicate(s)</button>
+                <a href="{{ route('inventory.items.index') }}" class="btn btn-sm ui-act ui-act-cancel" title="Cancel"><i class="fa-solid fa-ban"></i> Cancel</a>
             </form>
         </div>
     </div>

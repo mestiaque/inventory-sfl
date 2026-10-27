@@ -40,8 +40,8 @@
                         </select>
                     </div>
                     <div class="col-md-3 mb-2 d-flex align-items-end flex-wrap gap-1">
-                        <button type="submit" class="btn btn-secondary btn-sm btn-icon" title="Show"><i class="fa-solid fa-eye"></i></button>
-                        <a href="{{ url()->current() }}" class="btn btn-light btn-sm btn-icon" title="Reset"><i class="fa-solid fa-rotate-left"></i></a>
+                        <button type="submit" class="btn btn-sm ui-act ui-act-view" title="Show"><i class="fa-solid fa-eye"></i> Show</button>
+                        <a href="{{ url()->current() }}" class="btn btn-sm ui-act ui-act-reset" title="Reset"><i class="fa-solid fa-rotate-left"></i> Reset</a>
                     </div>
                 </form>
             @endunless

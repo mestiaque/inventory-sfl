@@ -14,10 +14,10 @@
             <h4 class="mb-0">Internal Stock Transfer</h4>
             <div>
                 @can('inv_transfer.delete')
-                    <button type="button" class="btn btn-outline-secondary btn-sm btn-icon" data-toggle="modal" data-target="#transferTrashModal" title="Trash"><i class="fa-solid fa-trash"></i> <span class="ui-btn-count">{{ $trashedTransfers->count() }}</span></button>
+                    <button type="button" class="btn btn-sm ui-act ui-act-delete" data-toggle="modal" data-target="#transferTrashModal" title="Trash"><i class="fa-solid fa-trash"></i> Trash<span class="ui-btn-count">{{ $trashedTransfers->count() }}</span></button>
                 @endcan
                 @can('inv_transfer.add')
-                    <a href="{{ route('inventory.transfers.create') }}" class="btn btn-primary btn-sm btn-icon" title="Request Transfer"><i class="fa-solid fa-plus"></i></a>
+                    <a href="{{ route('inventory.transfers.create') }}" class="btn btn-sm ui-act ui-act-create" title="Request Transfer"><i class="fa-solid fa-plus"></i> Request Transfer</a>
                 @endcan
             </div>
         </div>
@@ -65,8 +65,8 @@
                     <input type="date" name="date_to" class="form-control form-control-sm" value="{{ request('date_to') }}" placeholder="To">
                 </div>
                 <div class="col-md-3 mb-2 d-flex align-items-end flex-wrap gap-1">
-                    <button type="submit" class="btn btn-secondary btn-sm btn-icon" title="Filter"><i class="fa-solid fa-filter"></i></button>
-                    <a href="{{ route('inventory.transfers.index') }}" class="btn btn-light btn-sm btn-icon" title="Reset"><i class="fa-solid fa-rotate-left"></i></a>
+                    <button type="submit" class="btn btn-sm ui-act ui-act-filter" title="Filter"><i class="fa-solid fa-filter"></i> Filter</button>
+                    <a href="{{ route('inventory.transfers.index') }}" class="btn btn-sm ui-act ui-act-reset" title="Reset"><i class="fa-solid fa-rotate-left"></i> Reset</a>
                 </div>
             </form>
 
@@ -89,28 +89,28 @@
                                     </span>
                                 </td>
                                 <td class="text-right">
-                                    <a href="{{ route('inventory.transfers.show', $transfer) }}" class="btn-custom success"><i class="fa-solid fa-eye"></i></a>
+                                    <a href="{{ route('inventory.transfers.show', $transfer) }}" class="btn-custom ui-act ui-act-view" title="View"><i class="fa-solid fa-eye"></i></a>
                                     @if($transfer->status === 'pending')
                                         @can('inv_transfer.approve')
                                             <form method="POST" action="{{ route('inventory.transfers.approve', $transfer) }}" class="d-inline">
                                                 @csrf
-                                                <button type="submit" class="btn btn-sm btn-outline-success btn-icon" onclick="return confirm('Approve and dispatch this transfer?')" title="Approve"><i class="fa-solid fa-check"></i></button>
+                                                <button type="submit" class="btn btn-sm btn-icon ui-act ui-act-approve" onclick="return confirm('Approve and dispatch this transfer?')" title="Approve"><i class="fa-solid fa-check"></i></button>
                                             </form>
                                             <form method="POST" action="{{ route('inventory.transfers.reject', $transfer) }}" class="d-inline">
                                                 @csrf
-                                                <button type="submit" class="btn btn-sm btn-outline-danger btn-icon" onclick="return confirm('Reject this transfer?')" title="Reject"><i class="fa-solid fa-xmark"></i></button>
+                                                <button type="submit" class="btn btn-sm btn-icon ui-act ui-act-reject" onclick="return confirm('Reject this transfer?')" title="Reject"><i class="fa-solid fa-xmark"></i></button>
                                             </form>
                                         @endcan
                                         @can('inv_transfer.edit')
-                                            <a href="{{ route('inventory.transfers.edit', $transfer) }}" class="btn-custom yellow"><i class="fa-solid fa-pen"></i></a>
+                                            <a href="{{ route('inventory.transfers.edit', $transfer) }}" class="btn-custom ui-act ui-act-edit" title="Edit"><i class="fa-solid fa-pen-to-square"></i></a>
                                         @endcan
                                     @elseif($transfer->status === 'in_transit')
                                         @can('inv_transfer.receive')
-                                            <a href="{{ route('inventory.transfers.receive-form', $transfer) }}" class="btn btn-sm btn-outline-primary">Receive</a>
+                                            <a href="{{ route('inventory.transfers.receive-form', $transfer) }}" class="btn btn-sm btn-icon ui-act ui-act-receive" title="Receive"><i class="fa-solid fa-box-open"></i></a>
                                         @endcan
                                     @endif
                                     @can('inv_transfer.delete')
-                                        <button type="button" class="btn-custom danger" data-toggle="modal" data-target="#deleteTransferModal" data-action="{{ route('inventory.transfers.destroy', $transfer) }}"><i class="fa-solid fa-trash"></i></button>
+                                        <button type="button" class="btn-custom ui-act ui-act-delete" data-toggle="modal" data-target="#deleteTransferModal" data-action="{{ route('inventory.transfers.destroy', $transfer) }}" title="Delete"><i class="fa-solid fa-trash"></i></button>
                                     @endcan
                                 </td>
                             </tr>

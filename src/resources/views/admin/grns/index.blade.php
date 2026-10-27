@@ -14,10 +14,10 @@
             <h4 class="mb-0">Goods Receive Note (GRN)</h4>
             <div>
                 @can('inv_grn.delete')
-                    <button type="button" class="btn btn-outline-secondary btn-sm btn-icon" data-toggle="modal" data-target="#grnTrashModal" title="Trash"><i class="fa-solid fa-trash"></i> <span class="ui-btn-count">{{ $trashedGrns->count() }}</span></button>
+                    <button type="button" class="btn btn-sm ui-act ui-act-delete" data-toggle="modal" data-target="#grnTrashModal" title="Trash"><i class="fa-solid fa-trash"></i> Trash<span class="ui-btn-count">{{ $trashedGrns->count() }}</span></button>
                 @endcan
                 @can('inv_grn.add')
-                    <a href="{{ route('inventory.grns.create') }}" class="btn btn-primary btn-sm btn-icon" title="Add GRN"><i class="fa-solid fa-plus"></i></a>
+                    <a href="{{ route('inventory.grns.create') }}" class="btn btn-sm ui-act ui-act-create" title="Add GRN"><i class="fa-solid fa-plus"></i> Add GRN</a>
                 @endcan
             </div>
         </div>
@@ -72,8 +72,8 @@
                     </select>
                 </div>
                 <div class="col-md-3 mb-2 d-flex align-items-end flex-wrap gap-1">
-                    <button type="submit" class="btn btn-secondary btn-sm btn-icon" title="Filter"><i class="fa-solid fa-filter"></i></button>
-                    <a href="{{ route('inventory.grns.index') }}" class="btn btn-light btn-sm btn-icon" title="Reset"><i class="fa-solid fa-rotate-left"></i></a>
+                    <button type="submit" class="btn btn-sm ui-act ui-act-filter" title="Filter"><i class="fa-solid fa-filter"></i> Filter</button>
+                    <a href="{{ route('inventory.grns.index') }}" class="btn btn-sm ui-act ui-act-reset" title="Reset"><i class="fa-solid fa-rotate-left"></i> Reset</a>
                 </div>
             </form>
 
@@ -115,20 +115,20 @@
                                 <td>{{ $grn->created_at?->format('d M Y, h:i A') }}</td>
                                 <td>{{ $grn->creator?->name ?? '—' }}</td>
                                 <td class="text-right">
-                                    <a href="{{ route('inventory.grns.show', $grn) }}" class="btn-custom success"><i class="fa-solid fa-eye"></i></a>
+                                    <a href="{{ route('inventory.grns.show', $grn) }}" class="btn-custom ui-act ui-act-view" title="View"><i class="fa-solid fa-eye"></i></a>
                                     @if(view()->exists('components.approval-remind'))<x-approval-remind :model="$grn" />@endif
                                     @can('inv_grn.approve')
                                         @if($grn->source_type === 'purchase' && $grn->status === 'pending')
-                                            <a href="{{ route('inventory.grns.approval-form', $grn) }}" class="btn-custom success" title="Receive Approval"><i class="fa-solid fa-check"></i></a>
+                                            <a href="{{ route('inventory.grns.approval-form', $grn) }}" class="btn-custom ui-act ui-act-approve" title="Receive Approval"><i class="fa-solid fa-check"></i></a>
                                         @endif
                                     @endcan
                                     @can('inv_grn.edit')
                                         @if($grn->status !== 'rejected')
-                                            <a href="{{ route('inventory.grns.edit', $grn) }}" class="btn-custom yellow"><i class="fa-solid fa-pen"></i></a>
+                                            <a href="{{ route('inventory.grns.edit', $grn) }}" class="btn-custom ui-act ui-act-edit" title="Edit"><i class="fa-solid fa-pen-to-square"></i></a>
                                         @endif
                                     @endcan
                                     @can('inv_grn.delete')
-                                        <button type="button" class="btn-custom danger" data-toggle="modal" data-target="#deleteGrnModal" data-action="{{ route('inventory.grns.destroy', $grn) }}"><i class="fa-solid fa-trash"></i></button>
+                                        <button type="button" class="btn-custom ui-act ui-act-delete" data-toggle="modal" data-target="#deleteGrnModal" data-action="{{ route('inventory.grns.destroy', $grn) }}" title="Delete"><i class="fa-solid fa-trash"></i></button>
                                     @endcan
                                 </td>
                             </tr>

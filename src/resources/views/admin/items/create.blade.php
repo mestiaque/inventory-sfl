@@ -12,14 +12,14 @@
     <div class="card">
         <div class="card-header d-flex justify-content-between align-items-center">
             <h4 class="mb-0">Add Item</h4>
-            <a href="{{ route('inventory.items.index') }}" class="btn btn-light btn-sm btn-icon" title="Back"><i class="fa-solid fa-arrow-left"></i></a>
+            <a href="{{ route('inventory.items.index') }}" class="btn btn-sm ui-act ui-act-back" title="Back"><i class="fa-solid fa-arrow-left"></i> Back</a>
         </div>
         <div class="card-body">
             <form method="POST" action="{{ route('inventory.items.store') }}">
                 @csrf
                 @include('sfl-inventory::admin.items.partials.fields')
-                <button type="submit" class="btn btn-primary btn-sm">Save Item</button>
-                <a href="{{ route('inventory.items.index') }}" class="btn btn-light btn-sm">Cancel</a>
+                <button type="submit" class="btn btn-sm ui-act ui-act-save" title="Save Item"><i class="fa-solid fa-floppy-disk"></i> Save Item</button>
+                <a href="{{ route('inventory.items.index') }}" class="btn btn-sm ui-act ui-act-cancel" title="Cancel"><i class="fa-solid fa-ban"></i> Cancel</a>
             </form>
         </div>
     </div>

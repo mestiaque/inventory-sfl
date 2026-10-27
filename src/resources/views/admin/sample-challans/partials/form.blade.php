@@ -54,7 +54,7 @@
 
 <div class="d-flex justify-content-between align-items-center mb-2">
     <h6 class="mb-0">Items</h6>
-    <button type="button" class="btn btn-sm btn-outline-primary" data-line-items-add="sci"><i class="fa-solid fa-plus"></i> Add Item</button>
+    <button type="button" class="btn btn-sm ui-act ui-act-create" data-line-items-add="sci" title="Add Item"><i class="fa-solid fa-plus"></i> Add Item</button>
 </div>
 <div class="table-responsive">
     <table class="table table-bordered table-sm align-middle">

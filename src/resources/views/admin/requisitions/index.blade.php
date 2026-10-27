@@ -14,10 +14,10 @@
             <h4 class="mb-0">Store Requisitions</h4>
             <div>
                 @can('inv_requisition.delete')
-                    <button type="button" class="btn btn-outline-secondary btn-sm btn-icon" data-toggle="modal" data-target="#requisitionTrashModal" title="Trash"><i class="fa-solid fa-trash"></i> <span class="ui-btn-count">{{ $trashedRequisitions->count() }}</span></button>
+                    <button type="button" class="btn btn-sm ui-act ui-act-delete" data-toggle="modal" data-target="#requisitionTrashModal" title="Trash"><i class="fa-solid fa-trash"></i> Trash<span class="ui-btn-count">{{ $trashedRequisitions->count() }}</span></button>
                 @endcan
                 @can('inv_requisition.add')
-                    <a href="{{ route('inventory.requisitions.create') }}" class="btn btn-primary btn-sm btn-icon" title="Add Requisition"><i class="fa-solid fa-plus"></i></a>
+                    <a href="{{ route('inventory.requisitions.create') }}" class="btn btn-sm ui-act ui-act-create" title="Add Requisition"><i class="fa-solid fa-plus"></i> Add Requisition</a>
                 @endcan
             </div>
         </div>
@@ -65,8 +65,8 @@
                     </select>
                 </div>
                 <div class="col-md-3 mb-2 d-flex align-items-end flex-wrap gap-1">
-                    <button type="submit" class="btn btn-secondary btn-sm btn-icon" title="Filter"><i class="fa-solid fa-filter"></i></button>
-                    <a href="{{ route('inventory.requisitions.index') }}" class="btn btn-light btn-sm btn-icon" title="Reset"><i class="fa-solid fa-rotate-left"></i></a>
+                    <button type="submit" class="btn btn-sm ui-act ui-act-filter" title="Filter"><i class="fa-solid fa-filter"></i> Filter</button>
+                    <a href="{{ route('inventory.requisitions.index') }}" class="btn btn-sm ui-act ui-act-reset" title="Reset"><i class="fa-solid fa-rotate-left"></i> Reset</a>
                 </div>
             </form>
 
@@ -93,31 +93,31 @@
                                     </span>
                                 </td>
                                 <td class="text-right">
-                                    <button type="button" class="btn-custom success" data-toggle="modal" data-target="#viewReqModal{{ $requisition->id }}"><i class="fa-solid fa-eye"></i></button>
+                                    <button type="button" class="btn-custom ui-act ui-act-view" data-toggle="modal" data-target="#viewReqModal{{ $requisition->id }}" title="View"><i class="fa-solid fa-eye"></i></button>
                                     @if(view()->exists('components.approval-remind'))<x-approval-remind :model="$requisition" />@endif
                                     @if($requisition->status === 'pending')
                                         @can('inv_requisition.edit')
-                                            <a href="{{ route('inventory.requisitions.edit', $requisition) }}" class="btn-custom yellow"><i class="fa-solid fa-pen"></i></a>
+                                            <a href="{{ route('inventory.requisitions.edit', $requisition) }}" class="btn-custom ui-act ui-act-edit" title="Edit"><i class="fa-solid fa-pen-to-square"></i></a>
                                         @endcan
                                         @can('inv_requisition.approve')
-                                            <a href="{{ route('inventory.requisitions.approval-form', $requisition) }}" class="btn btn-sm btn-outline-success btn-icon" title="Approve / Reject"><i class="fa-solid fa-gavel"></i></a>
+                                            <a href="{{ route('inventory.requisitions.approval-form', $requisition) }}" class="btn btn-sm btn-icon ui-act ui-act-approve" title="Approve / Reject"><i class="fa-solid fa-check"></i></a>
                                         @endcan
                                         @can('inv_requisition.delete')
-                                            <button type="button" class="btn-custom danger" data-toggle="modal" data-target="#deleteReqModal" data-action="{{ route('inventory.requisitions.destroy', $requisition) }}"><i class="fa-solid fa-trash"></i></button>
+                                            <button type="button" class="btn-custom ui-act ui-act-delete" data-toggle="modal" data-target="#deleteReqModal" data-action="{{ route('inventory.requisitions.destroy', $requisition) }}" title="Delete"><i class="fa-solid fa-trash"></i></button>
                                         @endcan
                                     @endif
                                     @if($requisition->isApprovedButUnissued())
                                         @can('inv_requisition.delete_approved')
-                                            <button type="button" class="btn-custom danger" title="Approved, nothing issued yet — delete to release the reserved stock" data-toggle="modal" data-target="#deleteReqModal" data-action="{{ route('inventory.requisitions.destroy', $requisition) }}"><i class="fa-solid fa-trash"></i></button>
+                                            <button type="button" class="btn-custom ui-act ui-act-delete" title="Approved, nothing issued yet — delete to release the reserved stock" data-toggle="modal" data-target="#deleteReqModal" data-action="{{ route('inventory.requisitions.destroy', $requisition) }}"><i class="fa-solid fa-trash"></i></button>
                                         @endcan
                                     @endif
                                     @can('inv_issue.add')
                                         @if(in_array($requisition->status, ['approved', 'partially_issued']))
-                                            <a href="{{ route('inventory.issues.create', ['requisition_id' => $requisition->id]) }}" class="btn btn-sm btn-outline-secondary">Issue</a>
+                                            <a href="{{ route('inventory.issues.create', ['requisition_id' => $requisition->id]) }}" class="btn btn-sm btn-icon ui-act ui-act-create" title="Issue"><i class="fa-solid fa-plus"></i></a>
                                         @endif
                                     @endcan
                                     @can('inv_requisition.print')
-                                        <a href="{{ route('inventory.requisitions.print', $requisition) }}" target="_blank" class="btn-custom primary"><i class="fa-solid fa-print"></i></a>
+                                        <a href="{{ route('inventory.requisitions.print', $requisition) }}" target="_blank" class="btn-custom ui-act ui-act-print" title="Print"><i class="fa-solid fa-print"></i></a>
                                     @endcan
                                 </td>
                             </tr>
@@ -204,9 +204,9 @@
                 </div>
                 <div class="modal-footer">
                     @can('inv_requisition.print')
-                        <a href="{{ route('inventory.requisitions.print', $requisition) }}" target="_blank" class="btn btn-outline-secondary btn-sm btn-icon" title="Print"><i class="fa-solid fa-print"></i></a>
+                        <a href="{{ route('inventory.requisitions.print', $requisition) }}" target="_blank" class="btn btn-sm ui-act ui-act-print" title="Print"><i class="fa-solid fa-print"></i> Print</a>
                     @endcan
-                    <button type="button" class="btn btn-light btn-sm" data-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-sm ui-act ui-act-cancel" data-dismiss="modal" title="Close"><i class="fa-solid fa-ban"></i> Close</button>
                 </div>
             </div>
         </div>

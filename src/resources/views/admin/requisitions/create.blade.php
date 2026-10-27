@@ -12,7 +12,7 @@
     <div class="card">
         <div class="card-header d-flex justify-content-between align-items-center">
             <h4 class="mb-0">Add Store Requisition</h4>
-            <a href="{{ route('inventory.requisitions.index') }}" class="btn btn-light btn-sm btn-icon" title="Back"><i class="fa-solid fa-arrow-left"></i></a>
+            <a href="{{ route('inventory.requisitions.index') }}" class="btn btn-sm ui-act ui-act-back" title="Back"><i class="fa-solid fa-arrow-left"></i> Back</a>
         </div>
         <div class="card-body">
             <form method="POST" action="{{ route('inventory.requisitions.store') }}">
@@ -30,8 +30,8 @@
                 @endcan
                 --}}
 
-                <button type="submit" class="btn btn-primary mt-3 btn-sm">Submit Requisition</button>
-                <a href="{{ route('inventory.requisitions.index') }}" class="btn btn-light mt-3 btn-sm">Cancel</a>
+                <button type="submit" class="btn mt-3 btn-sm ui-act ui-act-save" title="Submit Requisition"><i class="fa-solid fa-floppy-disk"></i> Submit Requisition</button>
+                <a href="{{ route('inventory.requisitions.index') }}" class="btn mt-3 btn-sm ui-act ui-act-cancel" title="Cancel"><i class="fa-solid fa-ban"></i> Cancel</a>
             </form>
         </div>
     </div>

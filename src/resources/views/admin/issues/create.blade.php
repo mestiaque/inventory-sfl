@@ -12,7 +12,7 @@
     <div class="card">
         <div class="card-header d-flex justify-content-between align-items-center">
             <h4 class="mb-0">Store Issue {{ $requisition ? '— against ' . $requisition->requisition_no : '(Direct Issue)' }}</h4>
-            <a href="{{ route('inventory.issues.index') }}" class="btn btn-light btn-sm btn-icon" title="Back"><i class="fa-solid fa-arrow-left"></i></a>
+            <a href="{{ route('inventory.issues.index') }}" class="btn btn-sm ui-act ui-act-back" title="Back"><i class="fa-solid fa-arrow-left"></i> Back</a>
         </div>
         <div class="card-body">
             <form method="POST" action="{{ route('inventory.issues.store') }}">
@@ -96,7 +96,7 @@
                 <div class="d-flex justify-content-between align-items-center mb-2">
                     <h6 class="mb-0">Items</h6>
                     @unless($requisition)
-                        <button type="button" class="btn btn-sm btn-outline-primary" data-line-items-add="iss"><i class="fa-solid fa-plus"></i> Add Row</button>
+                        <button type="button" class="btn btn-sm ui-act ui-act-create" data-line-items-add="iss" title="Add Row"><i class="fa-solid fa-plus"></i> Add Row</button>
                     @endunless
                 </div>
                 <div class="table-responsive">
@@ -147,7 +147,7 @@
                                     <td>{{ isset($line['remaining']) ? inv_qty($line['remaining']) : '—' }}</td>
                                     <td data-role="stock" @if($requisition) data-requisition="{{ $requisition->id }}" @endif @if(isset($line['requisition_item_id'])) data-item-id="{{ $line['item_id'] }}" data-color-id="{{ $line['color_id'] }}" data-size-id="{{ $line['size_id'] }}" @endif></td>
                                     <td><input type="number" step="0.0001" min="0.0001" name="items[{{ $index }}][issued_qty]" class="form-control form-control-sm" value="{{ $line['issued_qty'] ?? ($line['remaining'] ?? '') }}" data-stock-qty="current" required></td>
-                                    <td><button type="button" class="btn-custom danger" data-line-items-remove><i class="fa-solid fa-xmark"></i></button></td>
+                                    <td><button type="button" class="btn-custom ui-act ui-act-delete" data-line-items-remove title="Delete"><i class="fa-solid fa-trash"></i></button></td>
                                 </tr>
                             @endforeach
                         </tbody>
@@ -169,7 +169,7 @@
                         <td>—</td>
                         <td data-role="stock"></td>
                         <td><input type="number" step="0.0001" min="0.0001" name="items[__INDEX__][issued_qty]" class="form-control form-control-sm" data-stock-qty="current" required></td>
-                        <td><button type="button" class="btn-custom danger" data-line-items-remove><i class="fa-solid fa-xmark"></i></button></td>
+                        <td><button type="button" class="btn-custom ui-act ui-act-delete" data-line-items-remove title="Delete"><i class="fa-solid fa-trash"></i></button></td>
                     </tr>
                 </template>
 
@@ -181,8 +181,8 @@
                     </div>
                 @endcan
 
-                <button type="submit" class="btn btn-primary mt-3 btn-sm">Issue &amp; Update Stock</button>
-                <a href="{{ route('inventory.issues.index') }}" class="btn btn-light mt-3 btn-sm">Cancel</a>
+                <button type="submit" class="btn mt-3 btn-sm ui-act ui-act-save" title="Issue & Update Stock"><i class="fa-solid fa-floppy-disk"></i> Issue &amp; Update Stock</button>
+                <a href="{{ route('inventory.issues.index') }}" class="btn mt-3 btn-sm ui-act ui-act-cancel" title="Cancel"><i class="fa-solid fa-ban"></i> Cancel</a>
             </form>
         </div>
     </div>

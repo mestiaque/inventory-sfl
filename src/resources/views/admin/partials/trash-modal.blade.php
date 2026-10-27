@@ -39,11 +39,11 @@
                                         @if ($canRestore && $restoreRoute)
                                             <form method="POST" action="{{ route($restoreRoute, $row['id']) }}" class="d-inline" onsubmit="return confirm('Restore this {{ strtolower($label) }}?')">
                                                 @csrf
-                                                <button type="submit" class="btn-custom success" title="Restore"><i class="fa-solid fa-rotate-left"></i></button>
+                                                <button type="submit" class="btn-custom ui-act ui-act-restore" title="Restore"><i class="fa-solid fa-trash-arrow-up"></i></button>
                                             </form>
                                         @endif
                                         @if ($canForce && $forceRoute)
-                                            <button type="button" class="btn-custom danger" title="Delete Permanently" data-toggle="modal" data-target="#{{ $modalId }}ForceConfirm" data-action="{{ route($forceRoute, $row['id']) }}"><i class="fa-solid fa-triangle-exclamation"></i></button>
+                                            <button type="button" class="btn-custom ui-act ui-act-delete" title="Delete Permanently" data-toggle="modal" data-target="#{{ $modalId }}ForceConfirm" data-action="{{ route($forceRoute, $row['id']) }}"><i class="fa-solid fa-trash"></i></button>
                                         @endif
                                     </td>
                                 </tr>
@@ -55,7 +55,7 @@
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-light btn-sm" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-sm ui-act ui-act-cancel" data-dismiss="modal" title="Close"><i class="fa-solid fa-ban"></i> Close</button>
             </div>
         </div>
     </div>
@@ -76,8 +76,8 @@
                         <p class="text-danger mb-0">{{ $forceWarning ?? 'Permanently delete this ' . strtolower($label) . '? This cannot be undone.' }}</p>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-light btn-sm" data-dismiss="modal">Cancel</button>
-                        <button type="submit" class="btn btn-danger btn-sm">Delete Permanently</button>
+                        <button type="button" class="btn btn-sm ui-act ui-act-cancel" data-dismiss="modal" title="Cancel"><i class="fa-solid fa-ban"></i> Cancel</button>
+                        <button type="submit" class="btn btn-sm ui-act ui-act-delete" title="Delete Permanently"><i class="fa-solid fa-trash"></i> Delete Permanently</button>
                     </div>
                 </form>
             </div>

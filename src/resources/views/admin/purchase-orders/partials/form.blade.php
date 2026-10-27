@@ -26,7 +26,7 @@
 <hr>
 <div class="d-flex justify-content-between align-items-center mb-2">
     <h6 class="mb-0">Items</h6>
-    <button type="button" class="btn btn-sm btn-outline-primary" data-line-items-add="po"><i class="fa-solid fa-plus"></i> Add Row</button>
+    <button type="button" class="btn btn-sm ui-act ui-act-create" data-line-items-add="po" title="Add Row"><i class="fa-solid fa-plus"></i> Add Row</button>
 </div>
 <div class="table-responsive">
     <table class="table table-bordered table-sm align-middle">
@@ -50,7 +50,7 @@
                     <td><input type="number" step="0.0001" min="0.0001" name="items[{{ $index }}][quantity]" class="form-control form-control-sm" data-role="qty" value="{{ $line['quantity'] ?? '' }}" required></td>
                     <td><input type="number" step="0.01" min="0" name="items[{{ $index }}][rate]" class="form-control form-control-sm" data-role="rate" value="{{ $line['rate'] ?? '' }}" placeholder="Priced at receive"></td>
                     <td><input type="text" class="form-control form-control-sm" data-role="amount" value="{{ $line['amount'] ?? '' }}" disabled></td>
-                    <td><button type="button" class="btn-custom danger" data-line-items-remove><i class="fa-solid fa-xmark"></i></button></td>
+                    <td><button type="button" class="btn-custom ui-act ui-act-delete" data-line-items-remove title="Delete"><i class="fa-solid fa-trash"></i></button></td>
                 </tr>
             @endforeach
         </tbody>
@@ -71,6 +71,6 @@
         <td><input type="number" step="0.0001" min="0.0001" name="items[__INDEX__][quantity]" class="form-control form-control-sm" data-role="qty" required></td>
         <td><input type="number" step="0.01" min="0" name="items[__INDEX__][rate]" class="form-control form-control-sm" data-role="rate" placeholder="Priced at receive"></td>
         <td><input type="text" class="form-control form-control-sm" data-role="amount" disabled></td>
-        <td><button type="button" class="btn-custom danger" data-line-items-remove><i class="fa-solid fa-xmark"></i></button></td>
+        <td><button type="button" class="btn-custom ui-act ui-act-delete" data-line-items-remove title="Delete"><i class="fa-solid fa-trash"></i></button></td>
     </tr>
 </template>

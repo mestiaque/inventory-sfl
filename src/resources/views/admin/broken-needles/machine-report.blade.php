@@ -31,19 +31,17 @@
             </div>
             @unless($printMode)
                 <div class="d-flex align-items-center gap-2">
-                    <a href="{{ route('inventory.broken-needles.machine-report.export', request()->query()) }}" class="btn btn-sm btn-outline-success btn-icon" title="Excel"><i class="fa-solid fa-file-excel"></i></a>
-                    <a href="{{ url()->current() }}?{{ http_build_query(array_merge(request()->query(), ['print' => 1])) }}" target="_blank" class="btn btn-sm btn-outline-secondary btn-icon" title="Print"><i class="fa-solid fa-print"></i></a>
-                    <a href="{{ route('inventory.broken-needles.report') }}" class="btn btn-outline-info btn-sm"><i class="fa-solid fa-chart-column"></i> Employee Report</a>
-                    <a href="{{ route('inventory.broken-needles.index') }}" class="btn btn-light btn-sm"><i class="fa-solid fa-arrow-left"></i> Entries</a>
+                    <a href="{{ route('inventory.broken-needles.machine-report.export', request()->query()) }}" class="btn btn-sm ui-act ui-act-excel" title="Excel"><i class="fa-solid fa-file-excel"></i> Excel</a>
+                    <a href="{{ url()->current() }}?{{ http_build_query(array_merge(request()->query(), ['print' => 1])) }}" target="_blank" class="btn btn-sm ui-act ui-act-print" title="Print"><i class="fa-solid fa-print"></i> Print</a>
+                    <a href="{{ route('inventory.broken-needles.report') }}" class="btn btn-sm ui-act ui-act-report" title="Employee Report"><i class="fa-solid fa-chart-column"></i> Employee Report</a>
+                    <a href="{{ route('inventory.broken-needles.index') }}" class="btn btn-sm ui-act ui-act-back" title="Entries"><i class="fa-solid fa-arrow-left"></i> Entries</a>
                 </div>
             @endunless
         </div>
         <div class="card-body">
             @unless($printMode)
                 @if($machine)
-                    <a href="{{ route('inventory.broken-needles.machine-report', array_merge(request()->except(['machine_id']))) }}" class="btn btn-sm btn-outline-secondary mb-3">
-                        <i class="fa-solid fa-arrow-left"></i> Back to all machines
-                    </a>
+                    <a href="{{ route('inventory.broken-needles.machine-report', array_merge(request()->except(['machine_id']))) }}" class="btn btn-sm mb-3 ui-act ui-act-back" title="Back to all machines"><i class="fa-solid fa-arrow-left"></i> Back to all machines</a>
                 @endif
                 <form method="GET" class="row mb-3 align-items-end">
                     <div class="col-md-3 mb-2">
@@ -75,8 +73,8 @@
                         </select>
                     </div>
                     <div class="col-md-3 mb-2 d-flex align-items-end flex-wrap gap-1">
-                        <button type="submit" class="btn btn-secondary btn-sm btn-icon" title="Filter"><i class="fa-solid fa-filter"></i></button>
-                        <a href="{{ url()->current() }}" class="btn btn-light btn-sm btn-icon" title="Reset"><i class="fa-solid fa-rotate-left"></i></a>
+                        <button type="submit" class="btn btn-sm ui-act ui-act-filter" title="Filter"><i class="fa-solid fa-filter"></i> Filter</button>
+                        <a href="{{ url()->current() }}" class="btn btn-sm ui-act ui-act-reset" title="Reset"><i class="fa-solid fa-rotate-left"></i> Reset</a>
                     </div>
                 </form>
             @endunless

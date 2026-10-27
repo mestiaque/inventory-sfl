@@ -13,16 +13,14 @@
         <div class="card-header d-flex justify-content-between align-items-center">
             <h4 class="mb-0">Broken Needle Entries</h4>
             <div class="d-flex align-items-center gap-2">
-                <a href="{{ route('inventory.broken-needles.daily-report') }}" class="btn btn-outline-warning btn-sm"><i class="fa-solid fa-file-lines"></i> Daily Needle Supply Report</a>
-                <a href="{{ route('inventory.broken-needles.report') }}" class="btn btn-outline-info btn-sm"><i class="fa-solid fa-chart-column"></i> Monthly Report</a>
-                <a href="{{ route('inventory.broken-needles.machine-report') }}" class="btn btn-outline-info btn-sm"><i class="fa-solid fa-industry"></i> Machine Report</a>
+                <a href="{{ route('inventory.broken-needles.daily-report') }}" class="btn btn-sm ui-act ui-act-report" title="Daily Needle Supply Report"><i class="fa-solid fa-chart-column"></i> Daily Needle Supply Report</a>
+                <a href="{{ route('inventory.broken-needles.report') }}" class="btn btn-sm ui-act ui-act-report" title="Monthly Report"><i class="fa-solid fa-chart-column"></i> Monthly Report</a>
+                <a href="{{ route('inventory.broken-needles.machine-report') }}" class="btn btn-sm ui-act ui-act-report" title="Machine Report"><i class="fa-solid fa-chart-column"></i> Machine Report</a>
                 @can('inv_broken_needle.delete')
-                    <button type="button" class="btn btn-outline-secondary btn-sm btn-icon" data-toggle="modal" data-target="#brokenNeedleTrashModal" title="Trash"><i class="fa-solid fa-trash"></i> <span class="ui-btn-count">{{ $trashedEntries->count() }}</span></button>
+                    <button type="button" class="btn btn-sm ui-act ui-act-delete" data-toggle="modal" data-target="#brokenNeedleTrashModal" title="Trash"><i class="fa-solid fa-trash"></i> Trash<span class="ui-btn-count">{{ $trashedEntries->count() }}</span></button>
                 @endcan
                 @can('inv_broken_needle.add')
-                    <button type="button" class="btn btn-primary btn-sm" data-toggle="modal" data-target="#createBrokenNeedleModal">
-                        <i class="fa-solid fa-plus"></i> Add Entry
-                    </button>
+                    <button type="button" class="btn btn-sm ui-act ui-act-create" data-toggle="modal" data-target="#createBrokenNeedleModal" title="Add Entry"><i class="fa-solid fa-plus"></i> Add Entry</button>
                 @endcan
             </div>
         </div>
@@ -70,8 +68,8 @@
                     <input type="date" name="date_to" class="form-control form-control-sm" value="{{ request('date_to') }}" placeholder="To">
                 </div>
                 <div class="col-md-3 mb-2 d-flex align-items-end flex-wrap gap-1">
-                    <button type="submit" class="btn btn-secondary btn-sm btn-icon" title="Filter"><i class="fa-solid fa-filter"></i></button>
-                    <a href="{{ route('inventory.broken-needles.index') }}" class="btn btn-light btn-sm btn-icon" title="Reset"><i class="fa-solid fa-rotate-left"></i></a>
+                    <button type="submit" class="btn btn-sm ui-act ui-act-filter" title="Filter"><i class="fa-solid fa-filter"></i> Filter</button>
+                    <a href="{{ route('inventory.broken-needles.index') }}" class="btn btn-sm ui-act ui-act-reset" title="Reset"><i class="fa-solid fa-rotate-left"></i> Reset</a>
                 </div>
             </form>
 
@@ -99,10 +97,10 @@
                                 <td>{{ $entry->remarks }}</td>
                                 <td class="text-right">
                                     @can('inv_broken_needle.edit')
-                                        <button type="button" class="btn-custom yellow" data-toggle="modal" data-target="#editBrokenNeedleModal{{ $entry->id }}"><i class="fa-solid fa-pen"></i></button>
+                                        <button type="button" class="btn-custom ui-act ui-act-edit" data-toggle="modal" data-target="#editBrokenNeedleModal{{ $entry->id }}" title="Edit"><i class="fa-solid fa-pen-to-square"></i></button>
                                     @endcan
                                     @can('inv_broken_needle.delete')
-                                        <button type="button" class="btn-custom danger" data-toggle="modal" data-target="#deleteBrokenNeedleModal" data-action="{{ route('inventory.broken-needles.destroy', $entry) }}"><i class="fa-solid fa-trash"></i></button>
+                                        <button type="button" class="btn-custom ui-act ui-act-delete" data-toggle="modal" data-target="#deleteBrokenNeedleModal" data-action="{{ route('inventory.broken-needles.destroy', $entry) }}" title="Delete"><i class="fa-solid fa-trash"></i></button>
                                     @endcan
                                 </td>
                             </tr>
@@ -121,8 +119,8 @@
                                                     @include('sfl-inventory::admin.broken-needles.partials.fields', ['entry' => $entry])
                                                 </div>
                                                 <div class="modal-footer">
-                                                    <button type="button" class="btn btn-light btn-sm" data-dismiss="modal">Cancel</button>
-                                                    <button type="submit" class="btn btn-primary btn-sm">Update</button>
+                                                    <button type="button" class="btn btn-sm ui-act ui-act-cancel" data-dismiss="modal" title="Cancel"><i class="fa-solid fa-ban"></i> Cancel</button>
+                                                    <button type="submit" class="btn btn-sm ui-act ui-act-save" title="Update"><i class="fa-solid fa-floppy-disk"></i> Update</button>
                                                 </div>
                                             </form>
                                         </div>
@@ -164,8 +162,8 @@
                         @include('sfl-inventory::admin.broken-needles.partials.fields', ['entry' => null])
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-light btn-sm" data-dismiss="modal">Cancel</button>
-                        <button type="submit" class="btn btn-primary btn-sm">Save</button>
+                        <button type="button" class="btn btn-sm ui-act ui-act-cancel" data-dismiss="modal" title="Cancel"><i class="fa-solid fa-ban"></i> Cancel</button>
+                        <button type="submit" class="btn btn-sm ui-act ui-act-save" title="Save"><i class="fa-solid fa-floppy-disk"></i> Save</button>
                     </div>
                 </form>
             </div>

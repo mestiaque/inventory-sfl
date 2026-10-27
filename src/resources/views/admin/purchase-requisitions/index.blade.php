@@ -14,10 +14,10 @@
             <h4 class="mb-0">Purchase Requisitions</h4>
             <div>
                 @can('inv_purchase_requisition.delete')
-                    <button type="button" class="btn btn-outline-secondary btn-sm btn-icon" data-toggle="modal" data-target="#purchaseRequisitionTrashModal" title="Trash"><i class="fa-solid fa-trash"></i> <span class="ui-btn-count">{{ $trashedPurchaseRequisitions->count() }}</span></button>
+                    <button type="button" class="btn btn-sm ui-act ui-act-delete" data-toggle="modal" data-target="#purchaseRequisitionTrashModal" title="Trash"><i class="fa-solid fa-trash"></i> Trash<span class="ui-btn-count">{{ $trashedPurchaseRequisitions->count() }}</span></button>
                 @endcan
                 @can('inv_purchase_requisition.add')
-                    <a href="{{ route('inventory.purchase-requisitions.create') }}" class="btn btn-primary btn-sm btn-icon" title="Add Purchase Requisition"><i class="fa-solid fa-plus"></i></a>
+                    <a href="{{ route('inventory.purchase-requisitions.create') }}" class="btn btn-sm ui-act ui-act-create" title="Add Purchase Requisition"><i class="fa-solid fa-plus"></i> Add Purchase Requisition</a>
                 @endcan
             </div>
         </div>
@@ -57,8 +57,8 @@
                     <input type="date" name="date_to" class="form-control form-control-sm" value="{{ request('date_to') }}" placeholder="To">
                 </div>
                 <div class="col-md-3 mb-2 d-flex align-items-end flex-wrap gap-1">
-                    <button type="submit" class="btn btn-secondary btn-sm btn-icon" title="Filter"><i class="fa-solid fa-filter"></i></button>
-                    <a href="{{ route('inventory.purchase-requisitions.index') }}" class="btn btn-light btn-sm btn-icon" title="Reset"><i class="fa-solid fa-rotate-left"></i></a>
+                    <button type="submit" class="btn btn-sm ui-act ui-act-filter" title="Filter"><i class="fa-solid fa-filter"></i> Filter</button>
+                    <a href="{{ route('inventory.purchase-requisitions.index') }}" class="btn btn-sm ui-act ui-act-reset" title="Reset"><i class="fa-solid fa-rotate-left"></i> Reset</a>
                 </div>
             </form>
 
@@ -82,25 +82,25 @@
                                     </span>
                                 </td>
                                 <td class="text-right">
-                                    <button type="button" class="btn-custom success" data-toggle="modal" data-target="#viewPreqModal{{ $purchaseRequisition->id }}"><i class="fa-solid fa-eye"></i></button>
+                                    <button type="button" class="btn-custom ui-act ui-act-view" data-toggle="modal" data-target="#viewPreqModal{{ $purchaseRequisition->id }}" title="View"><i class="fa-solid fa-eye"></i></button>
                                     @if(view()->exists('components.approval-remind'))<x-approval-remind :model="$purchaseRequisition" />@endif
                                     @if($purchaseRequisition->status === 'pending')
                                         @can('inv_purchase_requisition.edit')
-                                            <a href="{{ route('inventory.purchase-requisitions.edit', $purchaseRequisition) }}" class="btn-custom yellow"><i class="fa-solid fa-pen"></i></a>
+                                            <a href="{{ route('inventory.purchase-requisitions.edit', $purchaseRequisition) }}" class="btn-custom ui-act ui-act-edit" title="Edit"><i class="fa-solid fa-pen-to-square"></i></a>
                                         @endcan
                                         @can('inv_purchase_requisition.approve')
-                                            <a href="{{ route('inventory.purchase-requisitions.approval-form', $purchaseRequisition) }}" class="btn btn-sm btn-outline-success btn-icon" title="Approve / Reject"><i class="fa-solid fa-gavel"></i></a>
+                                            <a href="{{ route('inventory.purchase-requisitions.approval-form', $purchaseRequisition) }}" class="btn btn-sm btn-icon ui-act ui-act-approve" title="Approve / Reject"><i class="fa-solid fa-check"></i></a>
                                         @endcan
                                         @can('inv_purchase_requisition.delete')
-                                            <button type="button" class="btn-custom danger" data-toggle="modal" data-target="#deletePreqModal" data-action="{{ route('inventory.purchase-requisitions.destroy', $purchaseRequisition) }}"><i class="fa-solid fa-trash"></i></button>
+                                            <button type="button" class="btn-custom ui-act ui-act-delete" data-toggle="modal" data-target="#deletePreqModal" data-action="{{ route('inventory.purchase-requisitions.destroy', $purchaseRequisition) }}" title="Delete"><i class="fa-solid fa-trash"></i></button>
                                         @endcan
                                     @endif
                                     @can('inv_purchase_requisition.print')
-                                        <a href="{{ route('inventory.purchase-requisitions.print', $purchaseRequisition) }}" target="_blank" class="btn-custom primary" title="Print"><i class="fa-solid fa-print"></i></a>
+                                        <a href="{{ route('inventory.purchase-requisitions.print', $purchaseRequisition) }}" target="_blank" class="btn-custom ui-act ui-act-print" title="Print"><i class="fa-solid fa-print"></i></a>
                                     @endcan
                                     @can('inv_purchase_order.add')
                                         @if(in_array($purchaseRequisition->status, ['approved', 'partially_converted']))
-                                            <a href="{{ route('inventory.purchase-orders.create', ['purchase_requisition_id' => $purchaseRequisition->id]) }}" class="btn btn-sm btn-outline-secondary">Create Purchase Order</a>
+                                            <a href="{{ route('inventory.purchase-orders.create', ['purchase_requisition_id' => $purchaseRequisition->id]) }}" class="btn btn-sm btn-icon ui-act ui-act-create" title="Create Purchase Order"><i class="fa-solid fa-plus"></i></a>
                                         @endif
                                     @endcan
                                     {{-- Direct permanent delete right from the main list, regardless of
@@ -109,7 +109,7 @@
                                          requisition: forceDestroy() explicitly nulls that order's
                                          purchase_requisition_id link rather than deleting the order itself. --}}
                                     @can('inv_purchase_requisition.force_delete')
-                                        <button type="button" class="btn-custom danger" title="Delete Permanently" data-toggle="modal" data-target="#forcePreqModal" data-action="{{ route('inventory.purchase-requisitions.force-destroy', $purchaseRequisition) }}"><i class="fa-solid fa-triangle-exclamation"></i></button>
+                                        <button type="button" class="btn-custom ui-act ui-act-delete" title="Delete Permanently" data-toggle="modal" data-target="#forcePreqModal" data-action="{{ route('inventory.purchase-requisitions.force-destroy', $purchaseRequisition) }}"><i class="fa-solid fa-trash"></i></button>
                                     @endcan
                                 </td>
                             </tr>
@@ -195,7 +195,7 @@
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-light btn-sm" data-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-sm ui-act ui-act-cancel" data-dismiss="modal" title="Close"><i class="fa-solid fa-ban"></i> Close</button>
                 </div>
             </div>
         </div>
@@ -219,8 +219,8 @@
                         <p class="text-danger mb-0">Permanently delete this purchase requisition? This cannot be undone — it skips Trash entirely. If a real Store Order was already created from it, that order is kept — it just loses its link back to this requisition.</p>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-light btn-sm" data-dismiss="modal">Cancel</button>
-                        <button type="submit" class="btn btn-danger btn-sm">Delete Permanently</button>
+                        <button type="button" class="btn btn-sm ui-act ui-act-cancel" data-dismiss="modal" title="Cancel"><i class="fa-solid fa-ban"></i> Cancel</button>
+                        <button type="submit" class="btn btn-sm ui-act ui-act-delete" title="Delete Permanently"><i class="fa-solid fa-trash"></i> Delete Permanently</button>
                     </div>
                 </form>
             </div>

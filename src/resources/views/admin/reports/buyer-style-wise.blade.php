@@ -55,8 +55,8 @@
                     <div class="col-md-3 mb-2"><input type="date" name="date_from" class="form-control form-control-sm" value="{{ request('date_from') }}" placeholder="Receive From"></div>
                     <div class="col-md-3 mb-2"><input type="date" name="date_to" class="form-control form-control-sm" value="{{ request('date_to') }}" placeholder="Receive To"></div>
                     <div class="col-md-3 mb-2 d-flex align-items-end flex-wrap gap-1">
-                        <button type="submit" class="btn btn-secondary btn-sm btn-icon" title="Filter"><i class="fa-solid fa-filter"></i></button>
-                        <a href="{{ url()->current() }}" class="btn btn-light btn-sm btn-icon" title="Reset"><i class="fa-solid fa-rotate-left"></i></a>
+                        <button type="submit" class="btn btn-sm ui-act ui-act-filter" title="Filter"><i class="fa-solid fa-filter"></i> Filter</button>
+                        <a href="{{ url()->current() }}" class="btn btn-sm ui-act ui-act-reset" title="Reset"><i class="fa-solid fa-rotate-left"></i> Reset</a>
                     </div>
                 </form>
                 <p class="text-muted mb-3" style="font-size:12px;">Search by style alone, buyer alone, item alone, or any combination — Issue/Delivery Qty and Balance always reflect the full history for that buyer + style + item, not just the date range above (which only narrows which received lots are listed). Issue/Delivery Qty only counts <strong>Approved</strong> challans — a Prepared or Authorized-but-not-yet-approved challan hasn't actually moved stock out yet, so it's not counted here.</p>

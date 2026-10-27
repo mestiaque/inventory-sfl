@@ -12,7 +12,7 @@
     <div class="card">
         <div class="card-header d-flex justify-content-between align-items-center">
             <h4 class="mb-0">Add Shipment</h4>
-            <a href="{{ route('inventory.shipments.index') }}" class="btn btn-light btn-sm btn-icon" title="Back"><i class="fa-solid fa-arrow-left"></i></a>
+            <a href="{{ route('inventory.shipments.index') }}" class="btn btn-sm ui-act ui-act-back" title="Back"><i class="fa-solid fa-arrow-left"></i> Back</a>
         </div>
         <div class="card-body">
             <div class="alert alert-info">This records what's being shipped — no stock moves yet. Once saved, issue a <strong>Gate Pass</strong> against it to actually release the goods.@if($shipmentPos->isNotEmpty()) Pick each line's <strong>PO</strong> so Merchandising counts the shipped qty and value.@endif</div>
@@ -92,7 +92,7 @@
                 <hr>
                 <div class="d-flex justify-content-between align-items-center mb-2">
                     <h6 class="mb-0">Items</h6>
-                    <button type="button" class="btn btn-sm btn-outline-primary" data-line-items-add="shp"><i class="fa-solid fa-plus"></i> Add Row</button>
+                    <button type="button" class="btn btn-sm ui-act ui-act-create" data-line-items-add="shp" title="Add Row"><i class="fa-solid fa-plus"></i> Add Row</button>
                 </div>
                 <div class="table-responsive">
                     <table class="table table-bordered table-sm align-middle">
@@ -121,7 +121,7 @@
                                     <td><input type="text" class="form-control form-control-sm" data-role="unit" disabled></td>
                                     <td><input type="text" class="form-control form-control-sm" data-role="available" disabled></td>
                                     <td><input type="number" step="0.0001" min="0.0001" name="items[{{ $index }}][quantity]" class="form-control form-control-sm" data-role="qty" value="{{ $line['quantity'] ?? '' }}" required></td>
-                                    <td><button type="button" class="btn-custom danger" data-line-items-remove><i class="fa-solid fa-xmark"></i></button></td>
+                                    <td><button type="button" class="btn-custom ui-act ui-act-delete" data-line-items-remove title="Delete"><i class="fa-solid fa-trash"></i></button></td>
                                 </tr>
                             @endforeach
                         </tbody>
@@ -151,12 +151,12 @@
                         <td><input type="text" class="form-control form-control-sm" data-role="unit" disabled></td>
                         <td><input type="text" class="form-control form-control-sm" data-role="available" disabled></td>
                         <td><input type="number" step="0.0001" min="0.0001" name="items[__INDEX__][quantity]" class="form-control form-control-sm" data-role="qty" required></td>
-                        <td><button type="button" class="btn-custom danger" data-line-items-remove><i class="fa-solid fa-xmark"></i></button></td>
+                        <td><button type="button" class="btn-custom ui-act ui-act-delete" data-line-items-remove title="Delete"><i class="fa-solid fa-trash"></i></button></td>
                     </tr>
                 </template>
 
-                <button type="submit" class="btn btn-primary mt-3 btn-sm">Save Shipment</button>
-                <a href="{{ route('inventory.shipments.index') }}" class="btn btn-light mt-3 btn-sm">Cancel</a>
+                <button type="submit" class="btn mt-3 btn-sm ui-act ui-act-save" title="Save Shipment"><i class="fa-solid fa-floppy-disk"></i> Save Shipment</button>
+                <a href="{{ route('inventory.shipments.index') }}" class="btn mt-3 btn-sm ui-act ui-act-cancel" title="Cancel"><i class="fa-solid fa-ban"></i> Cancel</a>
             </form>
         </div>
     </div>

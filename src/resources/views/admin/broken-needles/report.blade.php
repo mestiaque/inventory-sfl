@@ -26,10 +26,10 @@
             </div>
             @unless($printMode)
                 <div class="d-flex align-items-center gap-2">
-                    <a href="{{ route('inventory.broken-needles.report.export', request()->query()) }}" class="btn btn-sm btn-outline-success btn-icon" title="Excel"><i class="fa-solid fa-file-excel"></i></a>
-                    <a href="{{ url()->current() }}?{{ http_build_query(array_merge(request()->query(), ['print' => 1])) }}" target="_blank" class="btn btn-sm btn-outline-secondary btn-icon" title="Print"><i class="fa-solid fa-print"></i></a>
-                    <a href="{{ route('inventory.broken-needles.machine-report') }}" class="btn btn-outline-info btn-sm"><i class="fa-solid fa-industry"></i> Machine Report</a>
-                    <a href="{{ route('inventory.broken-needles.index') }}" class="btn btn-light btn-sm"><i class="fa-solid fa-arrow-left"></i> Entries</a>
+                    <a href="{{ route('inventory.broken-needles.report.export', request()->query()) }}" class="btn btn-sm ui-act ui-act-excel" title="Excel"><i class="fa-solid fa-file-excel"></i> Excel</a>
+                    <a href="{{ url()->current() }}?{{ http_build_query(array_merge(request()->query(), ['print' => 1])) }}" target="_blank" class="btn btn-sm ui-act ui-act-print" title="Print"><i class="fa-solid fa-print"></i> Print</a>
+                    <a href="{{ route('inventory.broken-needles.machine-report') }}" class="btn btn-sm ui-act ui-act-report" title="Machine Report"><i class="fa-solid fa-chart-column"></i> Machine Report</a>
+                    <a href="{{ route('inventory.broken-needles.index') }}" class="btn btn-sm ui-act ui-act-back" title="Entries"><i class="fa-solid fa-arrow-left"></i> Entries</a>
                 </div>
             @endunless
         </div>
@@ -57,14 +57,12 @@
                         </select>
                     </div>
                     <div class="col-md-3 mb-2 d-flex align-items-end flex-wrap gap-1">
-                        <button type="submit" class="btn btn-secondary btn-sm btn-icon" title="Filter"><i class="fa-solid fa-filter"></i></button>
-                        <a href="{{ url()->current() }}" class="btn btn-light btn-sm btn-icon" title="Reset"><i class="fa-solid fa-rotate-left"></i></a>
+                        <button type="submit" class="btn btn-sm ui-act ui-act-filter" title="Filter"><i class="fa-solid fa-filter"></i> Filter</button>
+                        <a href="{{ url()->current() }}" class="btn btn-sm ui-act ui-act-reset" title="Reset"><i class="fa-solid fa-rotate-left"></i> Reset</a>
                     </div>
                 </form>
                 @if($employeeId)
-                    <a href="{{ route('inventory.broken-needles.report', request()->except(['employee_id'])) }}" class="btn btn-sm btn-outline-secondary mb-3">
-                        <i class="fa-solid fa-arrow-left"></i> Clear employee filter
-                    </a>
+                    <a href="{{ route('inventory.broken-needles.report', request()->except(['employee_id'])) }}" class="btn btn-sm mb-3 ui-act ui-act-back" title="Clear employee filter"><i class="fa-solid fa-arrow-left"></i> Clear employee filter</a>
                 @endif
             @endunless
 

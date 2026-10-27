@@ -15,15 +15,15 @@
             <div class="d-flex align-items-center gap-2">
                 @can('inv_grn.approve')
                     @if($grn->source_type === 'purchase' && $grn->status === 'pending')
-                        <a href="{{ route('inventory.grns.approval-form', $grn) }}" class="btn btn-success btn-sm"><i class="fa-solid fa-check"></i> Receive Approval</a>
+                        <a href="{{ route('inventory.grns.approval-form', $grn) }}" class="btn btn-sm ui-act ui-act-approve" title="Receive Approval"><i class="fa-solid fa-check"></i> Receive Approval</a>
                     @endif
                 @endcan
                 @can('inv_grn.edit')
                     @if($grn->status !== 'rejected')
-                        <a href="{{ route('inventory.grns.edit', $grn) }}" class="btn btn-outline-primary btn-sm btn-icon" title="Edit"><i class="fa-solid fa-pen"></i></a>
+                        <a href="{{ route('inventory.grns.edit', $grn) }}" class="btn btn-sm ui-act ui-act-edit" title="Edit"><i class="fa-solid fa-pen-to-square"></i> Edit</a>
                     @endif
                 @endcan
-                <a href="{{ route('inventory.grns.index') }}" class="btn btn-light btn-sm btn-icon" title="Back"><i class="fa-solid fa-arrow-left"></i></a>
+                <a href="{{ route('inventory.grns.index') }}" class="btn btn-sm ui-act ui-act-back" title="Back"><i class="fa-solid fa-arrow-left"></i> Back</a>
             </div>
         </div>
         <div class="card-body">

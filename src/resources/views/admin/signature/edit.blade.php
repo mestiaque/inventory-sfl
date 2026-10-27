@@ -37,14 +37,14 @@
                     <input type="file" name="signature" class="form-control form-control-sm" accept="image/*" required>
                     <div class="form-text">PNG with a transparent background works best. Max 1MB.</div>
                 </div>
-                <button type="submit" class="btn btn-primary btn-sm">Save Signature</button>
+                <button type="submit" class="btn btn-sm ui-act ui-act-save" title="Save Signature"><i class="fa-solid fa-floppy-disk"></i> Save Signature</button>
             </form>
 
             @if($user->signature)
                 <form method="POST" action="{{ route('inventory.signature.destroy') }}" class="mt-2" onsubmit="return confirm('Remove your signature?')">
                     @csrf
                     @method('DELETE')
-                    <button type="submit" class="btn btn-outline-danger btn-sm">Remove Signature</button>
+                    <button type="submit" class="btn btn-sm ui-act ui-act-delete" title="Remove Signature"><i class="fa-solid fa-trash"></i> Remove Signature</button>
                 </form>
             @endif
         </div>

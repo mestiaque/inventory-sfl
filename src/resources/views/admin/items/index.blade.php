@@ -14,25 +14,17 @@
             <h4 class="mb-0">Item Master</h4>
             <div>
                 @can('inv_item.delete')
-                    <button type="button" class="btn btn-outline-secondary btn-sm btn-icon" data-toggle="modal" data-target="#itemTrashModal" title="Trash"><i class="fa-solid fa-trash"></i> <span class="ui-btn-count">{{ $trashedItems->count() }}</span></button>
+                    <button type="button" class="btn btn-sm ui-act ui-act-delete" data-toggle="modal" data-target="#itemTrashModal" title="Trash"><i class="fa-solid fa-trash"></i> Trash<span class="ui-btn-count">{{ $trashedItems->count() }}</span></button>
                 @endcan
                 @can('inv_item.export')
-                    <a href="{{ route('inventory.items.export', request()->query()) }}" class="btn btn-outline-success btn-sm">
-                        <i class="fa-solid fa-file-excel"></i> Excel
-                    </a>
-                    <a href="{{ route('inventory.items.print', request()->query()) }}" target="_blank" class="btn btn-outline-secondary btn-sm">
-                        <i class="fa-solid fa-print"></i> Print
-                    </a>
+                    <a href="{{ route('inventory.items.export', request()->query()) }}" class="btn btn-sm ui-act ui-act-excel" title="Excel"><i class="fa-solid fa-file-excel"></i> Excel</a>
+                    <a href="{{ route('inventory.items.print', request()->query()) }}" target="_blank" class="btn btn-sm ui-act ui-act-print" title="Print"><i class="fa-solid fa-print"></i> Print</a>
                 @endcan
                 @can('inv_item.merge')
-                    <a href="{{ route('inventory.items.merge-form') }}" class="btn btn-outline-warning btn-sm">
-                        <i class="fa-solid fa-code-merge"></i> Merge Duplicates
-                    </a>
+                    <a href="{{ route('inventory.items.merge-form') }}" class="btn btn-sm ui-act ui-act-merge" title="Merge Duplicates"><i class="fa-solid fa-code-merge"></i> Merge Duplicates</a>
                 @endcan
                 @can('inv_item.add')
-                    <a href="{{ route('inventory.items.create') }}" class="btn btn-primary btn-sm">
-                        <i class="fa-solid fa-plus"></i> Add Item
-                    </a>
+                    <a href="{{ route('inventory.items.create') }}" class="btn btn-sm ui-act ui-act-create" title="Add Item"><i class="fa-solid fa-plus"></i> Add Item</a>
                 @endcan
             </div>
         </div>
@@ -111,8 +103,8 @@
                     </select>
                 </div>
                 <div class="col-md-3 mb-2 d-flex align-items-end flex-wrap gap-1">
-                    <button type="submit" class="btn btn-secondary btn-sm btn-icon" title="Filter"><i class="fa-solid fa-filter"></i></button>
-                    <a href="{{ route('inventory.items.index') }}" class="btn btn-light btn-sm btn-icon" title="Reset"><i class="fa-solid fa-rotate-left"></i></a>
+                    <button type="submit" class="btn btn-sm ui-act ui-act-filter" title="Filter"><i class="fa-solid fa-filter"></i> Filter</button>
+                    <a href="{{ route('inventory.items.index') }}" class="btn btn-sm ui-act ui-act-reset" title="Reset"><i class="fa-solid fa-rotate-left"></i> Reset</a>
                 </div>
             </form>
 
@@ -158,7 +150,7 @@
                                         @elseif($item->barcode_enabled)
                                             <form method="POST" action="{{ route('inventory.items.generate-barcode', $item) }}" class="d-inline">
                                                 @csrf
-                                                <button type="submit" class="btn btn-sm btn-outline-secondary" style="font-size:11px; padding:2px 6px;">Generate</button>
+                                                <button type="submit" class="btn btn-sm btn-icon ui-act ui-act-auto" style="font-size:11px; padding:2px 6px;" title="Generate"><i class="fa-solid fa-wand-magic-sparkles"></i></button>
                                             </form>
                                         @else
                                             <span class="text-muted">—</span>
@@ -166,19 +158,19 @@
                                     </td>
                                 @endcan
                                 <td class="text-right">
-                                    <button type="button" class="btn-custom success" data-toggle="modal" data-target="#viewItemModal{{ $item->id }}"><i class="fa-solid fa-eye"></i></button>
+                                    <button type="button" class="btn-custom ui-act ui-act-view" data-toggle="modal" data-target="#viewItemModal{{ $item->id }}" title="View"><i class="fa-solid fa-eye"></i></button>
                                     @can('inv_item.edit')
-                                        <a href="{{ route('inventory.items.edit', $item) }}" class="btn-custom yellow"><i class="fa-solid fa-pen"></i></a>
+                                        <a href="{{ route('inventory.items.edit', $item) }}" class="btn-custom ui-act ui-act-edit" title="Edit"><i class="fa-solid fa-pen-to-square"></i></a>
                                     @endcan
                                     @can('inv_item.delete')
-                                        <button type="button" class="btn-custom danger" data-toggle="modal" data-target="#deleteItemModal" data-action="{{ route('inventory.items.destroy', $item) }}"><i class="fa-solid fa-trash"></i></button>
+                                        <button type="button" class="btn-custom ui-act ui-act-delete" data-toggle="modal" data-target="#deleteItemModal" data-action="{{ route('inventory.items.destroy', $item) }}" title="Delete"><i class="fa-solid fa-trash"></i></button>
                                     @endcan
                                     @can('inv_item.force_delete')
                                         {{-- Same permanent-delete confirm/modal the Trash list uses (itemTrashModalForceConfirm below) —
                                              skips the normal Delete-then-Trash-then-Force two-step for an emergency one-click permanent
                                              delete. Still runs through forceDestroy()'s referencing-table checks, so it's refused with a
                                              clear error if the item is actually used on a real document; nothing here bypasses that. --}}
-                                        <button type="button" class="btn-custom danger" title="Force Delete (skip Trash)" data-toggle="modal" data-target="#itemTrashModalForceConfirm" data-action="{{ route('inventory.items.force-destroy', $item) }}"><i class="fa-solid fa-triangle-exclamation"></i></button>
+                                        <button type="button" class="btn-custom ui-act ui-act-delete" title="Force Delete (skip Trash)" data-toggle="modal" data-target="#itemTrashModalForceConfirm" data-action="{{ route('inventory.items.force-destroy', $item) }}"><i class="fa-solid fa-trash"></i></button>
                                     @endcan
                                 </td>
                             </tr>
@@ -226,7 +218,7 @@
                                             @endcan
                                         </div>
                                         <div class="modal-footer">
-                                            <button type="button" class="btn btn-light btn-sm" data-dismiss="modal">Close</button>
+                                            <button type="button" class="btn btn-sm ui-act ui-act-cancel" data-dismiss="modal" title="Close"><i class="fa-solid fa-ban"></i> Close</button>
                                         </div>
                                     </div>
                                 </div>

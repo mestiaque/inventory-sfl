@@ -14,10 +14,10 @@
             <h4 class="mb-0">Stores</h4>
             <div>
                 @can('inv_store.delete')
-                    <button type="button" class="btn btn-outline-secondary btn-sm btn-icon" data-toggle="modal" data-target="#storeTrashModal" title="Trash"><i class="fa-solid fa-trash"></i> <span class="ui-btn-count">{{ $trashedStores->count() }}</span></button>
+                    <button type="button" class="btn btn-sm ui-act ui-act-delete" data-toggle="modal" data-target="#storeTrashModal" title="Trash"><i class="fa-solid fa-trash"></i> Trash<span class="ui-btn-count">{{ $trashedStores->count() }}</span></button>
                 @endcan
                 @can('inv_store.add')
-                    <button type="button" class="btn btn-primary btn-sm btn-icon" data-toggle="modal" data-target="#createStoreModal" title="Add Store"><i class="fa-solid fa-plus"></i></button>
+                    <button type="button" class="btn btn-sm ui-act ui-act-create" data-toggle="modal" data-target="#createStoreModal" title="Add Store"><i class="fa-solid fa-plus"></i> Add Store</button>
                 @endcan
             </div>
         </div>
@@ -34,8 +34,8 @@
                     </select>
                 </div>
                 <div class="col-md-3 mb-2 d-flex align-items-end flex-wrap gap-1">
-                    <button type="submit" class="btn btn-secondary btn-sm btn-icon" title="Filter"><i class="fa-solid fa-filter"></i></button>
-                    <a href="{{ route('inventory.stores.index') }}" class="btn btn-light btn-sm btn-icon" title="Reset"><i class="fa-solid fa-rotate-left"></i></a>
+                    <button type="submit" class="btn btn-sm ui-act ui-act-filter" title="Filter"><i class="fa-solid fa-filter"></i> Filter</button>
+                    <a href="{{ route('inventory.stores.index') }}" class="btn btn-sm ui-act ui-act-reset" title="Reset"><i class="fa-solid fa-rotate-left"></i> Reset</a>
                 </div>
             </form>
 
@@ -66,15 +66,15 @@
                                     </span>
                                 </td>
                                 <td class="text-right">
-                                    <button type="button" class="btn-custom success" data-toggle="modal"
-                                        data-target="#viewStoreModal{{ $store->id }}"><i class="fa-solid fa-eye"></i></button>
+                                    <button type="button" class="btn-custom ui-act ui-act-view" data-toggle="modal"
+                                        data-target="#viewStoreModal{{ $store->id }}" title="View"><i class="fa-solid fa-eye"></i></button>
                                     @can('inv_store.edit')
-                                        <button type="button" class="btn-custom yellow" data-toggle="modal"
-                                            data-target="#editStoreModal{{ $store->id }}"><i class="fa-solid fa-pen"></i></button>
+                                        <button type="button" class="btn-custom ui-act ui-act-edit" data-toggle="modal"
+                                            data-target="#editStoreModal{{ $store->id }}" title="Edit"><i class="fa-solid fa-pen-to-square"></i></button>
                                     @endcan
                                     @can('inv_store.delete')
-                                        <button type="button" class="btn-custom danger" data-toggle="modal"
-                                            data-target="#deleteStoreModal" data-action="{{ route('inventory.stores.destroy', $store) }}"><i class="fa-solid fa-trash"></i></button>
+                                        <button type="button" class="btn-custom ui-act ui-act-delete" data-toggle="modal"
+                                            data-target="#deleteStoreModal" data-action="{{ route('inventory.stores.destroy', $store) }}" title="Delete"><i class="fa-solid fa-trash"></i></button>
                                     @endcan
                                 </td>
                             </tr>
@@ -101,7 +101,7 @@
                                             </dl>
                                         </div>
                                         <div class="modal-footer">
-                                            <button type="button" class="btn btn-light btn-sm" data-dismiss="modal">Close</button>
+                                            <button type="button" class="btn btn-sm ui-act ui-act-cancel" data-dismiss="modal" title="Close"><i class="fa-solid fa-ban"></i> Close</button>
                                         </div>
                                     </div>
                                 </div>
@@ -121,8 +121,8 @@
                                                     @include('sfl-inventory::admin.stores.partials.fields', ['store' => $store])
                                                 </div>
                                                 <div class="modal-footer">
-                                                    <button type="button" class="btn btn-light btn-sm" data-dismiss="modal">Cancel</button>
-                                                    <button type="submit" class="btn btn-primary btn-sm">Update</button>
+                                                    <button type="button" class="btn btn-sm ui-act ui-act-cancel" data-dismiss="modal" title="Cancel"><i class="fa-solid fa-ban"></i> Cancel</button>
+                                                    <button type="submit" class="btn btn-sm ui-act ui-act-save" title="Update"><i class="fa-solid fa-floppy-disk"></i> Update</button>
                                                 </div>
                                             </form>
                                         </div>
@@ -157,8 +157,8 @@
                         @include('sfl-inventory::admin.stores.partials.fields', ['store' => null])
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-light btn-sm" data-dismiss="modal">Cancel</button>
-                        <button type="submit" class="btn btn-primary btn-sm">Save</button>
+                        <button type="button" class="btn btn-sm ui-act ui-act-cancel" data-dismiss="modal" title="Cancel"><i class="fa-solid fa-ban"></i> Cancel</button>
+                        <button type="submit" class="btn btn-sm ui-act ui-act-save" title="Save"><i class="fa-solid fa-floppy-disk"></i> Save</button>
                     </div>
                 </form>
             </div>

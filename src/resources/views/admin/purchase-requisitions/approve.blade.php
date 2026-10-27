@@ -12,7 +12,7 @@
     <div class="card">
         <div class="card-header d-flex justify-content-between align-items-center">
             <h4 class="mb-0">Approve / Reject — {{ $purchaseRequisition->requisition_no }}</h4>
-            <a href="{{ route('inventory.purchase-requisitions.index') }}" class="btn btn-light btn-sm btn-icon" title="Back"><i class="fa-solid fa-arrow-left"></i></a>
+            <a href="{{ route('inventory.purchase-requisitions.index') }}" class="btn btn-sm ui-act ui-act-back" title="Back"><i class="fa-solid fa-arrow-left"></i> Back</a>
         </div>
         <div class="card-body">
             <p>
@@ -24,7 +24,7 @@
                 @csrf
                 <div class="d-flex justify-content-between align-items-center mb-2">
                     <p class="text-muted mb-0" style="font-size:12px;">Adjust an Approved Qty to edit a line, remove (✕) an item you don't want to purchase, or add a new item the requester didn't originally ask for. Removed items are left out of the auto-created Store Order.</p>
-                    <button type="button" class="btn btn-sm btn-outline-primary" data-line-items-add="preqApprove"><i class="fa-solid fa-plus"></i> Add Item</button>
+                    <button type="button" class="btn btn-sm ui-act ui-act-create" data-line-items-add="preqApprove" title="Add Item"><i class="fa-solid fa-plus"></i> Add Item</button>
                 </div>
                 <div class="table-responsive">
                     <table class="table table-bordered table-sm align-middle">
@@ -43,7 +43,7 @@
                                     </td>
                                     <td><input type="number" step="0.01" min="0" class="form-control form-control-sm" data-role="rate" name="items[{{ $loop->index }}][estimated_rate]" value="{{ $item->estimated_rate }}" placeholder="Tk"></td>
                                     <td><input type="text" class="form-control form-control-sm text-right" data-role="amount" value="{{ number_format((float) $item->requested_qty * (float) $item->estimated_rate, 2, '.', '') }}" readonly tabindex="-1"></td>
-                                    <td><button type="button" class="btn-custom danger" data-line-items-remove title="Remove — don't purchase this item"><i class="fa-solid fa-xmark"></i></button></td>
+                                    <td><button type="button" class="btn-custom ui-act ui-act-delete" data-line-items-remove title="Remove — don't purchase this item"><i class="fa-solid fa-trash"></i></button></td>
                                 </tr>
                             @endforeach
                         </tbody>
@@ -87,7 +87,7 @@
                         <td><input type="number" step="0.0001" min="0.0001" class="form-control form-control-sm" data-role="qty" name="items[__INDEX__][approved_qty]" required></td>
                         <td><input type="number" step="0.01" min="0.01" class="form-control form-control-sm" data-role="rate" name="items[__INDEX__][estimated_rate]" placeholder="Tk" required></td>
                         <td><input type="text" class="form-control form-control-sm text-right" data-role="amount" readonly tabindex="-1"></td>
-                        <td><button type="button" class="btn-custom danger" data-line-items-remove><i class="fa-solid fa-xmark"></i></button></td>
+                        <td><button type="button" class="btn-custom ui-act ui-act-delete" data-line-items-remove title="Delete"><i class="fa-solid fa-trash"></i></button></td>
                     </tr>
                 </template>
 
@@ -96,9 +96,9 @@
                     <textarea name="approval_remarks" class="form-control form-control-sm" rows="2"></textarea>
                 </div>
 
-                <button type="submit" name="decision" value="approve" class="btn btn-success btn-sm">Approve</button>
-                <button type="submit" name="decision" value="reject" class="btn btn-danger btn-sm" onclick="return confirm('Reject this purchase requisition?')">Reject</button>
-                <a href="{{ route('inventory.purchase-requisitions.index') }}" class="btn btn-light btn-sm">Cancel</a>
+                <button type="submit" name="decision" value="approve" class="btn btn-sm ui-act ui-act-approve" title="Approve"><i class="fa-solid fa-check"></i> Approve</button>
+                <button type="submit" name="decision" value="reject" class="btn btn-sm ui-act ui-act-reject" onclick="return confirm('Reject this purchase requisition?')" title="Reject"><i class="fa-solid fa-xmark"></i> Reject</button>
+                <a href="{{ route('inventory.purchase-requisitions.index') }}" class="btn btn-sm ui-act ui-act-cancel" title="Cancel"><i class="fa-solid fa-ban"></i> Cancel</a>
             </form>
         </div>
     </div>

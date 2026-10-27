@@ -24,10 +24,10 @@
             <h4 class="mb-0">Buyers <small class="text-muted">(Merchandising)</small></h4>
             <div>
                 @if($merBuyersUrl)
-                    <a href="{{ $merBuyersUrl }}" class="btn btn-outline-primary btn-sm"><i class="fa-solid fa-handshake"></i> Manage Buyers</a>
+                    <a href="{{ $merBuyersUrl }}" class="btn btn-sm ui-act ui-act-nav" title="Manage Buyers"><i class="fa-solid fa-handshake"></i> Manage Buyers</a>
                 @endif
                 @if($merStylesUrl)
-                    <a href="{{ $merStylesUrl }}" class="btn btn-outline-primary btn-sm"><i class="fa-solid fa-shirt"></i> Manage Styles</a>
+                    <a href="{{ $merStylesUrl }}" class="btn btn-sm ui-act ui-act-nav" title="Manage Styles"><i class="fa-solid fa-shirt"></i> Manage Styles</a>
                 @endif
             </div>
         </div>
@@ -49,8 +49,8 @@
                     </select>
                 </div>
                 <div class="col-md-3 mb-2 d-flex align-items-end flex-wrap gap-1">
-                    <button type="submit" class="btn btn-secondary btn-sm btn-icon" title="Filter"><i class="fa-solid fa-filter"></i></button>
-                    <a href="{{ route('inventory.buyers.index') }}" class="btn btn-light btn-sm btn-icon" title="Reset"><i class="fa-solid fa-rotate-left"></i></a>
+                    <button type="submit" class="btn btn-sm ui-act ui-act-filter" title="Filter"><i class="fa-solid fa-filter"></i> Filter</button>
+                    <a href="{{ route('inventory.buyers.index') }}" class="btn btn-sm ui-act ui-act-reset" title="Reset"><i class="fa-solid fa-rotate-left"></i> Reset</a>
                 </div>
             </form>
 
@@ -110,7 +110,7 @@
                                                 </table>
                                             </div>
                                             <div class="modal-footer">
-                                                <button type="button" class="btn btn-light btn-sm" data-dismiss="modal">Close</button>
+                                                <button type="button" class="btn btn-sm ui-act ui-act-cancel" data-dismiss="modal" title="Close"><i class="fa-solid fa-ban"></i> Close</button>
                                             </div>
                                         </div>
                                     </div>

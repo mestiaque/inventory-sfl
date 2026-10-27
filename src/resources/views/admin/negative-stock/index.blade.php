@@ -14,7 +14,7 @@
             <h4 class="mb-0">Negative Stock Fix</h4>
             @can('inv_negative_stock.fix')
                 @if($rows->isNotEmpty())
-                    <a href="{{ route('inventory.negative-stock.auto-fix') }}" class="btn btn-danger btn-sm"><i class="fa-solid fa-wand-magic-sparkles"></i> Auto Fix All</a>
+                    <a href="{{ route('inventory.negative-stock.auto-fix') }}" class="btn btn-sm ui-act ui-act-auto" title="Auto Fix All"><i class="fa-solid fa-wand-magic-sparkles"></i> Auto Fix All</a>
                 @endif
             @endcan
         </div>
@@ -42,8 +42,8 @@
                     </select>
                 </div>
                 <div class="col-md-4 mb-2 d-flex align-items-end flex-wrap gap-1">
-                    <button type="submit" class="btn btn-secondary btn-sm btn-icon" title="Filter"><i class="fa-solid fa-filter"></i></button>
-                    <a href="{{ route('inventory.negative-stock.index') }}" class="btn btn-light btn-sm btn-icon" title="Reset"><i class="fa-solid fa-rotate-left"></i></a>
+                    <button type="submit" class="btn btn-sm ui-act ui-act-filter" title="Filter"><i class="fa-solid fa-filter"></i> Filter</button>
+                    <a href="{{ route('inventory.negative-stock.index') }}" class="btn btn-sm ui-act ui-act-reset" title="Reset"><i class="fa-solid fa-rotate-left"></i> Reset</a>
                 </div>
             </form>
 
@@ -63,7 +63,7 @@
                                 <td>{{ $stores->get($row->store_id)?->name }}</td>
                                 <td class="text-right text-danger font-weight-bold">{{ inv_qty($row->balance) }} {{ $item?->unit?->short_name }}</td>
                                 <td class="text-center">
-                                    <a href="{{ route('inventory.negative-stock.show', array_filter(['item_id' => $row->item_id, 'store_id' => $row->store_id, 'color_id' => $row->color_id, 'size_id' => $row->size_id])) }}" class="btn btn-danger btn-sm">Fix</a>
+                                    <a href="{{ route('inventory.negative-stock.show', array_filter(['item_id' => $row->item_id, 'store_id' => $row->store_id, 'color_id' => $row->color_id, 'size_id' => $row->size_id])) }}" class="btn btn-sm btn-icon ui-act ui-act-view" title="Fix"><i class="fa-solid fa-eye"></i></a>
                                 </td>
                             </tr>
                         @empty

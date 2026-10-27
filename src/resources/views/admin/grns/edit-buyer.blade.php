@@ -12,7 +12,7 @@
     <div class="card">
         <div class="card-header d-flex justify-content-between align-items-center">
             <h4 class="mb-0">Edit Buyer Supplied Challan — {{ $grn->grn_number }}</h4>
-            <a href="{{ route('inventory.grns.show', $grn) }}" class="btn btn-light btn-sm btn-icon" title="Back"><i class="fa-solid fa-arrow-left"></i></a>
+            <a href="{{ route('inventory.grns.show', $grn) }}" class="btn btn-sm ui-act ui-act-back" title="Back"><i class="fa-solid fa-arrow-left"></i> Back</a>
         </div>
         <div class="card-body">
             <div class="alert alert-warning">Editing a posted GRN reverses its original stock entries and re-posts the corrected quantities. This is blocked if any of this GRN's stock has already been issued or used elsewhere.</div>
@@ -61,7 +61,7 @@
                 <hr>
                 <div class="d-flex justify-content-between align-items-center mb-2">
                     <h6 class="mb-0">Items</h6>
-                    <button type="button" class="btn btn-sm btn-outline-primary" data-line-items-add="grn"><i class="fa-solid fa-plus"></i> Add Row</button>
+                    <button type="button" class="btn btn-sm ui-act ui-act-create" data-line-items-add="grn" title="Add Row"><i class="fa-solid fa-plus"></i> Add Row</button>
                 </div>
                 <div class="table-responsive">
                     <table class="table table-bordered table-sm align-middle">
@@ -102,7 +102,7 @@
                                     <td>
                                         <input type="hidden" name="items[{{ $index }}][rate]" value="0">
                                         <input type="hidden" name="items[{{ $index }}][rejected_qty]" value="0">
-                                        <button type="button" class="btn-custom danger" data-line-items-remove><i class="fa-solid fa-xmark"></i></button>
+                                        <button type="button" class="btn-custom ui-act ui-act-delete" data-line-items-remove title="Delete"><i class="fa-solid fa-trash"></i></button>
                                     </td>
                                 </tr>
                             @endforeach
@@ -142,13 +142,13 @@
                         <td>
                             <input type="hidden" name="items[__INDEX__][rate]" value="0">
                             <input type="hidden" name="items[__INDEX__][rejected_qty]" value="0">
-                            <button type="button" class="btn-custom danger" data-line-items-remove><i class="fa-solid fa-xmark"></i></button>
+                            <button type="button" class="btn-custom ui-act ui-act-delete" data-line-items-remove title="Delete"><i class="fa-solid fa-trash"></i></button>
                         </td>
                     </tr>
                 </template>
 
-                <button type="submit" class="btn btn-primary mt-3 btn-sm">Save Changes &amp; Re-post Stock</button>
-                <a href="{{ route('inventory.grns.show', $grn) }}" class="btn btn-light mt-3 btn-sm">Cancel</a>
+                <button type="submit" class="btn mt-3 btn-sm ui-act ui-act-save" title="Save Changes & Re-post Stock"><i class="fa-solid fa-floppy-disk"></i> Save Changes &amp; Re-post Stock</button>
+                <a href="{{ route('inventory.grns.show', $grn) }}" class="btn mt-3 btn-sm ui-act ui-act-cancel" title="Cancel"><i class="fa-solid fa-ban"></i> Cancel</a>
             </form>
         </div>
     </div>

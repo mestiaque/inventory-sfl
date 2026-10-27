@@ -43,7 +43,7 @@
                                     @can('inv_negative_stock.fix')
                                         <form method="POST" action="{{ route('inventory.data-conflicts.consolidate', $row->item_id) }}" onsubmit="return confirm('Move all of {{ $row->item_code }}\'s history from {{ $row->store_name }} into {{ $row->own_store }}?');">
                                             @csrf
-                                            <button class="btn btn-primary btn-sm">Move into own store</button>
+                                            <button class="btn btn-sm btn-icon ui-act ui-act-auto" title="Move into own store"><i class="fa-solid fa-wand-magic-sparkles"></i></button>
                                         </form>
                                     @endcan
                                 </td>
@@ -72,7 +72,7 @@
                                 <td class="text-right {{ $row->balance < 0 ? 'text-danger' : '' }}">{{ inv_qty($row->balance) }}</td>
                                 <td class="text-center">
                                     @can('inv_item.edit')
-                                        <a href="{{ route('inventory.items.edit', $row->item_id) }}" class="btn btn-outline-primary btn-sm">Set store</a>
+                                        <a href="{{ route('inventory.items.edit', $row->item_id) }}" class="btn btn-sm btn-icon ui-act ui-act-edit" title="Set store"><i class="fa-solid fa-pen-to-square"></i></a>
                                     @endcan
                                 </td>
                             </tr>

@@ -12,7 +12,7 @@
     <div class="card">
         <div class="card-header d-flex justify-content-between align-items-center">
             <h4 class="mb-0">Add Store Order{{ $purchaseRequisition ? ' — against ' . $purchaseRequisition->requisition_no : '' }}</h4>
-            <a href="{{ route('inventory.purchase-orders.index') }}" class="btn btn-light btn-sm btn-icon" title="Back"><i class="fa-solid fa-arrow-left"></i></a>
+            <a href="{{ route('inventory.purchase-orders.index') }}" class="btn btn-sm ui-act ui-act-back" title="Back"><i class="fa-solid fa-arrow-left"></i> Back</a>
         </div>
         <div class="card-body">
             @unless($purchaseRequisition)
@@ -88,8 +88,8 @@
                         </table>
                     </div>
 
-                    <button type="submit" class="btn btn-primary mt-3 btn-sm">Save Store Order</button>
-                    <a href="{{ route('inventory.purchase-orders.create') }}" class="btn btn-light mt-3 btn-sm">Change Requisition</a>
+                    <button type="submit" class="btn mt-3 btn-sm ui-act ui-act-save" title="Save Store Order"><i class="fa-solid fa-floppy-disk"></i> Save Store Order</button>
+                    <a href="{{ route('inventory.purchase-orders.create') }}" class="btn mt-3 btn-sm ui-act ui-act-create" title="Change Requisition"><i class="fa-solid fa-plus"></i> Change Requisition</a>
                 </form>
             @endunless
         </div>

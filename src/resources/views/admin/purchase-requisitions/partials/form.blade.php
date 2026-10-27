@@ -22,7 +22,7 @@
 <hr>
 <div class="d-flex justify-content-between align-items-center mb-2">
     <h6 class="mb-0">Items</h6>
-    <button type="button" class="btn btn-sm btn-outline-primary" data-line-items-add="preq"><i class="fa-solid fa-plus"></i> Add Row</button>
+    <button type="button" class="btn btn-sm ui-act ui-act-create" data-line-items-add="preq" title="Add Row"><i class="fa-solid fa-plus"></i> Add Row</button>
 </div>
 <p class="text-muted" style="font-size:12px;">Color/Size only need to be picked for an item that has no fixed color or size of its own on the Item Master.</p>
 <div class="table-responsive">
@@ -61,7 +61,7 @@
                     <td><input type="number" step="0.0001" min="0.0001" name="items[{{ $index }}][requested_qty]" class="form-control form-control-sm" data-role="qty" value="{{ $line['requested_qty'] ?? '' }}" required></td>
                     <td><input type="number" step="0.01" min="0.01" name="items[{{ $index }}][estimated_rate]" class="form-control form-control-sm" data-role="rate" value="{{ $line['estimated_rate'] ?? '' }}" placeholder="Tk" required></td>
                     <td><input type="text" class="form-control form-control-sm text-right" data-role="amount" value="{{ isset($line['requested_qty'], $line['estimated_rate']) && $line['estimated_rate'] !== '' ? number_format((float) $line['requested_qty'] * (float) $line['estimated_rate'], 2, '.', '') : '' }}" readonly tabindex="-1"></td>
-                    <td><button type="button" class="btn-custom danger" data-line-items-remove><i class="fa-solid fa-xmark"></i></button></td>
+                    <td><button type="button" class="btn-custom ui-act ui-act-delete" data-line-items-remove title="Delete"><i class="fa-solid fa-trash"></i></button></td>
                 </tr>
             @endforeach
         </tbody>
@@ -105,7 +105,7 @@
         <td><input type="number" step="0.0001" min="0.0001" name="items[__INDEX__][requested_qty]" class="form-control form-control-sm" data-role="qty" required></td>
         <td><input type="number" step="0.01" min="0.01" name="items[__INDEX__][estimated_rate]" class="form-control form-control-sm" data-role="rate" placeholder="Tk" required></td>
         <td><input type="text" class="form-control form-control-sm text-right" data-role="amount" readonly tabindex="-1"></td>
-        <td><button type="button" class="btn-custom danger" data-line-items-remove><i class="fa-solid fa-xmark"></i></button></td>
+        <td><button type="button" class="btn-custom ui-act ui-act-delete" data-line-items-remove title="Delete"><i class="fa-solid fa-trash"></i></button></td>
     </tr>
 </template>
 

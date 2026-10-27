@@ -12,7 +12,7 @@
     <div class="card">
         <div class="card-header d-flex justify-content-between align-items-center">
             <h4 class="mb-0">Receive Approval — {{ $grn->grn_number }}</h4>
-            <a href="{{ route('inventory.grns.index') }}" class="btn btn-light btn-sm btn-icon" title="Back"><i class="fa-solid fa-arrow-left"></i></a>
+            <a href="{{ route('inventory.grns.index') }}" class="btn btn-sm ui-act ui-act-back" title="Back"><i class="fa-solid fa-arrow-left"></i> Back</a>
         </div>
         <div class="card-body">
             <p>
@@ -62,12 +62,12 @@
                 </div>
 
                 @can('inv_grn.approve')
-                    <button type="submit" name="decision" value="approve" class="btn btn-success btn-sm">Approve</button>
+                    <button type="submit" name="decision" value="approve" class="btn btn-sm ui-act ui-act-approve" title="Approve"><i class="fa-solid fa-check"></i> Approve</button>
                 @endcan
                 @can('inv_grn.reject')
-                    <button type="submit" name="decision" value="reject" class="btn btn-danger btn-sm" onclick="return confirm('Reject this GRN? The claimed quantity on its Purchase Order will be released.')">Reject</button>
+                    <button type="submit" name="decision" value="reject" class="btn btn-sm ui-act ui-act-reject" onclick="return confirm('Reject this GRN? The claimed quantity on its Purchase Order will be released.')" title="Reject"><i class="fa-solid fa-xmark"></i> Reject</button>
                 @endcan
-                <a href="{{ route('inventory.grns.index') }}" class="btn btn-light btn-sm">Cancel</a>
+                <a href="{{ route('inventory.grns.index') }}" class="btn btn-sm ui-act ui-act-cancel" title="Cancel"><i class="fa-solid fa-ban"></i> Cancel</a>
             </form>
         </div>
     </div>

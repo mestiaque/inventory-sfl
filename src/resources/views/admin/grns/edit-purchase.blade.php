@@ -12,7 +12,7 @@
     <div class="card">
         <div class="card-header d-flex justify-content-between align-items-center">
             <h4 class="mb-0">Edit Purchase Challan — {{ $grn->grn_number }}{{ $grn->purchaseOrder ? ' — against ' . $grn->purchaseOrder->po_number : '' }}</h4>
-            <a href="{{ route('inventory.grns.show', $grn) }}" class="btn btn-light btn-sm btn-icon" title="Back"><i class="fa-solid fa-arrow-left"></i></a>
+            <a href="{{ route('inventory.grns.show', $grn) }}" class="btn btn-sm ui-act ui-act-back" title="Back"><i class="fa-solid fa-arrow-left"></i> Back</a>
         </div>
         <div class="card-body">
             @if($grn->status === 'pending')
@@ -70,7 +70,7 @@
                 <div class="d-flex justify-content-between align-items-center mb-2">
                     <h6 class="mb-0">Items</h6>
                     @unless($grn->purchase_order_id)
-                        <button type="button" class="btn btn-sm btn-outline-primary" data-line-items-add="grn"><i class="fa-solid fa-plus"></i> Add Row</button>
+                        <button type="button" class="btn btn-sm ui-act ui-act-create" data-line-items-add="grn" title="Add Row"><i class="fa-solid fa-plus"></i> Add Row</button>
                     @else
                         <span class="text-muted" style="font-size:12px;">This GRN's own lines against {{ $grn->purchaseOrder->po_number }} — new items must be received via a new GRN.</span>
                     @endunless
@@ -150,7 +150,7 @@
                                         <td><input type="text" name="items[{{ $index }}][batch_no]" class="form-control form-control-sm" value="{{ $line['batch_no'] ?? '' }}"></td>
                                         <td><input type="date" name="items[{{ $index }}][expiry_date]" class="form-control form-control-sm" value="{{ $line['expiry_date'] ?? '' }}"></td>
                                         <td><input type="text" class="form-control form-control-sm" data-role="amount" disabled></td>
-                                        <td><button type="button" class="btn-custom danger" data-line-items-remove><i class="fa-solid fa-xmark"></i></button></td>
+                                        <td><button type="button" class="btn-custom ui-act ui-act-delete" data-line-items-remove title="Delete"><i class="fa-solid fa-trash"></i></button></td>
                                     </tr>
                                 @endforeach
                             </tbody>
@@ -191,13 +191,13 @@
                             <td><input type="text" name="items[__INDEX__][batch_no]" class="form-control form-control-sm"></td>
                             <td><input type="date" name="items[__INDEX__][expiry_date]" class="form-control form-control-sm"></td>
                             <td><input type="text" class="form-control form-control-sm" data-role="amount" disabled></td>
-                            <td><button type="button" class="btn-custom danger" data-line-items-remove><i class="fa-solid fa-xmark"></i></button></td>
+                            <td><button type="button" class="btn-custom ui-act ui-act-delete" data-line-items-remove title="Delete"><i class="fa-solid fa-trash"></i></button></td>
                         </tr>
                     </template>
                 @endif
 
-                <button type="submit" class="btn btn-primary mt-3 btn-sm">{{ $grn->status === 'pending' ? 'Save Changes' : 'Save Changes & Re-post Stock' }}</button>
-                <a href="{{ route('inventory.grns.show', $grn) }}" class="btn btn-light mt-3 btn-sm">Cancel</a>
+                <button type="submit" class="btn mt-3 btn-sm ui-act ui-act-save" title="Save"><i class="fa-solid fa-floppy-disk"></i> {{ $grn->status === 'pending' ? 'Save Changes' : 'Save Changes & Re-post Stock' }}</button>
+                <a href="{{ route('inventory.grns.show', $grn) }}" class="btn mt-3 btn-sm ui-act ui-act-cancel" title="Cancel"><i class="fa-solid fa-ban"></i> Cancel</a>
             </form>
         </div>
     </div>

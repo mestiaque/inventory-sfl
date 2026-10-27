@@ -12,7 +12,7 @@
     <div class="card">
         <div class="card-header d-flex justify-content-between align-items-center">
             <h4 class="mb-0">Purchase Challan{{ $purchaseOrder ? ' — against ' . $purchaseOrder->po_number : '' }}</h4>
-            <a href="{{ route('inventory.grns.create') }}" class="btn btn-light btn-sm btn-icon" title="Back"><i class="fa-solid fa-arrow-left"></i></a>
+            <a href="{{ route('inventory.grns.create') }}" class="btn btn-sm ui-act ui-act-back" title="Back"><i class="fa-solid fa-arrow-left"></i> Back</a>
         </div>
         <div class="card-body">
             @unless($purchaseOrder)
@@ -131,8 +131,8 @@
                     @endcan
                     --}}
 
-                    <button type="submit" class="btn btn-primary mt-3 btn-sm">Submit Challan for Receive Approval</button>
-                    <a href="{{ route('inventory.grns.create-purchase') }}" class="btn btn-light mt-3 btn-sm">Change Store Order</a>
+                    <button type="submit" class="btn mt-3 btn-sm ui-act ui-act-save" title="Submit Challan for Receive Approval"><i class="fa-solid fa-floppy-disk"></i> Submit Challan for Receive Approval</button>
+                    <a href="{{ route('inventory.grns.create-purchase') }}" class="btn mt-3 btn-sm ui-act ui-act-create" title="Change Store Order"><i class="fa-solid fa-plus"></i> Change Store Order</a>
                 </form>
             @endunless
         </div>

@@ -12,7 +12,7 @@
     <div class="card">
         <div class="card-header d-flex justify-content-between align-items-center">
             <h4 class="mb-0">Confirm Department Receipt — {{ $issue->issue_no }}</h4>
-            <a href="{{ route('inventory.issues.index') }}" class="btn btn-light btn-sm btn-icon" title="Back"><i class="fa-solid fa-arrow-left"></i></a>
+            <a href="{{ route('inventory.issues.index') }}" class="btn btn-sm ui-act ui-act-back" title="Back"><i class="fa-solid fa-arrow-left"></i> Back</a>
         </div>
         <div class="card-body">
             <p><strong>Department:</strong> {{ $issue->department?->name }} &nbsp;|&nbsp; <strong>Issue Date:</strong> {{ $issue->issue_date?->format('d M Y') }}</p>
@@ -46,8 +46,8 @@
                     <textarea name="department_receive_remarks" class="form-control form-control-sm" rows="2">{{ $issue->department_receive_remarks }}</textarea>
                 </div>
 
-                <button type="submit" class="btn btn-primary btn-sm">Confirm Receipt</button>
-                <a href="{{ route('inventory.issues.index') }}" class="btn btn-light btn-sm">Cancel</a>
+                <button type="submit" class="btn btn-sm ui-act ui-act-receive" title="Confirm Receipt"><i class="fa-solid fa-box-open"></i> Confirm Receipt</button>
+                <a href="{{ route('inventory.issues.index') }}" class="btn btn-sm ui-act ui-act-cancel" title="Cancel"><i class="fa-solid fa-ban"></i> Cancel</a>
             </form>
         </div>
     </div>

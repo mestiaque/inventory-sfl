@@ -17,7 +17,7 @@
     <div class="card mb-3">
         <div class="card-header d-flex justify-content-between align-items-center">
             <h4 class="mb-0">Negative Stock Fix</h4>
-            <a href="{{ route('inventory.negative-stock.index') }}" class="btn btn-light btn-sm btn-icon" title="Back"><i class="fa-solid fa-arrow-left"></i></a>
+            <a href="{{ route('inventory.negative-stock.index') }}" class="btn btn-sm ui-act ui-act-back" title="Back"><i class="fa-solid fa-arrow-left"></i> Back</a>
         </div>
         <div class="card-body">
             <div class="row">
@@ -70,7 +70,7 @@
                                             <form method="POST" action="{{ route('inventory.negative-stock.undo-move', $moved) }}"
                                                   onsubmit="return confirm('Move {{ $moved->issue_no }} back to {{ $store->name }}?');">
                                                 @csrf
-                                                <button type="submit" class="btn btn-warning btn-sm">Move back</button>
+                                                <button type="submit" class="btn btn-sm btn-icon ui-act ui-act-back" title="Move back"><i class="fa-solid fa-arrow-left"></i></button>
                                             </form>
                                         @endcan
                                     </td>
@@ -125,7 +125,7 @@
                                                             @endforeach
                                                         </select>
                                                         <input type="text" name="reason" class="form-control form-control-sm mb-1" placeholder="Reason (optional)">
-                                                        <button type="submit" class="btn btn-primary btn-sm btn-block">Move challan</button>
+                                                        <button type="submit" class="btn btn-sm btn-block btn-icon ui-act ui-act-auto" title="Move challan"><i class="fa-solid fa-wand-magic-sparkles"></i></button>
                                                     </form>
                                                 </td>
                                             </tr>
@@ -157,7 +157,7 @@
                                     <input type="hidden" name="{{ $k }}" value="{{ $v }}">
                                 @endforeach
                                 <textarea name="reason" class="form-control form-control-sm mb-2" rows="2" placeholder="Reason (optional)"></textarea>
-                                <button type="submit" class="btn btn-danger btn-sm btn-block">Set balance to 0</button>
+                                <button type="submit" class="btn btn-sm btn-block ui-act ui-act-auto" title="Set balance to 0"><i class="fa-solid fa-wand-magic-sparkles"></i> Set balance to 0</button>
                             </form>
                         </div>
                     </div>

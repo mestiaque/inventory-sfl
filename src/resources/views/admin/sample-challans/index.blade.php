@@ -13,7 +13,7 @@
         <div class="card-header d-flex justify-content-between align-items-center">
             <h4 class="mb-0">Sample Delivery Challan</h4>
             @can('inv_sample_challan.add')
-                <a href="{{ route('inventory.sample-challans.create') }}" class="btn btn-primary btn-sm btn-icon" title="New Challan"><i class="fa-solid fa-plus"></i></a>
+                <a href="{{ route('inventory.sample-challans.create') }}" class="btn btn-sm ui-act ui-act-create" title="New Challan"><i class="fa-solid fa-plus"></i> New Challan</a>
             @endcan
         </div>
         <div class="card-body">
@@ -36,8 +36,8 @@
                     <input type="date" name="date_to" class="form-control form-control-sm" value="{{ request('date_to') }}" placeholder="To">
                 </div>
                 <div class="col-md-3 mb-2 d-flex align-items-end flex-wrap gap-1">
-                    <button type="submit" class="btn btn-secondary btn-sm btn-icon" title="Filter"><i class="fa-solid fa-filter"></i></button>
-                    <a href="{{ route('inventory.sample-challans.index') }}" class="btn btn-light btn-sm btn-icon" title="Reset"><i class="fa-solid fa-rotate-left"></i></a>
+                    <button type="submit" class="btn btn-sm ui-act ui-act-filter" title="Filter"><i class="fa-solid fa-filter"></i> Filter</button>
+                    <a href="{{ route('inventory.sample-challans.index') }}" class="btn btn-sm ui-act ui-act-reset" title="Reset"><i class="fa-solid fa-rotate-left"></i> Reset</a>
                 </div>
             </form>
 
@@ -57,16 +57,16 @@
                                 <td>{{ $challan->items_count }}</td>
                                 <td class="text-right">
                                     @can('inv_sample_challan.view')
-                                        <a href="{{ route('inventory.sample-challans.show', $challan) }}" class="btn-custom success"><i class="fa-solid fa-eye"></i></a>
+                                        <a href="{{ route('inventory.sample-challans.show', $challan) }}" class="btn-custom ui-act ui-act-view" title="View"><i class="fa-solid fa-eye"></i></a>
                                     @endcan
                                     @can('inv_sample_challan.print')
-                                        <a href="{{ route('inventory.sample-challans.print', $challan) }}" target="_blank" class="btn-custom primary"><i class="fa-solid fa-print"></i></a>
+                                        <a href="{{ route('inventory.sample-challans.print', $challan) }}" target="_blank" class="btn-custom ui-act ui-act-print" title="Print"><i class="fa-solid fa-print"></i></a>
                                     @endcan
                                     @can('inv_sample_challan.edit')
-                                        <a href="{{ route('inventory.sample-challans.edit', $challan) }}" class="btn-custom yellow"><i class="fa-solid fa-pen"></i></a>
+                                        <a href="{{ route('inventory.sample-challans.edit', $challan) }}" class="btn-custom ui-act ui-act-edit" title="Edit"><i class="fa-solid fa-pen-to-square"></i></a>
                                     @endcan
                                     @can('inv_sample_challan.delete')
-                                        <button type="button" class="btn-custom danger" data-toggle="modal" data-target="#deleteSampleChallanModal" data-action="{{ route('inventory.sample-challans.destroy', $challan) }}"><i class="fa-solid fa-trash"></i></button>
+                                        <button type="button" class="btn-custom ui-act ui-act-delete" data-toggle="modal" data-target="#deleteSampleChallanModal" data-action="{{ route('inventory.sample-challans.destroy', $challan) }}" title="Delete"><i class="fa-solid fa-trash"></i></button>
                                     @endcan
                                 </td>
                             </tr>

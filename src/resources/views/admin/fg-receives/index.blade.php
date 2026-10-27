@@ -13,7 +13,7 @@
         <div class="card-header d-flex justify-content-between align-items-center">
             <h4 class="mb-0">Finished Goods Receive</h4>
             @can('inv_fg_receive.add')
-                <a href="{{ route('inventory.fg-receives.create') }}" class="btn btn-primary btn-sm btn-icon" title="Add Receive"><i class="fa-solid fa-plus"></i></a>
+                <a href="{{ route('inventory.fg-receives.create') }}" class="btn btn-sm ui-act ui-act-create" title="Add Receive"><i class="fa-solid fa-plus"></i> Add Receive</a>
             @endcan
         </div>
         <div class="card-body">
@@ -52,8 +52,8 @@
                     <input type="date" name="date_to" class="form-control form-control-sm" value="{{ request('date_to') }}" placeholder="To">
                 </div>
                 <div class="col-md-3 mb-2 d-flex align-items-end flex-wrap gap-1">
-                    <button type="submit" class="btn btn-secondary btn-sm btn-icon" title="Filter"><i class="fa-solid fa-filter"></i></button>
-                    <a href="{{ route('inventory.fg-receives.index') }}" class="btn btn-light btn-sm btn-icon" title="Reset"><i class="fa-solid fa-rotate-left"></i></a>
+                    <button type="submit" class="btn btn-sm ui-act ui-act-filter" title="Filter"><i class="fa-solid fa-filter"></i> Filter</button>
+                    <a href="{{ route('inventory.fg-receives.index') }}" class="btn btn-sm ui-act ui-act-reset" title="Reset"><i class="fa-solid fa-rotate-left"></i> Reset</a>
                 </div>
             </form>
 
@@ -73,7 +73,7 @@
                                 <td>{{ $receive->store?->name }}</td>
                                 <td>{{ $receive->receive_date?->format('d M Y') }}</td>
                                 <td class="text-right">
-                                    <button type="button" class="btn-custom success" data-toggle="modal" data-target="#viewFgrModal{{ $receive->id }}"><i class="fa-solid fa-eye"></i></button>
+                                    <button type="button" class="btn-custom ui-act ui-act-view" data-toggle="modal" data-target="#viewFgrModal{{ $receive->id }}" title="View"><i class="fa-solid fa-eye"></i></button>
                                 </td>
                             </tr>
                         @empty
@@ -134,7 +134,7 @@
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-light btn-sm" data-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-sm ui-act ui-act-cancel" data-dismiss="modal" title="Close"><i class="fa-solid fa-ban"></i> Close</button>
                 </div>
             </div>
         </div>

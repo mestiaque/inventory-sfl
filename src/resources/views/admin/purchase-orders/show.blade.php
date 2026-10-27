@@ -15,16 +15,14 @@
             <div>
                 @can('inv_grn.add')
                     @if(in_array($purchaseOrder->status, ['approved', 'received']))
-                        <a href="{{ route('inventory.grns.create-purchase', ['purchase_order_id' => $purchaseOrder->id]) }}" class="btn btn-success btn-sm">
-                            <i class="fa-solid fa-truck-ramp-box"></i> Receive (New Challan / GRN)
-                        </a>
+                        <a href="{{ route('inventory.grns.create-purchase', ['purchase_order_id' => $purchaseOrder->id]) }}" class="btn btn-sm ui-act ui-act-create" title="Receive (New Challan / GRN)"><i class="fa-solid fa-plus"></i> Receive (New Challan / GRN)</a>
                     @elseif($purchaseOrder->status === 'draft')
                         <span class="badge p-2 badge-secondary" title="Approve this store order first before a challan can be received against it.">
                             <i class="fa-solid fa-lock"></i> Approve first to receive
                         </span>
                     @endif
                 @endcan
-                <a href="{{ route('inventory.purchase-orders.index') }}" class="btn btn-light btn-sm btn-icon" title="Back"><i class="fa-solid fa-arrow-left"></i></a>
+                <a href="{{ route('inventory.purchase-orders.index') }}" class="btn btn-sm ui-act ui-act-back" title="Back"><i class="fa-solid fa-arrow-left"></i> Back</a>
             </div>
         </div>
         <div class="card-body">

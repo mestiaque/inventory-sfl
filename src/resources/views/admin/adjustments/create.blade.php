@@ -12,7 +12,7 @@
     <div class="card">
         <div class="card-header d-flex justify-content-between align-items-center">
             <h4 class="mb-0">New Stock Adjustment</h4>
-            <a href="{{ route('inventory.adjustments.index') }}" class="btn btn-light btn-sm btn-icon" title="Back"><i class="fa-solid fa-arrow-left"></i></a>
+            <a href="{{ route('inventory.adjustments.index') }}" class="btn btn-sm ui-act ui-act-back" title="Back"><i class="fa-solid fa-arrow-left"></i> Back</a>
         </div>
         <div class="card-body">
             <div class="alert alert-info">The system quantity for each item is captured automatically at the moment you submit this form. Enter the physically counted quantity — the difference will be posted to the stock ledger once approved.</div>
@@ -50,7 +50,7 @@
                 <hr>
                 <div class="d-flex justify-content-between align-items-center mb-2">
                     <h6 class="mb-0">Items</h6>
-                    <button type="button" class="btn btn-sm btn-outline-primary" data-line-items-add="adj"><i class="fa-solid fa-plus"></i> Add Row</button>
+                    <button type="button" class="btn btn-sm ui-act ui-act-create" data-line-items-add="adj" title="Add Row"><i class="fa-solid fa-plus"></i> Add Row</button>
                 </div>
                 <div class="table-responsive">
                     <table class="table table-bordered table-sm align-middle">
@@ -82,7 +82,7 @@
                                     </select>
                                 </td>
                                 <td><input type="number" step="0.0001" min="0" name="items[0][physical_qty]" class="form-control form-control-sm" required></td>
-                                <td><button type="button" class="btn-custom danger" data-line-items-remove><i class="fa-solid fa-xmark"></i></button></td>
+                                <td><button type="button" class="btn-custom ui-act ui-act-delete" data-line-items-remove title="Delete"><i class="fa-solid fa-trash"></i></button></td>
                             </tr>
                         </tbody>
                     </table>
@@ -115,12 +115,12 @@
                             </select>
                         </td>
                         <td><input type="number" step="0.0001" min="0" name="items[__INDEX__][physical_qty]" class="form-control form-control-sm" required></td>
-                        <td><button type="button" class="btn-custom danger" data-line-items-remove><i class="fa-solid fa-xmark"></i></button></td>
+                        <td><button type="button" class="btn-custom ui-act ui-act-delete" data-line-items-remove title="Delete"><i class="fa-solid fa-trash"></i></button></td>
                     </tr>
                 </template>
 
-                <button type="submit" class="btn btn-primary mt-3 btn-sm">Submit for Approval</button>
-                <a href="{{ route('inventory.adjustments.index') }}" class="btn btn-light mt-3 btn-sm">Cancel</a>
+                <button type="submit" class="btn mt-3 btn-sm ui-act ui-act-save" title="Submit for Approval"><i class="fa-solid fa-floppy-disk"></i> Submit for Approval</button>
+                <a href="{{ route('inventory.adjustments.index') }}" class="btn mt-3 btn-sm ui-act ui-act-cancel" title="Cancel"><i class="fa-solid fa-ban"></i> Cancel</a>
             </form>
         </div>
     </div>
