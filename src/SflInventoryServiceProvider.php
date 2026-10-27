@@ -90,6 +90,7 @@ class SflInventoryServiceProvider extends ServiceProvider
             'inv_grn'                    => Models\InvGrn::class,
             'inv_requisition'            => Models\InvRequisition::class,
             'inv_issue'                  => Models\InvIssue::class,
+            'inv_issue_return'           => Models\InvIssueReturn::class,
             'inv_stock_transfer'         => Models\InvStockTransfer::class,
             'inv_production_consumption' => Models\InvProductionConsumption::class,
             'inv_finished_goods_receive' => Models\InvFinishedGoodsReceive::class,
@@ -107,6 +108,7 @@ class SflInventoryServiceProvider extends ServiceProvider
         Models\InvGrn::observe(Observers\InvGrnObserver::class);
         Models\InvRequisition::observe(Observers\InvRequisitionObserver::class);
         Models\InvIssue::observe(Observers\InvIssueObserver::class);
+        Models\InvIssueReturn::observe(Observers\InvIssueReturnObserver::class);
         Models\InvStockTransfer::observe(Observers\InvStockTransferObserver::class);
         Models\InvProductionConsumption::observe(Observers\InvProductionConsumptionObserver::class);
         Models\InvFinishedGoodsReceive::observe(Observers\InvFinishedGoodsReceiveObserver::class);

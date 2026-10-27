@@ -4,6 +4,7 @@ namespace ME\SflInventory\Services;
 
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
+use ME\SflInventory\Models\InvIssueReturnItem;
 use ME\SflInventory\Models\InvItem;
 use ME\SflInventory\Models\InvRequisitionItem;
 use ME\SflInventory\Models\InvStockTransaction;
@@ -281,14 +282,16 @@ class StockService
             ->tap(fn ($q) => $sameStyle($q, 'g'))
             ->sum('gi.received_qty');
 
+        // Net of goods the department brought back (Issue Return).
         $issued = (float) DB::table('inv_issue_items as ii')
             ->join('inv_issues as i', 'i.id', '=', 'ii.issue_id')
+            ->leftJoinSub(InvIssueReturnItem::totalsByIssueItem(), 'rtn', 'rtn.issue_item_id', '=', 'ii.id')
             ->whereNull('i.deleted_at')
             ->where('ii.item_id', $itemId)
             ->when($excludeIssueId, fn ($q) => $q->where('i.id', '!=', $excludeIssueId))
             ->tap(fn ($q) => $variant($q, 'ii'))
             ->tap(fn ($q) => $sameStyle($q, 'i'))
-            ->sum('ii.issued_qty');
+            ->sum(DB::raw('ii.issued_qty - COALESCE(rtn.qty, 0)'));
 
         return ['received' => $received, 'issued' => $issued, 'balance' => $received - $issued];
     }
@@ -316,13 +319,15 @@ class StockService
             ->tap(fn ($q) => $variant($q, 'gi'))
             ->sum('gi.received_qty');
 
+        // Net of goods the department brought back (Issue Return).
         $issued = (float) DB::table('inv_issue_items as ii')
             ->join('inv_issues as i', 'i.id', '=', 'ii.issue_id')
+            ->leftJoinSub(InvIssueReturnItem::totalsByIssueItem(), 'rtn', 'rtn.issue_item_id', '=', 'ii.id')
             ->whereNull('i.deleted_at')
             ->where('i.buyer_id', $buyerId)
             ->where('ii.item_id', $itemId)
             ->tap(fn ($q) => $variant($q, 'ii'))
-            ->sum('ii.issued_qty');
+            ->sum(DB::raw('ii.issued_qty - COALESCE(rtn.qty, 0)'));
 
         return ['received' => $received, 'issued' => $issued, 'balance' => $received - $issued];
     }

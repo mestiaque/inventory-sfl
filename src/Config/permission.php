@@ -95,7 +95,7 @@ return [
         ],
         'inv_issue' => [
             'label' => 'Store Issue & Department Receive',
-            'permissions' => $crud + ['authorize' => 'Authorize', 'approve' => 'Approve', 'receive' => 'Department Receive', 'print' => 'Print', 'export' => 'Export'],
+            'permissions' => $crud + ['authorize' => 'Authorize', 'approve' => 'Approve', 'receive' => 'Department Receive', 'return' => 'Return to Store', 'print' => 'Print', 'export' => 'Export'],
         ],
         'inv_sample_challan' => [
             'label' => 'Sample Delivery Challan',

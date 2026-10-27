@@ -111,6 +111,9 @@
                                     <span class="badge badge-{{ ['pending' => 'secondary', 'partial' => 'warning', 'full' => 'success'][$issue->department_receive_status] ?? 'secondary' }}">
                                         {{ ucfirst($issue->department_receive_status) }}
                                     </span>
+                                    @if($issue->returned_total > 0)
+                                        <br><span class="badge badge-warning" title="Returned to store">Returned {{ inv_qty($issue->returned_total) }}</span>
+                                    @endif
                                 </td>
                                 <td class="text-right">
                                     @can('inv_issue.authorize')
@@ -140,6 +143,11 @@
                                     @endcan
                                     @can('inv_issue.print')
                                         <a href="{{ route('inventory.issues.print', $issue) }}" target="_blank" class="btn-custom ui-act ui-act-print" title="Print"><i class="fa-solid fa-print"></i></a>
+                                    @endcan
+                                    @can('inv_issue.return')
+                                        @if($issue->status === 'approved' && (float) $issue->returned_total < (float) $issue->issued_total - 0.0001)
+                                            <a href="{{ route('inventory.issue-returns.create', $issue) }}" class="btn btn-sm btn-icon ui-act ui-act-return" title="Return to Store"><i class="fa-solid fa-reply"></i></a>
+                                        @endif
                                     @endcan
                                     @can('inv_issue.receive')
                                         @if($issue->status === 'approved' && $issue->department_receive_status !== 'full')

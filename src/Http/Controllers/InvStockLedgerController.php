@@ -46,7 +46,7 @@ class InvStockLedgerController extends Controller
         $colors = InvColor::active()->orderBy('name')->get();
         $sizes = InvSize::active()->ordered()->get();
         $stores = InvStore::orderBy('name')->get();
-        $types = ['opening', 'grn', 'issue', 'transfer', 'production_consumption', 'finished_goods', 'gate_pass', 'shipment', 'adjustment'];
+        $types = ['opening', 'grn', 'issue', 'issue_return', 'transfer', 'production_consumption', 'finished_goods', 'gate_pass', 'shipment', 'adjustment'];
 
         return view('sfl-inventory::admin.stock-ledger.index', compact('transactions', 'items', 'colors', 'sizes', 'stores', 'types', 'totals'));
     }

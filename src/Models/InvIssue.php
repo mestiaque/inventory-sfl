@@ -63,6 +63,11 @@ class InvIssue extends Model
         return $this->hasMany(InvIssueItem::class, 'issue_id');
     }
 
+    public function returns(): HasMany
+    {
+        return $this->hasMany(InvIssueReturn::class, 'issue_id');
+    }
+
     public function issuer(): BelongsTo
     {
         return $this->belongsTo(User::class, 'issued_by');

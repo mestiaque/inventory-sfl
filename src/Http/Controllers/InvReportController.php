@@ -413,6 +413,7 @@ class InvReportController extends Controller
         // real stock had gone negative when physically nothing has moved.
         $issuedTotals = DB::table('inv_issue_items as ii')
             ->join('inv_issues as i', 'i.id', '=', 'ii.issue_id')
+            ->leftJoinSub(\ME\SflInventory\Models\InvIssueReturnItem::totalsByIssueItem(), 'rtn', 'rtn.issue_item_id', '=', 'ii.id')
             ->whereNull('i.deleted_at')
             ->where('i.status', 'approved')
             ->where($this->buyerStyleContextClause('i'))
@@ -420,7 +421,7 @@ class InvReportController extends Controller
             ->when($request->filled('style'), fn ($q) => $q->where('i.style', $request->style))
             ->when($request->filled('item_id'), fn ($q) => $q->where('ii.item_id', $request->item_id))
             ->groupBy('i.buyer_id', 'i.style', 'ii.item_id', 'ii.color_id', 'ii.size_id')
-            ->select('i.buyer_id', DB::raw("COALESCE(i.style, '') as style"), 'ii.item_id', 'ii.color_id', 'ii.size_id', DB::raw('SUM(ii.issued_qty) as total_qty'))
+            ->select('i.buyer_id', DB::raw("COALESCE(i.style, '') as style"), 'ii.item_id', 'ii.color_id', 'ii.size_id', DB::raw('SUM(ii.issued_qty - COALESCE(rtn.qty, 0)) as total_qty'))
             ->get()
             ->groupBy(fn ($row) => $row->buyer_id . '|' . $row->style . '|' . $row->item_id);
 

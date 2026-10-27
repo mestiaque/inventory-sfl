@@ -25,6 +25,7 @@ return [
         'grn'                  => 'GRN',
         'requisition'          => 'REQ',
         'issue'                => 'ISS',
+        'issue_return'         => 'RET',
         'transfer'             => 'TRF',
         'consumption'          => 'CONS',
         'fg_receive'           => 'FGR',

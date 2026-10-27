@@ -13,6 +13,7 @@ use ME\SflInventory\Http\Controllers\InvGatePassController;
 use ME\SflInventory\Http\Controllers\InvGrnController;
 use ME\SflInventory\Http\Controllers\InvGuidelineController;
 use ME\SflInventory\Http\Controllers\InvIssueController;
+use ME\SflInventory\Http\Controllers\InvIssueReturnController;
 use ME\SflInventory\Http\Controllers\InvItemCategoryController;
 use ME\SflInventory\Http\Controllers\InvItemController;
 use ME\SflInventory\Http\Controllers\InvMachineController;
@@ -142,6 +143,10 @@ Route::middleware($route['middleware'] ?? ['web', 'auth'])
         Route::get('issues/{issue}/print', [InvIssueController::class, 'print'])->name('issues.print');
         Route::get('issues/{issue}/receive', [InvIssueController::class, 'receiveForm'])->name('issues.receive-form');
         Route::post('issues/{issue}/receive', [InvIssueController::class, 'receive'])->name('issues.receive');
+        Route::get('issues/{issue}/return', [InvIssueReturnController::class, 'create'])->name('issue-returns.create');
+        Route::post('issues/{issue}/return', [InvIssueReturnController::class, 'store'])->name('issue-returns.store');
+        Route::get('issue-returns', [InvIssueReturnController::class, 'index'])->name('issue-returns.index');
+        Route::get('issue-returns/{issueReturn}/print', [InvIssueReturnController::class, 'print'])->name('issue-returns.print');
 
         // Sample Delivery Challan
         Route::resource('sample-challans', SampleChallanController::class)->parameters(['sample-challans' => 'sample_challan']);

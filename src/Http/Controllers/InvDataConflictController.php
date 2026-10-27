@@ -70,10 +70,11 @@ class InvDataConflictController extends Controller
         $styleOverIssues = DB::query()->fromSub(
             DB::table('inv_issues as iss')
                 ->join('inv_issue_items as ii', 'ii.issue_id', '=', 'iss.id')
+                ->leftJoinSub(\ME\SflInventory\Models\InvIssueReturnItem::totalsByIssueItem(), 'rtn', 'rtn.issue_item_id', '=', 'ii.id')
                 ->whereNull('iss.deleted_at')
                 ->whereIn('iss.store_id', $buyerStoreIds)
                 ->groupBy('iss.store_id', 'iss.buyer_id', DB::raw("TRIM(COALESCE(iss.style, ''))"), 'ii.item_id')
-                ->selectRaw("iss.store_id, iss.buyer_id, TRIM(COALESCE(iss.style, '')) as style, ii.item_id, SUM(ii.issued_qty) as issued, GROUP_CONCAT(DISTINCT iss.issue_no ORDER BY iss.issue_no SEPARATOR ', ') as issue_nos"),
+                ->selectRaw("iss.store_id, iss.buyer_id, TRIM(COALESCE(iss.style, '')) as style, ii.item_id, SUM(ii.issued_qty - COALESCE(rtn.qty, 0)) as issued, GROUP_CONCAT(DISTINCT iss.issue_no ORDER BY iss.issue_no SEPARATOR ', ') as issue_nos"),
             'z'
         )
             ->leftJoin('inv_items as i', 'i.id', '=', 'z.item_id')

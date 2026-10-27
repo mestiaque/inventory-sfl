@@ -34,6 +34,12 @@ class InvIssueController extends Controller
 
         $issues = InvIssue::query()
             ->with(['store', 'toStore', 'department', 'buyer', 'requisition'])
+            ->withSum('items as issued_total', 'issued_qty')
+            ->addSelect(['returned_total' => \ME\SflInventory\Models\InvIssueReturnItem::query()
+                ->join('inv_issue_returns as rt', 'rt.id', '=', 'inv_issue_return_items.return_id')
+                ->whereNull('rt.deleted_at')
+                ->whereColumn('rt.issue_id', 'inv_issues.id')
+                ->selectRaw('COALESCE(SUM(inv_issue_return_items.returned_qty), 0)')])
             ->when($request->filled('search'), fn ($q) => $q->where('issue_no', 'like', '%' . $request->search . '%'))
             ->when($request->filled('requisition_no'), fn ($q) => $q->whereHas('requisition', fn ($rq) => $rq->where('requisition_no', 'like', '%' . $request->requisition_no . '%')))
             ->when($request->filled('department_id'), fn ($q) => $q->where('department_id', $request->department_id))
