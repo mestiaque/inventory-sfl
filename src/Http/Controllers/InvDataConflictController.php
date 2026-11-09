@@ -26,12 +26,16 @@ class InvDataConflictController extends Controller
     {
         $this->authorize('inv_negative_stock.view');
 
-        // 1. Stock sitting in a store other than the item's own.
+        // Buyer Stores may hold any item besides its home store (InvItem::canBeInStore()).
+        $buyerStoreIds = InvItem::buyerStoreIds();
+
+        // 1. Stock sitting in a store other than the item's own (Buyer Stores excepted).
         $strayStock = DB::table('inv_stock_transactions as t')
             ->join('inv_items as i', fn ($j) => $j->on('i.id', '=', 't.item_id')->whereNull('i.deleted_at'))
             ->join('inv_stores as s', 's.id', '=', 't.store_id')
             ->join('inv_stores as own', 'own.id', '=', 'i.opening_store_id')
             ->whereColumn('t.store_id', '!=', 'i.opening_store_id')
+            ->when($buyerStoreIds, fn ($q) => $q->whereNotIn('t.store_id', $buyerStoreIds))
             ->groupBy('t.item_id', 't.store_id', 'i.item_code', 'i.item_name', 's.name', 'own.name')
             ->havingRaw('ABS(SUM(t.qty_in) - SUM(t.qty_out)) > 0.0001')
             ->selectRaw('t.item_id, i.item_code, i.item_name, s.name as store_name, own.name as own_store, SUM(t.qty_in) - SUM(t.qty_out) as balance')
@@ -60,13 +64,13 @@ class InvDataConflictController extends Controller
             ->whereNull('x.deleted_at')
             ->whereRaw($d[7])
             ->whereColumn('x.store_id', '!=', 'i.opening_store_id')
+            ->when($buyerStoreIds, fn ($q) => $q->whereNotIn('x.store_id', $buyerStoreIds))
             ->selectRaw("? as doc_type, x.{$d[4]} as doc_no, x.{$d[5]} as doc_date, i.item_code, i.item_name, li.{$d[6]} as qty, s.name as store_name, own.name as own_store", [$d[0]])
             ->get())
             ->sortByDesc('doc_date')
             ->values();
 
         // 4. Buyer Store: issued more under a buyer + style than was received under it.
-        $buyerStoreIds = InvStore::where('type', InvStore::TYPE_BUYER)->pluck('id');
         $styleOverIssues = DB::query()->fromSub(
             DB::table('inv_issues as iss')
                 ->join('inv_issue_items as ii', 'ii.issue_id', '=', 'iss.id')

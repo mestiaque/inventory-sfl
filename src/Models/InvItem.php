@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Traits\HasAudit;
@@ -81,6 +82,37 @@ class InvItem extends Model
         return $this->belongsTo(InvStore::class, 'opening_store_id');
     }
 
+    /** @var array<int, true>|null store id => true, for every Buyer Store */
+    private static ?array $buyerStoreMap = null;
+
+    /** Ids of every Buyer Store (cached per request). */
+    public static function buyerStoreIds(): array
+    {
+        self::$buyerStoreMap ??= InvStore::withTrashed()->where('type', InvStore::TYPE_BUYER)->pluck('id')
+            ->mapWithKeys(fn ($id) => [(int) $id => true])->all();
+
+        return array_keys(self::$buyerStoreMap);
+    }
+
+    /**
+     * An item has one home store (opening_store_id), e.g. the General Store.
+     * Besides that, the same item may also be held in any Buyer Store —
+     * there the stock is kept apart per buyer + style by the GRN / Issue
+     * headers (see StockService::styleBalance()), so one item can serve
+     * several buyers at once.
+     */
+    public function canBeInStore(?int $storeId): bool
+    {
+        if (! $storeId) {
+            return false;
+        }
+        if ((int) $this->opening_store_id === $storeId) {
+            return true;
+        }
+
+        return in_array($storeId, self::buyerStoreIds(), true);
+    }
+
     public function department(): BelongsTo
     {
         return $this->belongsTo(InvDepartment::class, 'department_id');
@@ -89,6 +121,23 @@ class InvItem extends Model
     public function supplier(): BelongsTo
     {
         return $this->belongsTo(InvSupplier::class, 'supplier_id');
+    }
+
+    /** Every buyer this item is for (inv_item_buyers); buyer_id keeps the first one. */
+    public function buyers(): BelongsToMany
+    {
+        return $this->belongsToMany(InvBuyer::class, 'inv_item_buyers', 'item_id', 'buyer_id')->withTimestamps();
+    }
+
+    /** Buyer names for display — the full list, or the old single buyer. */
+    public function buyerNames(): string
+    {
+        $names = $this->buyers->pluck('name');
+        if ($names->isEmpty() && $this->buyer) {
+            $names = collect([$this->buyer->name]);
+        }
+
+        return $names->implode(', ');
     }
 
     public function buyer(): BelongsTo

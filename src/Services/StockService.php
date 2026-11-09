@@ -201,7 +201,8 @@ class StockService
 
     /**
      * Moves an item to a new store by rewriting its history: every ledger
-     * row it has in another General/Buyer store is re-pointed at $storeId,
+     * row it has in another General store is re-pointed at $storeId (Buyer
+     * Store rows stay put — see the note below),
      * so every report — old periods included — shows the item as if it had
      * always lived there. No new entries are posted, so quantity and value
      * are exactly what they were, just in one store. Production-floor and
@@ -213,10 +214,13 @@ class StockService
      */
     public function moveItemHistoryToStore(InvItem $item, int $storeId): int
     {
-        $sourceStoreIds = \ME\SflInventory\Models\InvStore::whereIn('type', [
-            \ME\SflInventory\Models\InvStore::TYPE_GENERAL,
-            \ME\SflInventory\Models\InvStore::TYPE_BUYER,
-        ])->pluck('id')->push($storeId)->unique();
+        // An item may legitimately hold stock in a Buyer Store besides its
+        // home store (InvItem::canBeInStore()), so Buyer Store rows are never
+        // pulled out — unless the item's new home is itself a Buyer Store.
+        $targetIsBuyer = in_array($storeId, InvItem::buyerStoreIds(), true);
+        $sourceStoreIds = \ME\SflInventory\Models\InvStore::whereIn('type', $targetIsBuyer
+            ? [\ME\SflInventory\Models\InvStore::TYPE_GENERAL, \ME\SflInventory\Models\InvStore::TYPE_BUYER]
+            : [\ME\SflInventory\Models\InvStore::TYPE_GENERAL])->pluck('id')->push($storeId)->unique();
 
         $moved = DB::table('inv_stock_transactions')
             ->where('item_id', $item->id)

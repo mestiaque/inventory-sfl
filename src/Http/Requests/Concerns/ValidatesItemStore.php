@@ -7,9 +7,10 @@ use ME\SflInventory\Models\InvItem;
 use ME\SflInventory\Models\InvStore;
 
 /**
- * Every item lives in exactly one store (inv_items.opening_store_id). A
- * document line may only use an item that has a store, and — when the
- * document itself names a store — only in that store. Items already on a
+ * Every item has one home store (inv_items.opening_store_id) and may also be
+ * held in any Buyer Store (InvItem::canBeInStore()). A document line may only
+ * use an item that has a home store, and — when the document itself names a
+ * store — only in its home store or a Buyer Store. Items already on a
  * document being edited ($keepItemIds) are let through so old documents
  * stay editable.
  */
@@ -31,8 +32,8 @@ trait ValidatesItemStore
             $label = "\"{$item->item_code} — {$item->item_name}\"";
             if (! $item->opening_store_id) {
                 $v->errors()->add("{$itemsKey}.{$index}.item_id", "{$label} has no store assigned — set its store in Item Master first.");
-            } elseif ($documentStoreId && (int) $item->opening_store_id !== $documentStoreId) {
-                $v->errors()->add("{$itemsKey}.{$index}.item_id", "{$label} belongs to {$item->openingStore?->name}, not {$storeName}.");
+            } elseif ($documentStoreId && ! $item->canBeInStore($documentStoreId)) {
+                $v->errors()->add("{$itemsKey}.{$index}.item_id", "{$label} belongs to {$item->openingStore?->name} (or a Buyer Store), not {$storeName}.");
             }
         }
     }

@@ -173,7 +173,8 @@ class InvStockOverviewController extends Controller
                 ->where('item_code', 'like', '%' . $request->search . '%')
                 ->orWhere('item_name', 'like', '%' . $request->search . '%')))
             ->when($request->filled('category_id'), fn ($q) => $q->where('category_id', $request->category_id))
-            ->when($store, fn ($q) => $q->where('opening_store_id', $store->id));
+            ->when($store, fn ($q) => $q->where(fn ($q2) => $q2->where('opening_store_id', $store->id)
+                ->orWhereIn('id', DB::table('inv_stock_transactions')->where('store_id', $store->id)->select('item_id'))));
 
         $balances = DB::table('inv_stock_transactions')
             ->when($store, fn ($q) => $q->where('store_id', $store->id))
