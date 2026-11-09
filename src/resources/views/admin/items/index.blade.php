@@ -134,7 +134,7 @@
                                 <td>{{ $item->category?->name }}</td>
                                 <td>{{ $item->department?->name ?? '—' }}</td>
                                 <td>{{ $item->supplier?->name ?? '—' }}</td>
-                                <td>{{ $item->buyer?->name ?? '—' }}</td>
+                                <td>{{ $item->buyerNames() ?: '—' }}</td>
                                 <td>{{ $item->unit?->short_name }}</td>
                                 <td>{{ ucwords(str_replace('_', ' ', $item->item_type)) }}</td>
                                 <td>{{ $item->openingStore?->name ?? '—' }}</td>
@@ -189,7 +189,7 @@
                                                 <dt class="col-sm-3">Category</dt><dd class="col-sm-9">{{ $item->category?->name ?? '—' }}</dd>
                                                 <dt class="col-sm-3">Department</dt><dd class="col-sm-9">{{ $item->department?->name ?? '—' }}</dd>
                                                 <dt class="col-sm-3">Supplier</dt><dd class="col-sm-9">{{ $item->supplier?->name ?? '—' }}</dd>
-                                                <dt class="col-sm-3">Buyer</dt><dd class="col-sm-9">{{ $item->buyer?->name ?? '—' }}</dd>
+                                                <dt class="col-sm-3">Buyer</dt><dd class="col-sm-9">{{ $item->buyerNames() ?: '—' }}</dd>
                                                 <dt class="col-sm-3">Unit</dt><dd class="col-sm-9">{{ $item->unit?->name ?? '—' }} @if($item->unit?->short_name) ({{ $item->unit->short_name }}) @endif</dd>
                                                 <dt class="col-sm-3">Brand</dt><dd class="col-sm-9">{{ $item->brand?->name ?? '—' }}</dd>
                                                 {{-- Color/Size no longer live on the Item Master — picked per transaction line at Goods Receive instead.

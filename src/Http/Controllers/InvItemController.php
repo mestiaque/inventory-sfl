@@ -87,7 +87,7 @@ class InvItemController extends Controller
     private function filteredItems(Request $request)
     {
         return InvItem::query()
-            ->with(['category', 'unit', 'brand', 'color', 'size', 'department', 'supplier', 'buyer', 'openingStore'])
+            ->with(['category', 'unit', 'brand', 'color', 'size', 'department', 'supplier', 'buyer', 'buyers', 'openingStore'])
             ->when($request->filled('item_id'), fn ($q) => $q->whereKey($request->item_id))
             ->when($request->filled('item_code'), fn ($q) => $q->where('item_code', 'like', '%' . $request->item_code . '%'))
             ->when($request->filled('item_name'), fn ($q) => $q->where('item_name', 'like', '%' . $request->item_name . '%'))
@@ -95,7 +95,8 @@ class InvItemController extends Controller
             ->when($request->filled('unit_id'), fn ($q) => $q->where('unit_id', $request->unit_id))
             ->when($request->filled('department_id'), fn ($q) => $q->where('department_id', $request->department_id))
             ->when($request->filled('supplier_id'), fn ($q) => $q->where('supplier_id', $request->supplier_id))
-            ->when($request->filled('buyer_id'), fn ($q) => $q->where('buyer_id', $request->buyer_id))
+            ->when($request->filled('buyer_id'), fn ($q) => $q->where(fn ($q2) => $q2->where('buyer_id', $request->buyer_id)
+                ->orWhereHas('buyers', fn ($b) => $b->where('inv_buyers.id', $request->buyer_id))))
             ->when($request->input('store_id') === 'none', fn ($q) => $q->whereNull('opening_store_id'))
             ->when($request->filled('store_id') && $request->input('store_id') !== 'none', fn ($q) => $q->where('opening_store_id', $request->store_id))
             ->when($request->filled('item_type'), fn ($q) => $q->where('item_type', $request->item_type))
@@ -113,7 +114,14 @@ class InvItemController extends Controller
     {
         $data = $request->validated();
         $data['created_by'] = auth()->id();
-        $item = InvItem::create($data);
+        $item = DB::transaction(function () use ($data) {
+            $item = InvItem::create($data);
+            if (array_key_exists('buyer_ids', $data)) {
+                $item->buyers()->sync($data['buyer_ids'] ?? []);
+            }
+
+            return $item;
+        });
 
         return redirect()->route('inventory.items.index')->with('success', "Item {$item->item_code} created successfully.");
     }
@@ -134,6 +142,9 @@ class InvItemController extends Controller
 
         $moved = DB::transaction(function () use ($item, $data, $storeChanged, $newStoreId) {
             $item->update($data);
+            if (array_key_exists('buyer_ids', $data)) {
+                $item->buyers()->sync($data['buyer_ids'] ?? []);
+            }
 
             return $storeChanged ? $this->stock->moveItemHistoryToStore($item, $newStoreId) : 0;
         });

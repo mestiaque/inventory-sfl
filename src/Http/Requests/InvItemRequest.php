@@ -9,10 +9,36 @@ class InvItemRequest extends FormRequest
 {
     use PicksMerchandisingStyle;
 
-    /** Buyer comes from Merchandising (partials.mer-buyer-select). */
+    /**
+     * Buyers come from Merchandising (several may be picked). Each pick is
+     * mapped to an inventory buyer id into buyer_ids; buyer_id keeps the
+     * first one so older screens still show a buyer.
+     */
     protected function prepareForValidation(): void
     {
-        $this->mapPickedBuyer($this->route('item')?->buyer_id);
+        $item = $this->route('item');
+        $field = $this->has('msfl_buyer_ids') ? 'msfl_buyer_ids' : ($this->has('buyer_ids') ? 'buyer_ids' : null);
+        if ($field !== null || $this->has('buyer_ids_present')) {
+            $link = app(\ME\SflInventory\Services\MerchandisingLink::class);
+            $existing = $item ? $item->buyers()->pluck('inv_buyers.id')->push($item->buyer_id)->filter()->map(fn ($id) => (int) $id)->all() : [];
+            $ids = [];
+            foreach ((array) ($field ? $this->input($field, []) : []) as $picked) {
+                if (blank($picked)) {
+                    continue;
+                }
+                if ($field === 'buyer_ids') {
+                    $ids[] = (int) $picked;
+                    continue;
+                }
+                $legacyId = str_starts_with((string) $picked, \ME\SflInventory\Services\MerchandisingLink::LEGACY_BUYER)
+                    ? (int) substr((string) $picked, strlen(\ME\SflInventory\Services\MerchandisingLink::LEGACY_BUYER)) : null;
+                $keep = $legacyId && in_array($legacyId, $existing, true) ? $legacyId : null;
+                // Something picked that isn't a usable buyer: -1 fails the exists rule.
+                $ids[] = $link->invBuyerFromPick($picked, $keep) ?? -1;
+            }
+            $ids = array_values(array_unique($ids));
+            $this->merge(['buyer_ids' => $ids, 'buyer_id' => $ids[0] ?? null]);
+        }
 
         // These columns are NOT NULL with a DB default — a blank input arrives
         // as null (ConvertEmptyStringsToNull) and an explicit NULL bypasses
@@ -74,6 +100,8 @@ class InvItemRequest extends FormRequest
             'department_id'    => ['nullable', 'integer', 'exists:inv_departments,id'],
             'supplier_id'      => ['nullable', 'integer', 'exists:inv_suppliers,id'],
             'buyer_id'         => ['nullable', 'integer', 'exists:inv_buyers,id'],
+            'buyer_ids'        => ['nullable', 'array'],
+            'buyer_ids.*'      => ['integer', 'distinct', 'exists:inv_buyers,id'],
             'unit_id'          => ['required', 'integer', 'exists:inv_units,id'],
             'brand_id'         => ['nullable', 'integer', 'exists:inv_brands,id'],
             'color_id'         => ['nullable', 'integer', 'exists:inv_colors,id'],

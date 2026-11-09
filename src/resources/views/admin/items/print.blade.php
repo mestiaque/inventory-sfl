@@ -40,7 +40,7 @@
                     <td>{{ $item->category?->name }}</td>
                     <td>{{ $item->department?->name }}</td>
                     <td>{{ $item->supplier?->name }}</td>
-                    <td>{{ $item->buyer?->name }}</td>
+                    <td>{{ $item->buyerNames() }}</td>
                     <td>{{ $item->unit?->short_name }}</td>
                     <td>{{ ucwords(str_replace('_', ' ', (string) $item->item_type)) }}</td>
                     <td>{{ $item->openingStore?->name ?? '—' }}</td>

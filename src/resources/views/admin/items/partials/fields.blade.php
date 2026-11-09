@@ -39,18 +39,38 @@
         </select>
     </div>
     <div class="col-md-3 mb-3">
+        @php
+            $itemBuyerIds = isset($item) && $item->exists
+                ? $item->buyers()->pluck('inv_buyers.id')->push($item->buyer_id)->filter()->map(fn ($id) => (int) $id)->unique()->values()
+                : collect();
+        @endphp
+        <input type="hidden" name="buyer_ids_present" value="1">
+        <label class="form-label">Buyers</label>
         @if($merLinked ?? false)
-            @include('sfl-inventory::admin.partials.mer-buyer-select', ['currentBuyerId' => $item->buyer_id ?? null, 'help' => 'Only for buyer-specific items.'])
-        @else
-            <label class="form-label">Buyer</label>
-            <select name="buyer_id" class="form-control form-control-sm inv-select2">
-                <option value="">— None —</option>
-                @foreach($buyers as $buyer)
-                    <option value="{{ $buyer->id }}" @selected(old('buyer_id', $item->buyer_id ?? '') == $buyer->id)>{{ $buyer->name }}</option>
+            @php
+                $mbLink = app(\ME\SflInventory\Services\MerchandisingLink::class);
+                $mbSelected = collect(old('msfl_buyer_ids', $itemBuyerIds->map(fn ($id) => (string) ($mbLink->merBuyerIdFor($id) ?? \ME\SflInventory\Services\MerchandisingLink::LEGACY_BUYER . $id))->all()))->map(fn ($v) => (string) $v)->all();
+                $mbKeep = $itemBuyerIds->filter(fn ($id) => ! $mbLink->merBuyerIdFor($id))
+                    ->map(fn ($id) => \ME\SflInventory\Models\InvBuyer::withTrashed()->find($id))->filter();
+            @endphp
+            <select name="msfl_buyer_ids[]" class="form-control form-control-sm inv-select2" multiple data-placeholder="— None —">
+                @foreach($merBuyersOptions as $b)
+                    <option value="{{ $b->id }}" @selected(in_array((string) $b->id, $mbSelected, true))>{{ $b->name }}</option>
+                @endforeach
+                @foreach($mbKeep as $kb)
+                    @php $kv = \ME\SflInventory\Services\MerchandisingLink::LEGACY_BUYER . $kb->id; @endphp
+                    <option value="{{ $kv }}" @selected(in_array($kv, $mbSelected, true))>{{ $kb->name }} (Inventory)</option>
                 @endforeach
             </select>
-            <div class="form-text">Only for buyer-specific items.</div>
+        @else
+            @php $selBuyers = collect(old('buyer_ids', $itemBuyerIds->all()))->map(fn ($v) => (int) $v)->all(); @endphp
+            <select name="buyer_ids[]" class="form-control form-control-sm inv-select2" multiple data-placeholder="— None —">
+                @foreach($buyers as $buyer)
+                    <option value="{{ $buyer->id }}" @selected(in_array((int) $buyer->id, $selBuyers, true))>{{ $buyer->name }}</option>
+                @endforeach
+            </select>
         @endif
+        <div class="form-text">Only for buyer-specific items — pick as many buyers as needed.</div>
     </div>
 
     <div class="col-md-3 mb-3">
