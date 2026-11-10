@@ -50,7 +50,7 @@
             <div class="table-responsive">
                 <table class="table table-bordered table-sm align-middle">
                     <thead>
-                        <tr><th>#</th><th>Name</th><th>Code</th><th>Machine No</th><th>Model</th><th>Type</th><th>Department</th><th>Section</th><th>Line</th><th>Status</th><th class="text-right">Actions</th></tr>
+                        <tr><th>#</th><th>Name</th><th>Code</th><th>Machine No</th><th>Brand</th><th>Model</th><th>Type</th><th>Department</th><th>Section</th><th>Line</th><th>Status</th><th class="text-right">Actions</th></tr>
                     </thead>
                     <tbody>
                         @forelse($machines as $machine)
@@ -59,6 +59,7 @@
                                 <td>{{ $machine->name }}</td>
                                 <td>{{ $machine->code }}</td>
                                 <td>{{ $machine->machine_no }}</td>
+                                <td>{{ $machine->brand?->name }}</td>
                                 <td>{{ $machine->model }}</td>
                                 <td>{{ $machine->type }}</td>
                                 <td>{{ $machine->department?->name ?? '—' }}</td>
@@ -91,6 +92,7 @@
                                                 <dt class="col-sm-4">Name</dt><dd class="col-sm-8">{{ $machine->name }}</dd>
                                                 <dt class="col-sm-4">Code</dt><dd class="col-sm-8">{{ $machine->code }}</dd>
                                                 <dt class="col-sm-4">Machine No</dt><dd class="col-sm-8">{{ $machine->machine_no ?? '—' }}</dd>
+                                                <dt class="col-sm-4">Brand</dt><dd class="col-sm-8">{{ $machine->brand?->name ?? '—' }}</dd>
                                                 <dt class="col-sm-4">Model</dt><dd class="col-sm-8">{{ $machine->model ?? '—' }}</dd>
                                                 <dt class="col-sm-4">Origin</dt><dd class="col-sm-8">{{ $machine->origin ?? '—' }}</dd>
                                                 <dt class="col-sm-4">Type</dt><dd class="col-sm-8">{{ $machine->type ?? '—' }}</dd>
@@ -136,7 +138,7 @@
                                 </div>
                             @endcan
                         @empty
-                            <tr><td colspan="11" class="text-center text-muted">No machines found.</td></tr>
+                            <tr><td colspan="12" class="text-center text-muted">No machines found.</td></tr>
                         @endforelse
                     </tbody>
                 </table>

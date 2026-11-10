@@ -6,6 +6,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 use ME\SflInventory\Http\Requests\InvMachineRequest;
+use ME\SflInventory\Models\InvBrand;
 use ME\SflInventory\Models\InvDepartment;
 use ME\SflInventory\Models\InvMachine;
 
@@ -16,7 +17,7 @@ class InvMachineController extends Controller
         $this->authorize('inv_machine.list');
 
         $machines = InvMachine::query()
-            ->with('department')
+            ->with(['department', 'brand'])
             ->when($request->filled('search'), fn ($q) => $q->where(function ($q) use ($request) {
                 $q->where('name', 'like', '%' . $request->search . '%')
                     ->orWhere('code', 'like', '%' . $request->search . '%');
@@ -28,11 +29,12 @@ class InvMachineController extends Controller
             ->withQueryString();
 
         $departments = InvDepartment::active()->orderBy('name')->get();
+        $brands = InvBrand::active()->orderBy('name')->get();
 
         $trashedMachines = InvMachine::onlyTrashed()->latest('deleted_at')->get()
             ->map(fn ($machine) => ['id' => $machine->id, 'title' => $machine->name, 'subtitle' => $machine->code, 'deleted_at' => $machine->deleted_at]);
 
-        return view('sfl-inventory::admin.machines.index', compact('machines', 'departments', 'trashedMachines'));
+        return view('sfl-inventory::admin.machines.index', compact('machines', 'departments', 'brands', 'trashedMachines'));
     }
 
     public function store(InvMachineRequest $request): RedirectResponse

@@ -18,13 +18,18 @@ class InvMachine extends Model
     protected $table = 'inv_machines';
 
     protected $fillable = [
-        'name', 'code', 'machine_no', 'model', 'origin', 'type', 'color', 'description',
+        'name', 'code', 'machine_no', 'brand_id', 'model', 'origin', 'type', 'color', 'description',
         'department_id', 'section', 'line', 'is_active', 'created_by',
     ];
 
     protected $casts = [
         'is_active' => 'boolean',
     ];
+
+    public function brand(): BelongsTo
+    {
+        return $this->belongsTo(InvBrand::class, 'brand_id');
+    }
 
     public function department(): BelongsTo
     {

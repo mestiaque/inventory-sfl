@@ -19,6 +19,18 @@
 </div>
 <div class="row">
     <div class="col-md-3 mb-3">
+        <label class="form-label">Brand</label>
+        <select name="brand_id" class="form-control form-control-sm inv-select2">
+            <option value="">— None —</option>
+            @foreach($brands as $brand)
+                <option value="{{ $brand->id }}" @selected(old('brand_id', $machine?->brand_id ?? '') == $brand->id)>{{ $brand->name }}</option>
+            @endforeach
+            @if(($machine?->brand_id ?? null) && ! $brands->contains('id', $machine->brand_id) && $machine->brand)
+                <option value="{{ $machine->brand_id }}" selected>{{ $machine->brand->name }} (inactive)</option>
+            @endif
+        </select>
+    </div>
+    <div class="col-md-3 mb-3">
         <label class="form-label">Model</label>
         <input type="text" name="model" class="form-control form-control-sm" value="{{ old('model', $machine?->model ?? '') }}">
     </div>

@@ -29,6 +29,7 @@ class InvBrand extends Model
 
     public function isReferenced(): bool
     {
-        return InvItem::where('brand_id', $this->id)->exists();
+        return InvItem::where('brand_id', $this->id)->exists()
+            || InvMachine::where('brand_id', $this->id)->exists();
     }
 }
